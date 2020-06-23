@@ -14,7 +14,11 @@ to update a record that should be a trigger.new
 
 trigger Lead_Trigger on Lead (before update) {
     
-    system.debug('trigger.new values are '+trigger.new);
+   //At this stage at this perticular place trigger.new contains values tempararly stored but not yet committed to data base.
+   these values are just right before you want to perform update operation. 
+   system.debug('trigger.new values are '+trigger.new);
+   //trigger.old values are always fixed in entire code since those are old verstion of the record 
+    which was already committed to databse before new verstion committed to data base.
     system.debug('trigger.old values are '+trigger.old);
     for(lead sObjectLead : Trigger.new){
         system.debug('vaule stored in sObjectLead is  '+ sObjectLead);
@@ -25,6 +29,7 @@ trigger Lead_Trigger on Lead (before update) {
         system.debug('trigger.new values are '+trigger.new);
         system.debug('trigger.old values are '+trigger.old);
     }
+    ////At this stage at this perticular place trigger.new contains values just committed to data base.
     system.debug('trigger.new values are '+trigger.new);
     system.debug('trigger.old values are '+trigger.old);
 }
