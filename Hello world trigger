@@ -1,11 +1,20 @@
 
+1)in this trigger trigger.new is standard variable which fetch and stores the records automaticaly
+without need of writing SOQL query and assign it to a variable.
+2)Once the records are automatically stored in trigger.new i am going to each record by using for loop.
+3)
 
 
 
 trigger Lead_Trigger on Lead (before update) {
      
+    system.debug('trigger.new values are '+trigger.new);
+    
     for(lead sObjectLead : Trigger.new){
+        system.debug('vaule stored in sObjectLead is  '+ sObjectLead);
+        system.debug('vaule stored in sObjectLead first name before update is  '+ sObjectLead.FirstName);
         sObjectLead.FirstName ='Hello';
         sObjectLead.LastName  ='World';
+        system.debug('vaule stored in sObjectLead first name after update is  '+ sObjectLead.FirstName);
     }
 }
