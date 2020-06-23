@@ -1,0 +1,12 @@
+trigger Opportunitytrigger on Opportunity (after insert) {
+
+    list<task> taskInsertList= new List<task>();
+    for (Opportunity sObjOpprecord : trigger.new ) {
+        task t = new task();
+        t.Description   ='Send one ASAP';
+        t.Subject       ='Apple Watch promo';
+        t.WhatId        =sObjOpprecord.Id;
+        taskInsertList.add(t);    
+    }
+    insert taskInsertList;
+}
