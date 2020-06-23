@@ -1,0 +1,24 @@
+trigger Casetrigger on Case (before insert, before update) {
+
+    for (case sObjCase: trigger.new) {
+        string purchacedDate       = sObjCase.Product_Purchase_Date__c.format();
+        string createdDate         = date.today().format();
+        integer noofDays           = sObjCase.Product_Total_Warranty_Days__c.intvalue();
+        decimal warrentyPercentage = (100 * (sObjCase.Product_Purchase_Date__c.daysBetween(date.today())/sObjCase.Product_Total_Warranty_Days__c)).setScale(2);
+        Boolean extendedWarrenty   = sObjCase.Product_Has_Extended_Warranty__c;
+        
+        sObjCase.Warranty_Summary__c= 'product purchaged on ' + purchacedDate
+                                       + 'and case created on ' + createdDate +'.\n'
+                                       + 'Warranty is for ' + noofDays + ' days and is '
+                                       +  warrentyPercentage +'through its warranty period.' +'\n'
+                                       + 'Extendeed warrenty : ' +extendedWarrenty +'.\n'
+                                       + 'Have a nice day!';
+                                      
+    }
+    
+    
+    //product purchaged on <<purchange date>> and case created on <<created date>>.
+    //Warranty is for <<no of days>> and is <<warrenrty percentage>> through its warranty period.
+    //Extendeed warrenty : false
+    //Have a nice day!
+}
