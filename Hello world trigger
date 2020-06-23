@@ -2,8 +2,14 @@
 1)in this trigger trigger.new is standard variable which fetch and stores the records automaticaly
 without need of writing SOQL query and assign it to a variable.
 2)Once the records are automatically stored in trigger.new i am going to each record by using for loop.
-3)
-
+3)Trigger.new contains all the records lets assue 2 records are getting updated, then 'sObjectLead' variable
+contains only one record at perticular instance.
+4)system.debug('vaule stored in sObjectLead first name before update is  '+ sObjectLead.FirstName);
+output is the value which was stored already in firstname field='chaitu'. 
+5)system.debug('vaule stored in sObjectLead first name after update is  '+ sObjectLead.FirstName);
+output is value we are assigning through code firstname='Hello'
+6)One more thing when we try to update the trigger.old version it throws an error msg 'record is readonly' so
+to update a record that should be a trigger.new
 
 
 trigger Lead_Trigger on Lead (before update) {
