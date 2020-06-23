@@ -1,0 +1,11 @@
+
+
+
+
+trigger Lead_Trigger on Lead (before update) {
+     
+    for(lead sObjectLead : Trigger.new){
+        sObjectLead.FirstName ='Hello';
+        sObjectLead.LastName  ='World';
+    }
+}
