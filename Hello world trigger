@@ -1,6 +1,6 @@
 
-1)in this trigger trigger.new is standard variable which fetch and stores the records automaticaly
-without need of writing SOQL query and assign it to a variable.
+1)in this trigger trigger.new is standard variable which fetch and stores the record vaulues 
+without need of passing parameters and assign it to a variable. 
 2)Once the records are automatically stored in trigger.new i am going to each record by using for loop.
 3)Trigger.new contains all the records lets assue 2 records are getting updated, then 'sObjectLead' variable
 contains only one record at perticular instance.
