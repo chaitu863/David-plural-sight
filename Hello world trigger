@@ -13,14 +13,18 @@ to update a record that should be a trigger.new
 
 
 trigger Lead_Trigger on Lead (before update) {
-     
-    system.debug('trigger.new values are '+trigger.new);
     
+    system.debug('trigger.new values are '+trigger.new);
+    system.debug('trigger.old values are '+trigger.old);
     for(lead sObjectLead : Trigger.new){
         system.debug('vaule stored in sObjectLead is  '+ sObjectLead);
         system.debug('vaule stored in sObjectLead first name before update is  '+ sObjectLead.FirstName);
         sObjectLead.FirstName ='Hello';
         sObjectLead.LastName  ='World';
         system.debug('vaule stored in sObjectLead first name after update is  '+ sObjectLead.FirstName);
+        system.debug('trigger.new values are '+trigger.new);
+        system.debug('trigger.old values are '+trigger.old);
     }
+    system.debug('trigger.new values are '+trigger.new);
+    system.debug('trigger.old values are '+trigger.old);
 }
