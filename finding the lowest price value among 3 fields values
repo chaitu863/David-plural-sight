@@ -1,0 +1,36 @@
+trigger OpportunityCompTrigger on Opportunity (before update) {
+
+    list <decimal> competitorPrices = new list <decimal>();
+    for(Opportunity opp : trigger.new) {
+        
+            list<decimal> competitorPrices = new list<decimal>();
+            competitorPrices.add(opp.Competitor_1_price__c);
+            competitorPrices.add(opp.Competitor_2_price__c);
+            competitorPrices.add(opp.Competitor_3_price__c);
+            system.debug('competitorPrices are '+competitorPrices);
+            list<string> competitors = new list<string>();
+            competitors.add(opp.Competitor_1__c);
+            competitors.add(opp.Competitor_2__c);
+            competitors.add(opp.Competitor_3__c);
+            system.debug('competitors are '+competitors);
+        
+            decimal lowestprice;
+            integer lowestposition;
+            for(integer i=0; i<competitorPrices.size(); i++){
+                
+                decimal currentprice = competitorPrices.get(i);
+                system.debug('current price is '+ currentprice);
+                 system.debug('lowest price is '+ lowestprice);
+                if(lowestprice == null || lowestprice > currentprice){
+                    //system.debug('current price is '+ currentprice);
+                   lowestprice = currentprice;
+                    //system.debug('current price is '+ lowestprice);
+                   lowestposition = i; 
+                   
+                }
+            }
+           system.debug('lowest position is '+ lowestposition);
+           opp.Leading_competitor__c = competitors.get(lowestposition);
+           system.debug('leading competitor is '+ opp.Leading_competitor__c );
+    }
+}
