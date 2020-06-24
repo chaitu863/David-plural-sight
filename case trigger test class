@@ -1,0 +1,16 @@
+@isTest
+public class CaseTriggerTest {
+
+    @isTest static void testmethod1(){
+        case a = new case ();
+        a.Product_Has_Extended_Warranty__c=true;
+        a.Product_Total_Warranty_Days__c=10;
+        a.Product_Purchase_Date__c=date.today();
+        a.Status='working';
+        a.Origin='Email';
+        
+        insert a;
+        a.Product_Has_Extended_Warranty__c=false;
+        update a;
+     }
+}
