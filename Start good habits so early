@@ -1,0 +1,25 @@
+1)Practice the code daily instead of writing code once a week. (persistence)
+2)I love test classes than writing triggers
+3)in side for each loop variable “objlead.firstname” means value inside first name field for that particular record. And this “objlead”  is list variable stores entirely different record for second iteration. And it continuous so on.  That means for third iteration it will have 3 record entire data in it so we can specifying the field name to fetch particular field info related to that record. The scope of this list variable called objlead is inside that loop so outside this loop meaning of “objlead” has no sense. So every time we write a code we need to keep scope of the variable in mind.
+3)indentation is important while writing the code to show up code neatly. Make all “ =” equal signs are in one vertical order.
+4)thumb rule is every line has ; (semi colon) or { curly braces in the end.
+5) FOR EACH loop is the name of it.
+6)for any kind of variables naming convention is like “myLead” starting letter should be smaller case and it follows camel case afterwards.
+7)trigger can take only 200 records at a time as a batch. Lets say if you have 500 records then trigger executes (200,200,100) as a separate cycles.
+8) let’s say you are creating child object record(ex: task) for a parent object record (ex :opportunity) then you should assign parent record id in child record lookup/master -detail relationship field.
+In the below example whatid is the field api name for task object ‘related to’ field ( it has the lookup with opportunities)
+Ex: taskobj.whatid=opportunity.id;
+9) In test class if you see lines inside if statement are get covered means if statement conditions did not met. But what happens in reality is if statement looks like covered but it in reality it does not.
+10) David: I am going to tell you big secret right now. Anyone can learn what I have learned. It does not take a genius. But It does take hard work.
+11) as you know there are variables/collections in apex to store values.
+      if you want to store any one of the field values in a salesforce record use (integer, decimal, string, Boolean, date, datetime)
+if you want to store a single salesforce record of any object use Sobject ex: task a= new task();
+if you want to store multiple records/ multiple fields values of a single record also into one group-use list, set or map collection variables.
+12)To go and access one particular field value in a record we use . dot notation. We can read the field value of child object  and we can traverse  and read to parent object field value also using .dot notation.
+On the other hand SOQL or SOSL helps to get the data.
+13)if you have any generic info in code more than once use variable and put at the first place in code so that in future if u need to change the value you can potentially change in the  one place( variable)
+14) trigger.old and trigger.oldmap are always use when you want to refer old version of (same/new)record. If you don’t want to refer old version of same record then no need to use trigger.old/trigger.oldmap.
+15)if you want to get the records that are already saved in data base use SOQL.
+16) try to use one space between each element to look code good.
+ 
+
