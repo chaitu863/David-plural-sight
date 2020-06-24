@@ -1,0 +1,154 @@
+public class CollectionTypes {
+    
+    public static void listmethod(){
+        
+        list<string>stringVariable = new list<string>();
+        stringVariable.add('chaitu');
+        stringVariable.add('poornima');
+        stringVariable.add('nag');
+        system.debug('string variable 1'+stringVariable );
+        
+        list<string>stringVariable2 = new list<string>();
+        stringVariable2.add('chaitu2');
+        stringVariable2.add('poornima2');
+        stringVariable2.add('nag2');
+        stringVariable2.add(2,'third value');
+        system.debug('string variable 2'+stringVariable2);
+        
+        stringVariable.addall(stringVariable2);  
+        system.debug('combined two variable values'+stringVariable);
+        
+        list<string>clonedlist=stringVariable.clone();
+        system.debug('cloned values are'+clonedlist);
+        
+        clonedlist.clear();
+        system.debug('list after clearing'+clonedlist.size());
+        
+        boolean boolvariable=stringVariable.contains('chaitu');
+        system.debug('is it contained the value  '+boolvariable);
+        
+        boolean boolvariable2=clonedlist.contains('poornim');
+        system.debug('is it contained the value  '+boolvariable2);
+        
+        string firstvalue=stringVariable.get(0);
+        system.debug('first value by using get methd '+firstvalue );
+        
+        string removedvalue=stringVariable.remove(1);
+        system.debug('string variable after removal ' +removedvalue);
+        system.debug('vlaues after removed one value'+ stringVariable);
+        
+        stringVariable.set(1,'updated value');
+        system.debug('vlaues after removed one value'+ stringVariable);   
+        
+        stringVariable.sort();
+        system.debug('vlaues after sorting'+ stringVariable);
+        
+    }
+    
+    public static void setmethod(){
+        
+        set<string> emails= new set<string>();
+        emails.add('chaotu@gmail.com');
+        emails.add('narayan@gmail.com');
+        emails.add('krishna@gmail.com');
+        system.debug('email set'+emails);
+        
+        set<string> emails2= new set<string>();
+        emails2.add('phaotu@gmail.com');
+        emails2.add('barayan@gmail.com');
+        emails2.add('mrishna@gmail.com');
+        system.debug('email2 set'+emails2);
+        
+        emails.addall(emails2);
+        system.debug('addall set'+emails);
+        
+        set<string>setcloneemails=emails.clone();
+        system.debug('cloned set'+setcloneemails);
+        
+        boolean yesbool=setcloneemails.contains('barayan@gmail.com');
+        system.debug('contains true set '+yesbool);
+        
+        boolean nobool=setcloneemails.contains('barn@gmail.com');
+        system.debug('contains flase set '+nobool);
+        
+        emails2.clear();
+        system.debug('after clear email2 '+emails2);
+        
+        boolean isempty=emails2.isEmpty();
+        system.debug('email2 is empty or not '+isempty);
+        
+        if(emails2.equals(emails)){
+            system.debug('yes its equal');
+        }else
+            system.debug('no its not equal');
+        
+        boolean removedvaluebool= emails.remove('barayan@gmail.com');
+        system.debug('removed or not '+removedvaluebool);
+        
+        string tostringset= emails.tostring();
+        system.debug('string format '+tostringset);
+    }
+    
+    public static void mapmethod(){
+        
+        map<string, string>statevillage= new map<string, string>();
+        statevillage.put('ap','BMP');
+        statevillage.put('ap','BMP2');
+        statevillage.put('telangana','hyd');
+        statevillage.put('karnataka','bangolure');
+        statevillage.put('maha','mumbai');
+        system.debug('statevillage names '+statevillage);
+        
+        map<string, string>countrycurrency= new map<string, string>();
+        countrycurrency.put('india','rupee');
+        countrycurrency.put('UK','Urakine');
+        countrycurrency.put('sri lanka','rupree');
+        countrycurrency.put('pakistan','rupee');
+        countrycurrency.put('napal','nepali');
+        system.debug('countrycurrency names '+countrycurrency);
+        
+        countrycurrency.putall(statevillage);
+        system.debug('combined map'+countrycurrency);
+        
+        boolean mapbool= countrycurrency.containskey('india');
+        system.debug('map cotnains key true is '+mapbool);
+        boolean mapboolno= countrycurrency.containskey('iia');
+        system.debug('map cotnains key flase is '+mapboolno);
+        
+        set<string>keyset=  countrycurrency.keyset();
+        system.debug('key set is '+keyset);
+        
+        list<string>valuesare=  countrycurrency.values();
+        system.debug('values are '+valuesare);
+    }
+    
+    public static void stringmethod(){
+        
+        string village= 'bommanampadu';
+        string village2= 'bommanampadu';
+        string name= 'chaitanya motupalli garu';
+        string cen=village.center(50);
+        
+        String s = 'hello';
+        String s2 = s.center(9);
+        System.assertEquals(
+            '  hello  ',
+            s2);
+        integer inte= village.compareTo(village2);
+        system.assertEquals(0,inte);
+        system.debug('capitalize please '+ village.compareTo(village2));
+        system.debug('centralize please '+ name.charAt(0));
+        system.debug('centralize please '+ name.center(2));
+        
+        boolean continedtrue=village.contains('bomma');
+        system.debug('is substraing contained this '+continedtrue);
+        boolean continedflase=village.contains('boa');
+        system.debug('is substraing contained this '+continedflase);
+        
+        boolean continedtrueingonre=village.containsIgnoreCase('BOmma');
+        system.debug('is substraing contained this '+continedtrueingonre);
+        
+        
+    }
+    
+}
