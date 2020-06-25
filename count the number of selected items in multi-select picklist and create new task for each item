@@ -1,0 +1,81 @@
+trigger AccountTrigger on Account (before insert, before update, after insert) {
+    
+    if(trigger.isbefore) {
+        AccountTriggerHandler.method1(trigger.new);
+    }
+    if(trigger.isafter) {
+        AccountTriggerHandler.method2(trigger.new);
+    }
+    
+}
+
+
+//Trigger handler
+public class AccountTriggerHandler {
+    
+    
+    
+    public static void method1(list<account> acclist) {
+        set<string> keywords = new set<string>();
+        keywords.add('Oranges');
+        keywords.add('Bananas');
+        keywords.add('Mangoes');
+        keywords.add('Apples');
+        keywords.add('Kiwi');
+        system.debug('set of predefined values '+keywords);
+        for (account acc : acclist) {
+            
+            //defining the set to store selected values
+            set<string> selected= new set<string> ();
+            for(string s : keywords){
+                if( acc.Fruits__c !=null && acc.Fruits__c.contains(s)){
+                    selected.add(s);
+                }
+            }
+            system.debug('set of seleted by multislect picklist '+selected);
+            
+            integer fruitsCount=0;
+            system.debug('intial fruitcount value '+fruitsCount);
+            if(!selected.isEmpty()){
+                fruitsCount = selected.size();
+            }
+            system.debug('fruitsCount after loop result is '+fruitsCount);
+            acc.Fruits_Selected_Count__c = fruitsCount;
+            system.debug('fruit selected field value is '+acc.Fruits_Selected_Count__c);
+        }
+    }
+    
+    public static void method2(list<account> acclist){
+        set<string> keywords = new set<string>();
+        keywords.add('Oranges');
+        keywords.add('Bananas');
+        keywords.add('Mangoes');
+        keywords.add('Apples');
+        keywords.add('Kiwi');
+        system.debug('set of predefined values '+keywords);
+        for (account acc : acclist) {
+            
+            //defining the set to store selected values
+            set<string> selected= new set<string> ();
+            for(string s : keywords){
+                if( acc.Fruits__c !=null && acc.Fruits__c.contains(s)){
+                    selected.add(s);
+                }
+            }
+            system.debug('set of seleted by multislect picklist '+selected);
+         if(!selected.isEmpty()){   
+            list<task> insertTask = new list<task>();
+            for(string se : selected){
+                task t = new task();
+                t.Subject=se;
+                t.WhatId=acc.Id;
+                t.Description='created by account multi-select picklist';
+                insertTask.add(t);
+            }
+            insert insertTask;
+         }
+        }
+    }
+}
+
+
