@@ -1,0 +1,11 @@
+trigger Lead_Trigger on Lead (before update) {
+
+        for (lead sObjectLead : Trigger.new) {
+            
+            if(sObjectLead.FirstName !=null && 
+              (sObjectLead.FirstName.equalsIgnoreCase('test') || sObjectLead.LastName.equalsIgnoreCase('test'))){
+                sObjectLead.Status = 'Disqualified';
+            }
+            
+        }
+}
