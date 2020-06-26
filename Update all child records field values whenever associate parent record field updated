@@ -1,0 +1,30 @@
+public static void method2(list<account> acclist){
+       
+         list<contact> conList = [SELECT Id, AccountId
+                                    FROM contact
+                                    WHERE AccountId =:acclist];
+        system.debug('contacts list associated to account '+conList);
+
+        system.debug('acclist before for loop '+acclist);
+        list<contact> updateConactsList = new list<contact>();
+        if(!conList.isEmpty()) {
+            for(account acc: acclist) {
+                for(contact con : conList) {
+                    system.debug('accout billing address is '+acc.BillingCity);
+                    system.debug('accout id '+acc.id);
+                    system.debug('contact accoutid '+con.AccountId);
+                    if((acc.id==con.AccountId) && acc.BillingCity!=null){
+                        con.MailingCity       =acc.BillingCity;
+                        con.MailingCountry    =acc.BillingCountry;
+                        con.MailingState      =acc.BillingState;
+                        con.MailingStreet     =acc.BillingStreet;
+                        con.MailingPostalCode =acc.BillingPostalCode;
+                        updateConactsList.add(con);
+                    }
+                }
+            }
+        system.debug('updatecontactlist values are '+updateConactsList);
+        update updateConactsList; 
+        }
+        
+    }
