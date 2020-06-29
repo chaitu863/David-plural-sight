@@ -1,18 +1,24 @@
-trigger Lead_Trigger on Lead (before insert) {
+trigger Lead_Trigger on Lead (before insert, before update) {
     
     list<contact> contactList = new list<contact> ();
+    set<string> Lastnameset = new set<string>();
     set<string> emailset = new set<string> ();
+    set<string> firstnameset= new set<string>();
     for(lead sObjLead : trigger.new) {
-        if(sObjLead.Email != null) {
+        if(sObjLead.Email != null || sObjLead.LastName != null || sObjLead.FirstName != null ){
             emailset.add(sObjLead.Email);
-        }
+            Lastnameset.add(sObjLead.LastName);
+            firstnameset.add(sObjLead.FirstName.substring(0,1)+ '%');
+          }
     }
-    system.debug('email list are '+emailset);
+    system.debug('email list are '+emailset +' '+Lastnameset +''+firstnameset);
     
-    if(!emailset.isEmpty()){
+    if(!emailset.isEmpty() || !firstnameset.isEmpty() || !Lastnameset.isEmpty()){
         contactList = [SELECT Id, Email, firstName, LastName
                        FROM contact
-                       WHERE Email IN :emailset];
+                       WHERE /*Email IN :emailset
+                       OR LastName IN : Lastnameset
+                       OR */FirstName LIKE : firstnameset];
     }
     
     system.debug('contact list '+contactList);
@@ -21,24 +27,21 @@ trigger Lead_Trigger on Lead (before insert) {
                              WHERE DeveloperName='Data_Quality'
                              Limit 1];
     for (lead sObjectLead : Trigger.new) {
-        if(!contactList.isEmpty()) {
-            if(!dataqueue.isEmpty()) {
-                sObjectLead.OwnerId = dataqueue.get(0).id;
-            }
-            
-            string leadDescription = 'These are the list of contacts '+'.\n';
-            
-            for(contact con : contactList){
-                if(con.Email==sObjectLead.Email){
-                    leadDescription += con.firstname +' '
-                        +con.lastname +' '
-                        +con.id +'.\n';
+        if(!contactList.isEmpty()){
+                if(!dataqueue.isEmpty()) {
+                    sObjectLead.OwnerId = dataqueue.get(0).id;
                 }
-                
-            }
-            system.debug('leadDescription before adding '+ leadDescription);
-            sObjectLead.Description= sObjectLead.Description + leadDescription;
-            system.debug('leadDescription after adding ' +sObjectLead.Description);
+                string leadDescription = 'These are the list of contacts '+'.\n';
+                for(contact con : contactList) {
+                    if((con.Email==sObjectLead.Email) || (con.FirstName.contains(sObjectLead.FirstName.substring(0,1))) || (con.LastName==sObjectLead.LastName)){
+                        leadDescription += con.firstname +' '
+                            +con.lastname +' '
+                            +con.id +'.\n';
+                    }
+                }
+                system.debug('leadDescription before adding '+ leadDescription);
+                sObjectLead.Description= sObjectLead.Description + leadDescription;
+                system.debug('leadDescription after adding ' +sObjectLead.Description);
         }  
     }
 }
