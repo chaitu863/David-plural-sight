@@ -1,0 +1,35 @@
+
+<template>
+  <lightning-card title="Location search" icon-name="custom:custom14">
+    <div class="slds-m-around_small">
+    <p> Hello {greetings}</p>
+    <lightning-input label="Name Hri"  onchange={nameEvent}></lightning-input>
+    
+    <br/>
+    <lightning-input label="Provider credentialed ?" type="checkbox" onchange={checkboxHandler}></lightning-input>
+    <template if:true = {checkboxvariable}><br/>
+     <p> display true</p>
+    </template>
+     <template if:false = {checkboxvariable}><br/>
+     <p> display flase</p>
+    </template>
+    </div>
+  </lightning-card>
+</template>
+    
+    
+    
+import { LightningElement, track } from 'lwc';
+export default class HelloWorld extends LightningElement {
+ @track greetings;
+ @track checkboxvariable = false;
+ nameEvent(event){
+      console.log(event.target.value);
+       this.greetings=event.target.value;
+ }
+
+ checkboxHandler(event){
+   this.checkboxvariable= event.target.checked;
+ }
+}
+  
