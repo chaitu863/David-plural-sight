@@ -12,6 +12,14 @@
     </template>
      <template if:false = {checkboxvariable}><br/>
      <p> display flase</p>
+     </template><br/>
+    <p>Loop using for each and for item</p>
+    <template for:each = {cityofarray} for:item="city">
+    <p key={city}>{city}</p>
+    </template><br/>
+    <p>Loop using for iterator</p>
+    <template iterator:it = {cityofarray}>
+    <p key={it.value}>{it.value}</p>
     </template>
     </div>
   </lightning-card>
@@ -23,6 +31,7 @@ import { LightningElement, track } from 'lwc';
 export default class HelloWorld extends LightningElement {
  @track greetings;
  @track checkboxvariable = false;
+ @track cityofarray = ['jaipur', 'Mumbai', 'kolkotta', 'singapore'];
  nameEvent(event){
       console.log(event.target.value);
        this.greetings=event.target.value;
@@ -32,4 +41,3 @@ export default class HelloWorld extends LightningElement {
    this.checkboxvariable= event.target.checked;
  }
 }
-  
