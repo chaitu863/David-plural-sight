@@ -1,0 +1,71 @@
+<template>
+<lightning-card title="Simple Calculator" icon-name="custom:custom14">
+<lightning-layout multiple-rows>
+              <lightning-layout-item padding="around-small" size="12">
+                  <lightning-input type="number" label="FirstNumber" name="firstnumbername" onchange={numberHandler}></lightning-input>
+              </lightning-layout-item>
+              <lightning-layout-item padding="around-small" size="12">
+                  <lightning-input type="number" label="SecondNumber" name="secondnumbername" onchange={numberHandler}></lightning-input>
+              </lightning-layout-item>
+              <lightning-layout-item padding="around-small" size="12">
+                <lightning-button-group>
+                    <lightning-button label="ADD"  icon-name ="utility:add" onclick={addclick}></lightning-button>
+                    <lightning-button label="SUB" icon-name ="utility:dash"  onclick={subclick}></lightning-button>
+                    <lightning-button label="MUL" icon-name ="utility:close" onclick={mulclick}></lightning-button>
+                    <lightning-button label="DIV"  icon-name ="utility:magicwand" onclick={divclick}></lightning-button>
+                </lightning-button-group>
+              </lightning-layout-item>
+              <lightning-layout-item padding="around-small" size="12">
+                  <p><lightning-formatted-text value={currentResult} ></lightning-formatted-text></p>
+              </lightning-layout-item>
+          </lightning-layout>
+</lightning-card>
+</template>
+
+import { LightningElement, track } from 'lwc';
+export default class HelloWorld extends LightningElement {
+@track secondnumberjs
+@track firstnumberjs
+@track currentResult;
+numberHandler(event){
+  const holdname= event.target.name;
+  if(holdname === 'firstnumbername'){
+    this.firstnumberjs = event.target.value;
+  }else if(holdname === 'secondnumbername'){
+    this.secondnumberjs = event.target.value;
+  }
+}
+
+addclick(){
+  const Fnum = parseInt(this.firstnumberjs);
+  const Snum = parseInt(this.secondnumberjs);
+  
+  this.currentResult = `Result of ${Fnum} + ${Snum} is ${Fnum +Snum}`;
+
+}
+
+subclick(){
+  const Fnum = parseInt(this.firstnumberjs);
+  const Snum = parseInt(this.secondnumberjs);
+  this.currentResult = `Result of ${Fnum} - ${Snum} is ${Fnum - Snum}`;
+
+}
+
+mulclick(){
+  const Fnum = parseInt(this.firstnumberjs);
+  const Snum = parseInt(this.secondnumberjs);
+  
+  this.currentResult = `Result of ${Fnum} x ${Snum} is ${Fnum * Snum}`;
+
+}
+
+divclick(){
+  const Fnum = parseInt(this.firstnumberjs);
+  const Snum = parseInt(this.secondnumberjs);
+  
+  this.currentResult = `Result of ${Fnum} / ${Snum} is ${Fnum / Snum}`;
+
+}
+
+
+}
