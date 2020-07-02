@@ -17,16 +17,35 @@
               </lightning-layout-item>
               <lightning-layout-item padding="around-small" size="12">
                   <p><lightning-formatted-text value={currentResult} ></lightning-formatted-text></p>
+              </lightning-layout-item><br/>
+              <lightning-layout-item padding="around-small" size="12">
+                  <lightning-input type="checkbox" label="Show previous result" name="checkboxname" onchange={checkboxHandler}></lightning-input>
+              </lightning-layout-item><br/>
+              <lightning-layout-item padding="around-small" size="12">
+                <template if:true={isitchecked}>
+                 <ul>
+                    <template iterator:it = {previousvalues}>
+                      <li key={it.value}>
+                          <div if:true={it.first} class="slds-border_top"></div>
+                          {it.value}
+                          <div if:true={it.last} class="slds-border_bottom"></div>
+                      </li>
+                    </template>
+                  </ul>    
+                </template>
               </lightning-layout-item>
           </lightning-layout>
 </lightning-card>
 </template>
+
 
 import { LightningElement, track } from 'lwc';
 export default class HelloWorld extends LightningElement {
 @track secondnumberjs
 @track firstnumberjs
 @track currentResult;
+@track previousvalues = [];
+@track isitchecked = false;
 numberHandler(event){
   const holdname= event.target.name;
   if(holdname === 'firstnumbername'){
@@ -41,14 +60,14 @@ addclick(){
   const Snum = parseInt(this.secondnumberjs);
   
   this.currentResult = `Result of ${Fnum} + ${Snum} is ${Fnum +Snum}`;
-
+  this.previousvalues.push(this.currentResult);
 }
 
 subclick(){
   const Fnum = parseInt(this.firstnumberjs);
   const Snum = parseInt(this.secondnumberjs);
   this.currentResult = `Result of ${Fnum} - ${Snum} is ${Fnum - Snum}`;
-
+this.previousvalues.push(this.currentResult);
 }
 
 mulclick(){
@@ -56,7 +75,7 @@ mulclick(){
   const Snum = parseInt(this.secondnumberjs);
   
   this.currentResult = `Result of ${Fnum} x ${Snum} is ${Fnum * Snum}`;
-
+  this.previousvalues.push(this.currentResult);
 }
 
 divclick(){
@@ -64,8 +83,11 @@ divclick(){
   const Snum = parseInt(this.secondnumberjs);
   
   this.currentResult = `Result of ${Fnum} / ${Snum} is ${Fnum / Snum}`;
-
+  this.previousvalues.push(this.currentResult);
 }
 
+checkboxHandler(event){
+  this.isitchecked = event.target.checked;
+}
 
 }
