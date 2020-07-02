@@ -1,0 +1,46 @@
+<template>
+  <lightning-card title="BMI Calculator">
+      <div class="slds-m-around_medium">
+      <lightning-input type="number" step="0.01" label ="Weight in kgs" onchange={weightchange}></lightning-input>
+      <lightning-input type="number" step="0.01" label ="Hight in meters" onchange={Hightchange}></lightning-input>
+      <br/><lightning-button label="Calculate BMI" onclick={buttonclick}></lightning-button>
+      <p><br/>
+          BMI value is : {bmiData.resultofbmi}
+      </p>
+      </div>
+  </lightning-card>
+
+</template>
+
+
+
+
+
+
+import { LightningElement, track } from 'lwc';
+export default class HelloWorld extends LightningElement {
+
+@track bmiData = {
+ weight: 0,
+Hight: 0,
+resultofbmi: 0
+}
+
+weightchange(event){
+  this.bmiData.weight = parseFloat(event.target.value);
+}
+
+Hightchange(event){
+  this.bmiData.Hight = parseFloat(event.target.value);
+}
+
+buttonclick(){
+  try{
+    this.bmiData.resultofbmi = ( this.bmiData.weight/(this.bmiData.Hight* this.bmiData.Hight));
+  }catch (error){
+     this.bmiData.resultofbmi = undefined;
+  }
+  
+}
+
+}
