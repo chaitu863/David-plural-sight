@@ -1,0 +1,47 @@
+global class sendemail implements Database.Batchable < sobject > , Schedulable
+
+{
+    global Database.QueryLocator start(Database.BatchableContext bc) 
+    {
+        return Database.getquerylocator([select id,name,Phone from account]);
+    }
+        
+    global void execute(Database.BatchableContext bc, List < account > acclist) 
+    {
+        system.debug('acclist before for loop'+acclist); 
+        for (account acc : acclist) {
+            if(acc.Phone == '4444'){
+                acc.Phone='5555';
+                //accgroup.add(acc);
+            }
+        }
+        update acclist;
+                system.debug('acclist after for loop'+acclist); 
+    }
+    
+    global void finish(database.BatchableContext bc) 
+    {
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        String[] toAddresses = new String[] {'chaitu863@gmail.com'};
+        mail.setToAddresses(toAddresses);
+        mail.setSubject('This is from batch class');
+        mail.setPlainTextBody('Happy ending');
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+    }
+    
+     global void execute(SchedulableContext sc)
+
+    {
+        sendemail ss= new sendemail();
+        Database.executeBatch(ss,200);
+
+    }
+
+}
+
+
+
+In Execute anonymous window
+
+sendemail ss= new sendemail();
+Database.executeBatch(ss);
