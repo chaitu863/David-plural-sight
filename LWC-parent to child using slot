@@ -1,0 +1,58 @@
+PARENT.HTML
+
+<template>
+    <c-child show>
+        <div slot="trse">
+            <ui >
+                <template for:each = {gre} for:item = "room" scope="trse">
+                    <li key={rre}>
+                        {room.roomNumber}<br/>
+                        {room.RE}
+                    </li>
+                </template>
+            </ui>
+        </div>
+    </c-child>
+    <c-child show> </c-child>
+</template>
+
+PARENT.JS
+
+import { LightningElement, api } from 'lwc';
+
+/**
+ * Show an item
+ */
+export default class Child extends LightningElement {
+  
+  gre = [{roomNumber : 'A-1012', RE:'27'},
+         {roomNumber : 'A-103', RE:'22'},
+         {roomNumber : 'A-104', RE:'2'},
+         {roomNumber : 'A-105', RE:'127'}
+  
+  ]
+
+}
+
+CHILD.PARENT
+
+<template>
+<lightning-card title="CHILD DETAILS"> 
+  <template if:true = {show}>
+      <slot name="trse"> </slot>
+      Hi my name is chaitanya
+      <slot name="trse"> </slot>
+  </template>
+</lightning-card>
+</template>
+
+CHILD.JS
+import { LightningElement, api } from 'lwc';
+
+/**
+ * Show an item
+ */
+export default class Child extends LightningElement {
+  
+  @api show = false;
+}
