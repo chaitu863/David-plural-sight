@@ -1,0 +1,43 @@
+
+CHILD.HTML
+
+<template>
+<lightning-card title="CHILD DETAILS"> 
+  <template if:true = {show}>
+      Hi my name is chaitanya
+      
+  </template>
+</lightning-card>
+</template>
+
+CHILD.JS
+
+import { LightningElement, api } from 'lwc';
+
+/**
+ * Show an item
+ */
+export default class Child extends LightningElement {
+  
+  @api show = false;
+}
+
+
+PARENT.HTML
+
+<template>
+    <c-child show> </c-child>
+    <c-child show> </c-child>
+    <c-child > </c-child>
+</template>
+
+PARENT.JS
+
+import { LightningElement, api } from 'lwc';
+
+/**
+ * Show an item
+ */
+export default class Child extends LightningElement {
+  
+}
