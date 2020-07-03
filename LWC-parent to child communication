@@ -1,0 +1,47 @@
+Parent:
+
+<template>
+  <lightning-card title="Parent to Child">
+        <div class="slds-m-around_medium">
+          <ul>
+            <template for:each ={meetingRoomsinfo} for:item ="room">
+                <li key={room.roomNumber}>
+                    <c-child meeting={room}>
+
+                    </c-child>
+               </li>
+            </template>
+          </ul>
+    </div>
+  </lightning-card>
+</template>
+
+import { LightningElement, track } from 'lwc';
+export default class HelloWorld extends LightningElement {
+ @track meetingRoomsinfo = [
+   {roomNumber: 'A-101', kp: '12'},
+   {roomNumber: 'A-102', kp: '11'},
+   {roomNumber: 'A-103', kp: '10'},
+   {roomNumber: 'A-104', kp: '9'},
+   {roomNumber: 'A-105', kp: '8'}
+ ]
+}
+
+
+CHILD:
+
+<template>
+    <div class="slds-p-around_medium lgc-bg">
+            <lightning-tile label={meeting.roomNumber} href="/path/to/somewhere">
+                <p class="slds-truncate" title="count of people">{meeting.kp}</p>
+            </lightning-tile>
+    </div>
+</template>
+
+
+import { LightningElement, api } from 'lwc';
+
+export default class Child extends LightningElement {
+    @api meeting;
+
+}
