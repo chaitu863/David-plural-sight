@@ -1,0 +1,67 @@
+PARENT:
+
+<template>
+<lightning-card title="PARENT">
+        <lightning-input label="Color" onchange={colorhandler}></lightning-input><BR/>
+        <lightning-button label="pass value" onclick={passvaluehandler}></lightning-button>
+        <c-child></c-child>
+ </lightning-card>
+</template>
+
+import { LightningElement, track, api } from 'lwc';
+
+export default class PublicMethodChild extends LightningElement {
+ 
+ storecolor;
+
+ colorhandler(event){
+     this.storecolor = event.target.value;
+ }
+
+ passvaluehandler(){
+     const childcomponent = this.template.querySelector('c-child');
+     const resopnsesring = childcomponent.childmethod(this.storecolor);
+     console.log('resonse is',resopnsesring);
+ }
+
+}
+
+
+CHILD:
+
+<template>
+        <lightning-card title="CHILD">
+          <lightning-checkbox-group name="Checkbox Group"
+                              label="Checkbox Group"
+                              options={multicheckbox}
+                              value={value}
+                              ></lightning-checkbox-group>  
+         </lightning-card>
+</template>
+
+import { LightningElement, track, api } from 'lwc';
+
+export default class PublicMethodChild extends LightningElement {
+ 
+   @track value = ['option1'];
+
+   multicheckbox = [    { label: 'Ross', value: 'option1' },
+            { label: 'Rachel', value: 'option2' }
+            ];
+
+
+    @api
+    childmethod(receivedvalue){
+        const resonseofcheckbox = this.multicheckbox.find( prede=> {
+            return receivedvalue === prede.value;
+        })
+
+        if(resonseofcheckbox){
+            this.value = resonseofcheckbox.value;
+            return 'success';
+        }
+        return 'failed';
+    }
+ 
+
+}
