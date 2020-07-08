@@ -1,0 +1,48 @@
+trigger LeadTrigger on Lead (after insert, after update) {
+  
+    //Collect the email address
+    set<string> setOfEmails = new set<string>();
+    for (lead sObjLead : Trigger.new) {
+        if(sObjLead.Email !=null) {
+        setOfEmails.add(sObjLead.Email);
+        }
+    }
+    system.debug('email set'+ setOfEmails);
+    //Fetch the accounts associated with that email
+    list<account> accWithLeadEmail = [SELECT id, name, email__c
+                                      FROM account
+                                      WHERE email__c =:setOfEmails];
+    system.debug('account matched lead emails'+ accWithLeadEmail);
+    map<string,account> emailAccountMap = new map<string,account>();
+    if(!accWithLeadEmail.isEmpty()) {
+        for(account acc : accWithLeadEmail) {
+        emailAccountMap.put(acc.Email__c, acc);
+        } 
+    }
+     system.debug('accounts with map'+ emailAccountMap);
+    //if you have account update account last name and first name
+    list<account> accountsCreated = new list<account>();
+   
+    for(Lead sObjLeadRecord : Trigger.new) {
+        account acc = new account();
+            system.debug('sObjLeadRecord '+ sObjLeadRecord);
+            if(sObjLeadRecord.Email!=null && emailAccountMap.size()>0
+              && emailAccountMap.get(sObjLeadRecord.Email).email__c == sObjLeadRecord.Email){
+              system.debug('account map email is '+emailAccountMap.get(sObjLeadRecord.Email).email__c);
+              system.debug('lead email in for loop '+ sObjLeadRecord.Email);
+                  emailAccountMap.get(sObjLeadRecord.Email).name = sObjLeadRecord.LastName;
+                  emailAccountMap.put(sObjLeadRecord.Email,emailAccountMap.get(sObjLeadRecord.Email));
+                 
+            }else if(sObjLeadRecord.Email!=null){
+                acc.Name = sObjLeadRecord.LastName;
+                acc.Email__c = sObjLeadRecord.Email;
+                accountsCreated.add(acc);
+            }
+        }
+    
+     system.debug('new accounts before upsert'+ accountsCreated);
+     update emailAccountMap.values();
+     insert accountsCreated;
+     system.debug('new accounts after upsert'+ accountsCreated);
+    //if you have not found an email create account
+}
