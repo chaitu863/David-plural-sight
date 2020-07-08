@@ -1,3 +1,5 @@
+MAP:
+
 trigger LeadTrigger on Lead (after insert, after update) {
   
     //Collect the email address
@@ -44,5 +46,48 @@ trigger LeadTrigger on Lead (after insert, after update) {
      update emailAccountMap.values();
      insert accountsCreated;
      system.debug('new accounts after upsert'+ accountsCreated);
+    //if you have not found an email create account
+}
+
+
+Only LIST :
+
+trigger LeadTrigger on Lead (before insert, before update) {
+    
+    //Collect the email address
+    set<string> setOfEmails = new set<string>();
+    for (lead sObjLead : Trigger.new) {
+        if(sObjLead.Email !=null) {
+            setOfEmails.add(sObjLead.Email);
+        }
+    }
+    system.debug('email set'+ setOfEmails);
+    //Fetch the accounts associated with that email
+    list<account> accWithLeadEmail = [SELECT id, name, email__c
+                                      FROM account
+                                      WHERE email__c =:setOfEmails];
+    system.debug('account matched lead emails'+ accWithLeadEmail);
+    
+    
+    list<account> accountsCreated = new list<account>();
+    
+    for(Lead sObjLeadRecord : Trigger.new) {
+        account acc1 = new account();
+        if(accWithLeadEmail.size()>0){
+        for(account acc : accWithLeadEmail) {
+            if(acc.Email__c == sObjLeadRecord.Email){
+                    acc.Name = sObjLeadRecord.LastName;
+              } 
+        }
+        } else if (accWithLeadEmail.size()==0) {
+            acc1.Name = sObjLeadRecord.LastName;
+            acc1.Email__c = sObjLeadRecord.Email;
+            accountsCreated.add(acc1);
+        }
+    }
+    system.debug('new accounts before upsert'+ accountsCreated);
+    update accWithLeadEmail;
+    insert accountsCreated;
+    system.debug('new accounts after upsert'+ accountsCreated);
     //if you have not found an email create account
 }
