@@ -1,56 +1,6 @@
-MAP:
-
-trigger LeadTrigger on Lead (after insert, after update) {
-  
-    //Collect the email address
-    set<string> setOfEmails = new set<string>();
-    for (lead sObjLead : Trigger.new) {
-        if(sObjLead.Email !=null) {
-        setOfEmails.add(sObjLead.Email);
-        }
-    }
-    system.debug('email set'+ setOfEmails);
-    //Fetch the accounts associated with that email
-    list<account> accWithLeadEmail = [SELECT id, name, email__c
-                                      FROM account
-                                      WHERE email__c =:setOfEmails];
-    system.debug('account matched lead emails'+ accWithLeadEmail);
-    map<string,account> emailAccountMap = new map<string,account>();
-    if(!accWithLeadEmail.isEmpty()) {
-        for(account acc : accWithLeadEmail) {
-        emailAccountMap.put(acc.Email__c, acc);
-        } 
-    }
-     system.debug('accounts with map'+ emailAccountMap);
-    //if you have account update account last name and first name
-    list<account> accountsCreated = new list<account>();
-   
-    for(Lead sObjLeadRecord : Trigger.new) {
-        account acc = new account();
-            system.debug('sObjLeadRecord '+ sObjLeadRecord);
-            if(sObjLeadRecord.Email!=null && emailAccountMap.size()>0
-              && emailAccountMap.get(sObjLeadRecord.Email).email__c == sObjLeadRecord.Email){
-              system.debug('account map email is '+emailAccountMap.get(sObjLeadRecord.Email).email__c);
-              system.debug('lead email in for loop '+ sObjLeadRecord.Email);
-                  emailAccountMap.get(sObjLeadRecord.Email).name = sObjLeadRecord.LastName;
-                  emailAccountMap.put(sObjLeadRecord.Email,emailAccountMap.get(sObjLeadRecord.Email));
-                 
-            }else if(sObjLeadRecord.Email!=null){
-                acc.Name = sObjLeadRecord.LastName;
-                acc.Email__c = sObjLeadRecord.Email;
-                accountsCreated.add(acc);
-            }
-        }
-    
-     system.debug('new accounts before upsert'+ accountsCreated);
-     update emailAccountMap.values();
-     insert accountsCreated;
-     system.debug('new accounts after upsert'+ accountsCreated);
-    //if you have not found an email create account
-}
-
 
 LIST: 
+
 trigger LeadTigger on Lead (before insert) {
 
     set<string> emailcollection = new set<string>();
@@ -100,4 +50,59 @@ trigger LeadTigger on Lead (before insert) {
     insert accountsupdated;
     system.debug('accountsupdated after insert '+accountsupdated);
     update accountsWithSameEmail;
+}
+
+
+MAP:
+
+trigger LeadTigger on Lead (before insert) {
+
+    set<string> emailcollection = new set<string>();
+    for (lead sObjectLead : Trigger.new) {
+        if(sObjectLead.email !=null) {
+        emailcollection.add(sObjectLead.email);
+        }
+    }
+
+    list<account> accountsWithSameEmail = [SELECT id, name, email__c
+                                          FROM account
+                                          WHERE email__c IN : emailcollection
+                                          ];
+
+    map<string,account> accountmap = new map<string,account>();
+    for (account accountre : accountsWithSameEmail) {
+        accountmap.put(accountre.email__c, accountre);
+    }
+    list<account> accountsupdated = new list<account> ();
+    account acc1= new account ();
+    if(accountmap.size()>0) {
+        for (lead leadrecord : Trigger.new) {
+            if(leadrecord.email !=null && (leadrecord.email == accountmap.get(leadrecord.email).email__c)) {
+                accountmap.get(leadrecord.email).Name = leadrecord.lastname;
+                accountmap.get(leadrecord.email).email__c = leadrecord.email;
+                    break;
+            } else {
+                    acc1.Name = leadrecord.lastname;
+                    acc1.email__c = leadrecord.email;
+                    System.debug('acc1 record is '+acc1);
+                    accountsupdated.add(acc1);
+                    System.debug('accountsupdated inside for loop is '+accountsupdated);
+            }
+        }        
+    } else if(accountmap.size()== 0) {
+        for (lead leadrecord : Trigger.new) {
+            if(leadrecord.email !=null) {
+                acc1.Name = leadrecord.lastname;
+                acc1.email__c = leadrecord.email;
+                System.debug('acc1 record is '+acc1);
+                accountsupdated.add(acc1);
+                System.debug('accountsupdated inside for loop is '+accountsupdated);
+            }
+        }
+    }
+        
+    system.debug('accountsupdated before insert '+accountsupdated);
+    insert accountsupdated;
+    system.debug('accountsupdated after insert '+accountsupdated);
+    update accountmap.values();
 }
