@@ -1,0 +1,56 @@
+PARENT:
+
+<template>
+    <lightning-card title="Parent component">
+        <lightning-layout multiple-rows>
+            <lightning-layout-item size="12">
+            <ul>
+              <template for:each={parentroominfo} for:item="room">
+                <li key={room}>
+                  <c-single-room-child roominfo={room}></c-single-room-child>
+                </li>  
+              </template>
+            </ul>
+            </lightning-layout-item>
+       </lightning-layout>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class MutipleRoomParent extends LightningElement {
+
+    parentroominfo = [
+        {roomNumber : "A-101",
+        roomName : "chaitanya1",
+        studentsCount : "12"},
+        {roomNumber : "A-102",
+        roomName : "chaitanya2",
+        studentsCount : "122"},
+        {roomNumber : "A-103",
+        roomName : "chaitanya3",
+        studentsCount : "123"}
+    ]
+}
+
+
+CHILD:
+
+<template>
+    <lightning-card title={roomNumberjs}> 
+     <lightning-layout multiple-rows >
+       <lightning-layout-item size="12">
+          <lightning-tile label={roominfo.roomName} href="/path/to/somewhere" >
+                <h1>{roominfo.roomNumber}</h1>
+                <p class="slds-truncate">{roominfo.studentsCount}</p>
+            </lightning-tile>
+        </lightning-layout-item>
+       </lightning-layout>
+    </lightning-card>
+</template>
+
+import { LightningElement,api } from 'lwc';
+
+export default class SingleRoomChild extends LightningElement {
+@api roominfo;
+}
