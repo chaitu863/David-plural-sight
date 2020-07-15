@@ -1,0 +1,71 @@
+public with sharing class Accountgetclass {
+    
+    @AuraEnabled
+    public static list<account> methodName(integer noofrecords){
+        list<account> accounts;
+        try {
+            accounts = [SELECT id,name,phone FROM account WITH SECURITY_ENFORCED limit : noofrecords];
+        } catch(System.QueryException qe) {
+            System.debug(qe.getMessage());
+        }
+        return accounts;
+       
+    }
+    
+}
+
+
+<template>
+    <lightning-card title="List of Accounts" icon-name="standard:account">
+    <lightning-layout multiple-rows>
+    <lightning-layout-item size="12">
+       <lightning-input type=number label="No of records" onchange={numberchange}></lightning-input>
+    </lightning-layout-item>
+    <lightning-layout-item size="12">
+        <lightning-button label="Show Accounts" onclick={buttonhandler}></lightning-button>
+    </lightning-layout-item>
+    </lightning-layout>
+        <template if:true={accountsHavedata}>
+        <ul class="slds-m-around_medium">
+            <template for:each={accounts} for:item="acc">
+                <li key={acc.Id}>
+                    <div class="slds-p-around_medium lgc-bg">
+                        <lightning-tile label={acc.Name} href="/path/to/somewhere">
+                            <p class="slds-truncate" title={acc.Phone}>{acc.Phone}</p>
+                        </lightning-tile>
+                    </div>
+                </li>
+            </template>
+        </ul>
+    </template>
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+import getAllAccounts from '@salesforce/apex/Accountgetclass.methodName';
+
+export default class GetAccountDataFromWireApex extends LightningElement {
+
+    accounts;
+    var1;
+    numberchange(event){
+        this.var1 = event.target.value;
+    }
+
+    buttonhandler(){
+        getAllAccounts({noofrecords :this.var1}).then(Response =>{
+            this.accounts = Response;
+        }).catch(error=>{
+            console.log('error msg is',error.body.message);
+        })
+    }
+    get accountsHavedata() {
+        
+        if(this.accounts) {
+            return true;
+        } else{
+            return false;
+        }
+    }
+}
