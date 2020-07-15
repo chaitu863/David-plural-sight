@@ -1,0 +1,42 @@
+<template>
+    <lightning-card title="Create a record using edit form">
+        <lightning-layout multiple-rows>
+            <lightning-layout-item size="6">
+                <lightning-record-edit-form object-api-name="Account" onsuccess={handleSuccess}>
+                    <div class="slds-m-around_medium">
+                        <lightning-input-field field-name='Phone'></lightning-input-field>
+                        <lightning-input-field field-name='Name'></lightning-input-field>
+                        <div class="slds-m-top_medium">
+                            <lightning-button variant="brand" type="submit" name="save" label="Create Account">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </lightning-record-edit-form>
+            </lightning-layout-item>
+            <lightning-layout-item size="6" title="View record using view form">
+                <lightning-record-view-form record-id={accountId} object-api-name="Account">
+                    <div class="slds-box">
+                        <lightning-output-field field-name="Name">
+                        </lightning-output-field>
+                        <lightning-output-field field-name="Phone">
+                        </lightning-output-field>
+                        <P>{accountId}</P>
+                    </div>
+                   
+                </lightning-record-view-form>
+            </lightning-layout-item>
+        </lightning-layout>
+
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+
+export default class RecordEditForm extends LightningElement {
+
+    accountId;
+    handleSuccess(event) {
+        this.accountId = event.detail.id;
+    }
+}
