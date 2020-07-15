@@ -1,0 +1,58 @@
+PARENT:
+
+<template>
+    <ul >
+        <template for:each={roominfoparent} for:item="room">
+            <li key={room}>
+                <c-attribute-slot-commu-child roominfochild={room}>
+                    <h1 slot="slotone">
+                        this is slot one info
+                    </h1>
+                    <h1>this is not slot info</h1>
+                </c-attribute-slot-commu-child>
+            </li>
+        </template>
+    </ul>
+</template>
+
+
+import { LightningElement } from 'lwc';
+export default class AttributeSlotCommParent extends LightningElement {
+
+    roominfoparent = [
+        {roomNumber: 'B-101',
+        roomate : 'Poori',
+        countpeople : '2'},
+        {roomNumber: 'C-101',
+        roomate : 'Meghana',
+        countpeople : '3'}
+    ];
+}
+
+CHILD:
+
+<template>
+    <lightning-card title="Attribute Way">
+        <lightning-layout multiple-rows>
+         <lightning-layout-item size="12">
+            <div class="slds-p-around_medium lgc-bg">
+                <lightning-tile label={roominfochild.roomNumber} href="/path/to/somewhere">
+                    <p>{roominfochild.roomate}</p>
+                    <p>{roominfochild.countpeople}</p>
+                </lightning-tile>
+            </div>
+         </lightning-layout-item>
+         <lightning-layout-item>
+             <slot name="slotone"></slot>
+             <slot></slot>
+         </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+import { LightningElement, api } from 'lwc';
+
+export default class AttributeSlotCommuChild extends LightningElement {
+    @api roominfochild;
+}
+
