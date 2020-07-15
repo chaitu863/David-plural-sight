@@ -1,0 +1,38 @@
+<template>
+    <lightning-card title="Record Form1">
+        <div class="slds-p-around_medium" >
+            {recordId} <br/>
+        <lightning-record-form
+            record-id={recordId}
+            object-api-name="Account"
+            fields={fieldsArray}
+            mode="edit"
+            onsuccess={handleSuccess}>
+        </lightning-record-form>
+
+        </div>
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+import NAME_FIELD from '@salesforce/schema/Account.Name';
+import REVENUE_FIELD from '@salesforce/schema/Account.AnnualRevenue';
+import INDUSTRY_FIELD from '@salesforce/schema/Account.Industry';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+export default class RecordForm extends LightningElement {
+    debugger;
+    recordId;
+    fieldsArray = [NAME_FIELD, REVENUE_FIELD, INDUSTRY_FIELD];
+
+  handleSuccess(event) {
+      this.recordId = event.detail.id;
+        const evt = new ShowToastEvent({
+            title: "Account created",
+            message: "Record ID: " + this.recordId,
+            variant: "success"
+        });
+        this.dispatchEvent(evt);
+    }
+}
