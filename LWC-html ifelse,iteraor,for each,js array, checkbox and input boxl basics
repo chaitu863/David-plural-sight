@@ -1,0 +1,46 @@
+<template>
+  <lightning-card title="UI To JS and JS to UI">
+    <div class="slds-m-around_x-small">
+      <lightning-layout multiple-rows>
+        <lightning-layout-item size="12">
+          <lightning-input label="Type For Output Flow" name="firstnumbername" onchange={nameHandler}></lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+          <div> Output from type for testing : {namejsvar}</div>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+          <lightning-input type="checkbox" label="Provider credentialed" onchange={providercredentialhandler}>
+          </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+          <template if:true={procrejsvar}>
+            <p> Yes, its credentialed </p>
+          </template>
+          <template if:false={procrejsvar}>
+            <p> No, its not credentialed </p>
+          </template>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+          <ul >
+            For each results:<br />
+            <template for:each={countiriesJSArray} for:item="country">
+              <li key={country}>
+                {country}
+              </li>
+            </template>
+          </ul>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+          <ul>
+            Iterator output is :</br>
+            <template iterator:it={countiriesJSArray}>
+              <li key={it.value}>
+                {it.value}
+              </li>
+            </template>
+          </ul>
+        </lightning-layout-item>
+      </lightning-layout>
+    </div>
+  </lightning-card>
+</template>
