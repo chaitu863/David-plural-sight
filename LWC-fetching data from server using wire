@@ -1,0 +1,48 @@
+public with sharing class AccountWireClass {
+
+    @AuraEnabled(cacheable = true)
+
+    public static list<account> getaccounts(){
+        
+        return [SELECT id, name, phone FROM Account limit 10];
+    }
+   
+}
+
+
+<template>
+    <lightning-card title="List of Accounts" icon-name="standard:account">
+    <template if:true={accountsHavedata}>
+        <ul class="slds-m-around_medium">
+            <template for:each={Account.data} for:item="acc">
+                <li key={acc.Id}>
+                    <div class="slds-p-around_medium lgc-bg">
+                        <lightning-tile label={acc.Name} href="/path/to/somewhere">
+                            <p class="slds-truncate" title={acc.Phone}>{acc.Phone}</p>
+                        </lightning-tile>
+                    </div>
+                </li>
+            </template>
+        </ul>
+    </template>
+    </lightning-card>
+</template>
+
+
+import { LightningElement, wire } from 'lwc';
+import getAllAccounts from '@salesforce/apex/AccountWireClass.getaccounts';
+
+export default class GetAccountDataFromWireApex extends LightningElement {
+
+ @wire(getAllAccounts)
+ Account;
+
+    get accountsHavedata() {
+        
+        if(this.Account) {
+            return true;
+        } else{
+            return false;
+        }
+    }
+}
