@@ -1,0 +1,29 @@
+<template>
+    <lightning-card title="JS Methods">
+     
+    </lightning-card>
+</template>
+
+
+
+import { LightningElement } from 'lwc';
+
+export default class CompLifeCycle extends LightningElement {
+
+    constructor(){
+        super();
+        console.log('1.constructor');
+    }
+
+    connectedCallback(){
+        console.log('2.connectedCallback');
+    }
+
+    renderedCallback(){
+        console.log('3.renderedCallback');
+    }
+
+    disconnectedCallback(){
+        console.log('4.disconnectedCallback');
+    }
+}
