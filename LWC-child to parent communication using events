@@ -1,0 +1,58 @@
+PARENT:
+
+<template>
+<lightning-card title="Parent">
+    <lightning-layout multiple-rows>
+     <lightning-layout-item size="4">
+        <c-cp-comm-event-child >
+
+        </c-cp-comm-event-child>
+     </lightning-layout-item>
+     <lightning-layout-item size="6">
+        <lightning-formatted-text value={dispaly}></lightning-formatted-text>
+     </lightning-layout-item>
+    </lightning-layout>
+ 
+</lightning-card>
+    
+</template>
+
+JS:
+
+import { LightningElement } from 'lwc';
+
+export default class CpCommEventParent extends LightningElement {
+
+    dispaly;
+    handlerplease(event){
+        this.dispaly = event.detail;
+    }
+
+    constructor(){
+        super();
+        this.template.addEventListener('passhandler', this.handlerplease.bind(this));
+    }
+}
+
+
+CHILD:
+
+<template>
+    <lightning-card title="CHILD">
+    <div onclick={registereventone}>
+       <h1>{childmessage}</h1>
+    </div>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class CpCommEventChild extends LightningElement {
+
+    childmessage = "pass this info changed";
+
+    registereventone(event){
+        const var1 = new CustomEvent('passhandler',{detail:this.childmessage, bubbles:true});
+        this.dispatchEvent(var1);
+    }
+}
