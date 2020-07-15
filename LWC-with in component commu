@@ -1,0 +1,52 @@
+<template>
+  <lightning-card title="BMI Calculator1">
+    <div class="slds-m-around_small">
+      <lightning-layout multiple-rows>
+        <lightning-layout-item size="12">
+          <lightning-input label="Hight in meters" name="HINM" type="number" step="0.01" onchange={eventhandler}>
+          </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+          <lightning-input label="Wight in KG" name="WIKG" type="number" step="0.01" onchange={eventhandler}>
+          </lightning-input>
+        </lightning-layout-item><br/>
+        <lightning-layout-item size="12">
+          <lightning-button label="Calculate BMI" onclick={buttonhandler}></lightning-button>
+        </lightning-layout-item></br>
+        <lightning-layout-item size="12">
+          <lightning-formatted-number value={result}>
+          </lightning-formatted-number>
+        </lightning-layout-item>
+      </lightning-layout>
+    </div>
+  </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class BmiCalculator extends LightningElement {
+
+    hight;
+    wight;
+    result;
+    eventhandler(event) {
+        const namesofinput = event.target.name;
+        if(namesofinput === "HINM"){
+            this.hight = event.target.value;
+            console.log('hight is',this.hight);
+        }else if(namesofinput === "WIKG"){
+            this.wight = event.target.value;
+            console.log('wight is',this.wight);
+        }
+    }
+    buttonhandler() {
+        try{
+        this.result = (this.wight/(this.hight* this.hight));
+        console.log('result is',this.result);
+        }catch(error) {
+            this.result= undefined;
+        }
+     
+
+    }
+}
