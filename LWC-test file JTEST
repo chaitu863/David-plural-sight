@@ -1,0 +1,32 @@
+import {createElement} from 'lwc';
+import multipleRoomParent from 'c/multipleRoomParent';
+
+
+describe('c-multipleRoomParent', () => {
+
+    afterEach( () => {
+        while(document.body.firstChild) {
+            document.body.removeChild(document.body.firstChild);
+        }
+    })
+
+    it('count number of meeting room component', () =>{
+        const meetingRooms = createElement('c-multipleRoomParent', {is:multipleRoomParent} );
+
+        document.body.appendChild(meetingRooms);
+
+        const allMeetingRoomComponent = meetingRooms.shadowRoot.querySelectorAll('c-single-room-child');
+
+        expect(allMeetingRoomComponent.length).toBe(3);
+    });
+
+    it('check the title of lightning-card', () =>{
+        const meetingRooms = createElement('c-multipleRoomParent', {is:multipleRoomParent} );
+
+        document.body.appendChild(meetingRooms);
+        const lightningCardComponent = meetingRooms.shadowRoot.querySelector('lightning-card');
+
+        expect(lightningCardComponent.getAttribute("title")).toBe('Parent component');
+    });
+
+});
