@@ -1,0 +1,103 @@
+<template>
+    <lightning-card title="Navigation Example1">
+        <div class="slds-p-around_medium">
+            <lightning-button label="Open SFDCFacts" onclick={openSFDCFacts}></lightning-button>
+        </div>
+        <div class="slds-p-around_medium">
+            <lightning-button label="Account Home" onclick={openAccountHome}></lightning-button>
+        </div>
+        <div class="slds-p-around_medium">
+            <lightning-button label="Create New Contact" onclick={createNewContact}></lightning-button>
+        </div>
+        <div class="slds-p-around_medium">
+            <lightning-button label="Opportunity List View" onclick={openOppListView}></lightning-button>
+        </div>
+        <div class="slds-p-around_medium">
+            <lightning-button label="Open Case Record" onclick={openCaseRecord}></lightning-button>
+        </div>
+       <!-- <div class="slds-p-around_medium">
+            <lightning-button label="lead tab Tab" onclick={openMeetingRoom}></lightning-button>
+        </div>-->
+       <!-- <div class="slds-p-around_medium">
+            <lightning-button label="Preview A File" onclick={previewFile}></lightning-button>
+        </div>-->
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
+export default class NavigationExample extends NavigationMixin(LightningElement) {
+
+    openSFDCFacts(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__webPage',
+            attributes: {
+                url : 'https://sfdcfacts.com'
+            }
+        });
+    }
+
+    openAccountHome(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Account',
+                actionName: 'home'
+            }
+        });
+    }
+
+    createNewContact(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Contact',
+                actionName: 'new'
+            }
+        });
+    }
+
+    openOppListView(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Opportunity',
+                actionName: 'list'
+            }
+        });
+    }
+
+    openCaseRecord(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__recordPage',
+            attributes: {
+                recordId: "500B0000005MtkBIAS",
+                objectApiName: 'Case', // objectApiName is optional
+                actionName: 'view'
+            }
+        });
+    }
+
+    /*openMeetingRoom(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__navItemPage',
+            attributes: {
+                apiName: 'Campaigns'
+            }
+        });
+    }*/
+
+    /*previewFile(){
+        this[NavigationMixin.Navigate]({
+            type: 'standard__namedPage',
+            attributes: {
+                pageName: 'filePreview'
+            },
+            state : {
+                recordIds: '0696D0000004eENQAY,0696D0000004eEIQAY',
+                selectedRecordId:'0696D0000004eENQAY'
+            }
+        });
+    }*/
+
+}
