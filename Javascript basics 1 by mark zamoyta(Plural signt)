@@ -1,0 +1,173 @@
+
+// we can use either single quotes or double quotes
+welcome = "removed comma now",
+price = 665,
+discounted = false;
+console.log('string',welcome);
+console.log('integer',price);
+console.log('boolean',discounted);
+console.log('combined',welcome +' '+ price +' '+ discounted);
+
+// shotcut of addition of numbers or strings
+reven = 35;
+addreve = reven + 1;
+console.log(reven);
+console.log(addreve);
+console.log(typeof addreve);
+
+reven = reven + 35;
+console.log(reven);
+
+reven += 35;
+console.log(reven);
+
+// apend quotes for string
+accountName = 'HCSC';
+console.log(accountName);
+accNameSingle = '\"HCSC\" \'MANAGER\'';
+console.log(accNameSingle);
+
+// Adding variables to string
+city = 'chicago';
+console.log(city);
+country = 'USA';
+console.log(country);
+combinesen=`${city} is  in in ${country}`;
+console.log('result is: ',combinesen);
+
+// string methods
+message = 'HELLO WORLD';
+message = message.toLowerCase();
+console.log('messsage is: ',message);
+console.log('messsage LENGTH is: ',message.length);
+
+//number to string
+numberva = 30;
+num = numberva.toString();
+console.log('number is: ',numberva);
+console.log('num sting is : ',num);
+num = num + 2;
+console.log('num sting is : ',num);
+numberva = numberva +3;
+console.log('number is: ',numberva);
+
+//boolean 
+settrue = true;
+console.log('boolean is: ',settrue);
+changebool = !settrue;
+console.log('boolean not is: ',changebool);
+
+// null vs undefined
+
+let undefinedvar;
+console.log(undefinedvar);
+undefinedvar = 10;
+console.log(undefinedvar);
+// wipe off the values 
+undefinedvar = null;
+console.log(undefinedvar);
+
+// object and properties
+let person = {
+    firstname : 'chiatanya',
+    lastname : 'motupalli'
+}
+console.log(person);
+console.log(person.firstname);
+
+// if-else
+
+let count = 12;
+let vilage = 'BMP';
+
+if(vilage === 'BMP') {
+    console.log('viallage is equal to BMP');
+}
+if(vilage !== 'BM') {
+    console.log('viallage is not equal to BM');
+}
+if(5 <= 5){
+    console.log('5  is equal to 5');
+}
+if(6>5){
+    console.log('6 is greater than 5');
+}
+
+if(5 < 4){
+    console.log('5 is less than 4');
+}else{
+    console.log('5 is not less than 4');
+}
+
+if(true){
+    console.log('true');
+}
+
+if(1.1 + 1.2 === 2.3){
+    console.log('1.1 + 1.2 is equal to 2.3');
+}
+
+//shot cut for if-else 
+
+let fruit = 'Mango'
+
+let resultfruit = (fruit === 'Mango') ? 'yes' : 'NO';
+console.log(resultfruit);
+resultfruit = (fruit === 'Mango1') ? 'yes' : 'NO';
+console.log(resultfruit);
+
+//for loop
+
+for(i = 0; i<3; i++){
+    console.log(i);
+}
+
+//Functions 
+
+// one of declaring function
+function showMessage() {
+    console.log('show function message')
+}
+
+showMessage();
+showMessage();
+
+//seconf of declaring function
+let myfun = function() {
+    console.log('show function message')
+}
+myfun();
+
+//passing values to function
+
+function passmsg(msg, secmsg){
+    console.log(msg, secmsg);
+}
+passmsg('string is here', 'second string')
+passmsg(true, false);
+passmsg(30.45, 56.56);
+
+// Return in function
+
+function rerunsometing(num){
+  let are= num * num;
+  return are;
+}
+rerunsometing(2);
+console.log(rerunsometing(2));
+
+// stroing retutn value in variable
+function rerunsometing2(num){
+    let are= num * num;
+    return are;
+  }
+   let var1 = rerunsometing2(3);
+  console.log(var1);
+
+  // if you dont place retun statement in function then it return undefined
+
+  function rerunsometing3(num){
+    let are= num * num;
+    
+  }
+console.log(rerunsometing3(3));
