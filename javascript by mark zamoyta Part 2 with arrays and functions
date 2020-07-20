@@ -1,0 +1,108 @@
+// Objects
+// objects with properties and methods
+let obname1 = {
+    age : 34,
+    hight : 5.6,
+    company : 'HCSC',
+    showinfo : function(passAge){
+       console.log(this.age + ' and '+ passAge)
+    }
+}
+
+obname1.showinfo(43);
+
+// Now lets look at the diff in passing objects to functions and passing properties to functions
+// EX1: passing properties to functions
+
+let prop1 = 45;
+
+function change(p){
+ return ++p;
+}
+let result1 = change(prop1);
+console.log(result1);
+console.log(prop1);
+
+//EX2: Passing object to functions
+
+let samobj = {
+    role : 'Manager',
+    Location : 'India'
+}
+
+function passobj(l, p){
+ l='USA';
+ p.role='HD';
+ com = l+' and '+p.role ;
+ return com;
+}
+
+console.log(passobj(samobj.Location, samobj)); //output is : USA and HD
+console.log(samobj.Location); // output is : India
+console.log(samobj.role); // output is : HD
+
+// ARRAYS
+
+let values = ['a','b','c'];
+console.log(values);
+values.push('d'); // a b c d
+console.log(values);
+let last = values.pop(); 
+console.log(last); // d
+let first = values.shift();
+console.log('after shifting',first); // a
+console.log('after shifting the values are',values); // b c
+let addfirst = values.unshift('k');
+console.log('after unshifting',addfirst); 
+console.log('after unshifting the values are',values); // k b c
+
+
+let slicevar = ['a', 'b','c','d','e','f'];
+let afterslice = slicevar.slice(1,4); // creating new array with required sequence, it wont change original values in "slicevar"
+console.log(afterslice); // b c d
+console.log(slicevar);
+
+// now lets remove b and c from orignanl list "slicevar" by using 'splice'
+
+let removeele = slicevar.splice(1,3);
+console.log(removeele); // b c d
+console.log(slicevar); // a e f
+
+// lets add 'k' in between array by using 'splice'
+
+let addele = slicevar.splice(1,0,'k')
+console.log(addele);
+console.log(slicevar); // a k e f
+
+// Searching and looping in arrays
+
+let vegi = ['califlower', 'beans','carrot','onions'];
+
+console.log(vegi.indexOf('califlower')); // 0
+console.log(vegi.indexOf('cali')); // -1
+
+let alpha = ['a','b','c','d'];
+let set = alpha.filter(function(item){
+    return item>'b';
+}
+)
+console.log(set); // c d
+
+
+
+let ff = ['a','bb','c','ddd'];
+let setfor = ff.find(function(item){
+    return item.length>1;
+}
+)
+console.log(setfor);  // bb   (it get only one value once it found the value)
+
+const vegita = ['califlower', 'beans','carrot','onions'];
+
+vegita.forEach(function(item){
+    console.log(item); // 'califlower', 'beans','carrot','onions
+})
+
+// Function scope and global scope
+
+// parameters and properies defined with in a function can only accessed with in that function
