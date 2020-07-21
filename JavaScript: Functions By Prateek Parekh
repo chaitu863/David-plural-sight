@@ -1,0 +1,142 @@
+function method1(a,b){
+    return a+b;
+}
+let store = method1(2,3);
+console.log(store);
+
+
+let srorefunval = function hi(c,d){
+ return c-d;
+}
+
+let one = srorefunval(12,6);
+console.log(one);
+
+let meghana = function(){
+    let a = 5;
+    let b= 10;
+    c= a+b;
+    //return 12;
+    //console.log('meghi')
+}
+let keerthi = meghana();
+console.log('print', keerthi);
+
+function hari(){
+    let a = 5;
+    let b= 10;
+    c= a+b;
+    //return c;
+    //console.log('sai pallavi');
+}
+let sai = hari();
+console.log(sai);
+
+let hie =(function(){
+    let a = 5;
+    let b= 10;
+    c= a+b;
+    return c;
+})();
+console.log('hie values',hie);
+
+let fruits = ()=>{
+    let a=45;
+    let b=85;
+    c= a+b;
+    return c;
+};
+let fri = fruits();
+console.log('fri valiue is ',fri);
+
+let nameofsomebody = name=>'hello'+name;
+
+let mess= nameofsomebody('kerala4');
+console.log('mess is ',mess);
+
+//unlike regular functions, arrow functions dont have their own this value
+
+let message = {
+    name : 'john',
+    reguralfunction : function (){
+            console.log('Hi'+this.name);
+        },
+    arrowfunction : ()=>console.log('Hi'+this.name)
+    
+}
+message.reguralfunction();
+message.arrowfunction();
+
+// Function context and built in functions
+
+
+// global value
+function method2(){
+console.log(this);
+}
+method2();
+
+// function value 
+let greeting ={};
+greeting.show = function(){
+    console.log(this);
+}
+greeting.show();
+
+
+// entirely new value because of constructor
+function sai2(){
+    console.log(this);
+}
+
+let save = new sai2();
+
+// Call method
+// we use when you want to pass object as a argument 
+let person1 = {name: 'sai', hight : 5.9};
+let stval = function(a){
+    console.log( a + this.name);
+}
+stval.call(person1, 'hi');
+
+// Apply method
+
+//let array1 = ['sai','poori'];
+function fun1(a,b){
+    console.log(a,b);
+}
+fun1.apply(undefined,['sai','poori']);
+
+// bind method
+
+let country1 = {
+    name:'USA',
+    update : function(){
+     console.log('my name is'+ this.name);
+    }
+}
+let person2 = {name: 'chaitu'};
+let stoe = country1.update.bind(person2);
+console.log(stoe());
+
+// default parameter
+
+let we1 = function(a,name ='chaitanya'){
+    console.log(a+' '+name);
+}
+we1('hi');
+
+// rest parameters
+
+let sayhi = function (...name){
+    name.forEach(name => console.log(name));
+}
+sayhi('swapna','karthik','chaitu');
+
+// spread operator
+
+function display(char1,char2,char3,char4) {
+console.log(char1,char2,char3,char4);
+}
+let letters = ['a','b','c','d','e'];
+display(...letters);
