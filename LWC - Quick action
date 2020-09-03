@@ -1,0 +1,159 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" >
+  <c:jJ_SFASampleRequestApproveLWC recordId="{!v.recordId}"  onclose="{!c.closeQA}"></c:jJ_SFASampleRequestApproveLWC>
+</aura:component>
+
+
+({
+    closeQA : function(component, event, helper) {
+        $A.get("e.force:closeQuickAction").fire();
+    },
+
+})
+
+
+<template>
+    <template if:true={profilenamebool}>
+        <template if:true={orderstatusbool}>
+            <div class="slds-align_absolute-center">
+                Are you sure you want to approve this Sample Request?
+                
+            </div><br/>
+            <div class="slds-align_absolute-center">
+                <lightning-button-group>
+                    <lightning-button  label="Approve" onclick={approvehandler}></lightning-button>
+                    <lightning-button  label="Cancel" onclick={closeQuickAction}></lightning-button>
+                </lightning-button-group>
+            </div>
+        </template>
+        <template if:false={orderstatusbool}>
+            <div class="slds-align_absolute-center">
+                Order is not in Pending Approval Status!
+            </div>
+        </template>
+    </template>
+    <template if:false={profilenamebool}>
+        <div class="slds-align_absolute-center">
+            You can not perform this operation
+        </div>
+    </template>
+
+</template>
+
+import { LightningElement,api, wire} from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getRecord, getFieldValue,getFieldDisplayValue, updateRecord } from 'lightning/uiRecordApi';
+import SAMREQID from '@salesforce/schema/Inventory_Order_vod__c.Id';
+import ORDERSTATUS_FIELD from '@salesforce/schema/Inventory_Order_vod__c.Order_Status_vod__c';
+import APPROVED_FIELD from '@salesforce/schema/Inventory_Order_vod__c.Approved_vod__c';
+import USER_ID from '@salesforce/user/Id'; //this is how you will retreive the USER ID of current in user.
+import USERPROFILENAME_FIELD from '@salesforce/schema/user.Profile.Name';
+
+export default class JJ_SFASampleRequestApproveLWC extends LightningElement {
+    @api recordId;
+    userid = USER_ID;
+    orderstatus;
+    approved;
+    userprofilename;
+    profilenamebool;
+    orderstatusbool;
+  
+   
+    @wire(getRecord, {recordId: '$userid',fields: [USERPROFILENAME_FIELD]}) 
+    userdetails({ error, data }) {
+        if (data) {
+            console.log('hi i am inside user data',data);
+            this.userprofilename = getFieldValue(data, USERPROFILENAME_FIELD);
+            if((this.userprofilename==='JNJ Sampling Administrator')|| (this.userprofilename==='System Administrator')){
+               this.profilenamebool=true;
+            }else
+            this.profilenamebool=false;
+            console.log('hi profile name is',this.userprofilename);
+        } else if (error) {
+            console.log('hi i am inside user error',error);
+            this.error = error;
+            console.log('error is',this.error);
+        }
+    }
+  
+  
+    @wire(getRecord, { recordId: '$recordId', fields: [ORDERSTATUS_FIELD, APPROVED_FIELD] })
+    wiredRecord({ error, data }) {
+        if (data) {
+            console.log('hi i am inside object data',data);
+            this.orderstatus = getFieldDisplayValue(data, ORDERSTATUS_FIELD);
+            this.approved = getFieldValue(data, APPROVED_FIELD);
+            if(this.orderstatus==='Pending Approval'){
+                this.orderstatusbool=true;
+            }else
+               this.orderstatusbool=false;
+            console.log('hi orderstatus value is',this.orderstatus);
+            console.log('hi approved value is',this.approved);
+        } else if (error) {
+            console.log('hi i am error data');
+            // Handle error. Details in error.message.
+            this.error = error;
+            console.log('error is',this.error);
+        }
+    }
+    
+    approvehandler() {
+        console.log('i am inside approvehandler');
+        if((this.userprofilename==='JNJ Sampling Administrator')|| (this.userprofilename==='System Administrator')){
+            console.log('i am inside first if ');
+            
+            if(this.orderstatus==='Pending Approval'){
+                console.log('i am inside second if ');
+                this.orderstatusbool=true;
+                const fields = {};
+                fields[SAMREQID.fieldApiName] = this.recordId;
+                fields[ORDERSTATUS_FIELD.fieldApiName] = 'submitted';
+                fields[APPROVED_FIELD.fieldApiName] = true;
+                
+                const recordInput = { fields };
+                console.log('after set up field values record details are',recordInput)
+                updateRecord(recordInput )
+                .then(() => {
+                    this.dispatchEvent(
+                        new ShowToastEvent({
+                            title: 'Success',
+                            message: 'Approved the Pending for Approval Inventory Order records successfully!',
+                            variant: 'success'
+                        }),
+                    );
+                     
+                })
+                .catch(error => {
+                    this.dispatchEvent(
+                        new ShowToastEvent({
+                            title: 'Error updating record',
+                            message: error.body.message,
+                            variant: 'error'
+                        })
+                    );
+                })
+                .finally(() =>{ 
+                const closeQA = new CustomEvent('close');
+                this.dispatchEvent(closeQA);
+                 });
+                
+            }
+        }
+    }
+    
+    closeQuickAction() {
+        const closeQA = new CustomEvent('close');
+        this.dispatchEvent(closeQA);
+    }
+}
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>49.0</apiVersion>
+    <isExposed>true</isExposed>
+ <targets>
+    <target>lightning__AppPage</target>
+    <target>lightning__RecordPage</target>
+    <target>lightning__HomePage</target>
+    <target>lightning__UtilityBar</target>
+</targets>
+</LightningComponentBundle>
