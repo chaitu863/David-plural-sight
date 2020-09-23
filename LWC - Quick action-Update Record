@@ -122,12 +122,23 @@ export default class JJ_SFASampleRequestApproveLWC extends LightningElement {
                     );
                      
                 })
-                .catch(error => {
-                    this.dispatchEvent(
-                        new ShowToastEvent({
-                            title: 'Error updating record',
-                            message: error.body.message,
-                            variant: 'error'
+              .catch(error => {
+                let errormsg;
+                let jsonstring = JSON.stringify(error.body.output.errors[0].message);
+                console.log('jsonstring',jsonstring);
+                if(jsonstring.includes('Allocation quantity cannot')){
+                    console.log('inside if ' )
+                    errormsg = 'Allocation quantity cannot be less than the fulfilled quantity';
+                }else{
+                    errormsg = jsonstring;
+                }
+                
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                            title: 'Failed',
+                            message: errormsg,
+                            variant: 'error',
+                            mode : 'sticky'
                         })
                     );
                 })
