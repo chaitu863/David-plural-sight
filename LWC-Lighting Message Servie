@@ -1,0 +1,74 @@
+Folder name ; MessageChannels
+Sub meta data file name : SampleMessageChannel.messageChannel-meta
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>SampleMessageChannel</masterLabel>
+    <isExposed>true</isExposed>
+    <description>This is a sample Lightning Message Channel.</description>
+    <lightningMessageFields>
+        <fieldName>recordId</fieldName>
+        <description>This is the record Id that changed</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>recordData</fieldName>
+        <description>The current data representing the record that changed</description>
+    </lightningMessageFields>
+</LightningMessageChannel>
+
+
+Publisher:
+
+<template>
+    <lightning-button label="Publish" onclick={handleClick}></lightning-button>
+</template>
+
+import { LightningElement,wire } from 'lwc';
+import samplemessage  from '@salesforce/messageChannel/SampleMessageChannel__c';
+import { publish, MessageContext } from 'lightning/messageService';
+
+export default class Publisher extends LightningElement {
+    @wire(MessageContext)
+    messageContext;
+    handleClick() {
+        const message = {
+            recordId: '001xx000003NGSFAA4',
+            recordData: {accountName: 'Burlington Textiles Corp of America'}
+        };
+        publish(this.messageContext, samplemessage, message);
+    }
+
+}
+
+Subscriber:
+
+<template>
+    <lightning-card title="Subscriber">  
+      
+        Retrvied ID is : {recordIdretrived}
+    </lightning-card>
+</template>
+
+import { LightningElement,wire } from 'lwc';
+import { subscribe, unsubscribe, MessageContext } from 'lightning/messageService';
+import samplemessage  from '@salesforce/messageChannel/SampleMessageChannel__c';
+
+export default class Subscriber extends LightningElement {
+    @wire(MessageContext)
+    messageContext;
+    recordIdretrived;
+    connectedCallback() {
+        this.subscribeToMessageChannel();
+    }
+    subscribeToMessageChannel() {
+     
+        this.subscription = subscribe(
+            this.messageContext,
+            samplemessage, (message) => {
+                this.handleMessage(message);
+            });
+    }
+    handleMessage(message) {
+        this.recordIdretrived = message.recordId;
+    }
+}
