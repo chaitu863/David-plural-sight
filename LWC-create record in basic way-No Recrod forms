@@ -1,0 +1,82 @@
+<template>
+    <lightning-card title="Sample lot creation">
+        <lightning-layout>
+            <lightning-layout-item size="12" padding="around-small">
+                <lightning-input name = "SLN" label="Sample Lot No" onchange={inpputchangehandler}> </lightning-input>
+                <lightning-input name = "SN" label="Sample Name" onchange={inpputchangehandler}> </lightning-input>
+                <lightning-input label="Active" name= "AC" type ="checkbox" onchange={inpputchangehandler}> </lightning-input>
+                <lightning-button label="Create" onclick={createhandler}></lightning-button>
+            </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-small">
+        </lightning-layout-item>
+    </lightning-layout>
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+import { createRecord } from 'lightning/uiRecordApi';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+export default class Createrecord extends LightningElement {
+
+    lontnojs;
+    samplenamejs
+    activejs;
+
+inpputchangehandler(event){
+     if(event.target.name === "SLN"){
+        this.lontnojs = event.target.value;
+        console.log('lotnojs is ',this.lontnojs);
+     }if(event.target.name === "SN"){
+        this.samplenamejs = event.target.value;
+        console.log('sample name is ',this.samplenamejs );
+     } if(event.target.name === "AC"){
+        this.activejs = event.target.checked;
+        console.log('aactive is ',this.activejs);
+     }  
+
+    }
+
+    createhandler(){
+        const fields = {'Name' : this.lontnojs , 'Sample_vod__c' : this.samplenamejs, 'Active_vod__c' : this.activejs};
+        const recordinput = {apiname : 'Sample_Lot_vod__c',fields};
+        createRecord(recordinput)
+        .then((resonse) => {
+            console.log('record id is :',resonse.id);
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Record Created Sucessfully'+resonse.id,
+                    variant: 'success',
+                    mode : 'sticky'
+                }),
+            );
+             
+        })
+        .catch(error => {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error Creating record',
+                    message: error.body.message,
+                    variant: 'error'
+                })
+            );
+        })
+    }
+
+
+}
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>48.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightningCommunity__Page</target>
+        <target>lightningCommunity__Default</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__RecordPage</target>
+    </targets>
+</LightningComponentBundle>
