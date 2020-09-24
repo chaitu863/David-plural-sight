@@ -14,16 +14,37 @@
 </template>
 
 
-import { LightningElement } from 'lwc';
-import { createRecord } from 'lightning/uiRecordApi';
+import { LightningElement, wire } from 'lwc';
+import { createRecord,getRecord, getFieldValue,getFieldDisplayValue} from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import LOT_FIELD from '@salesforce/schema/Sample_Lot_vod__c.Name';
+import NAME_FIELD from '@salesforce/schema/Sample_Lot_vod__c.Sample_vod__c';
+import ACTIVE_FIELD from '@salesforce/schema/Sample_Lot_vod__c.Active_vod__c';
 
 export default class Createrecord extends LightningElement {
-
+    
+    recordID;
     lontnojs;
     samplenamejs
     activejs;
-
+    lotnooutput;
+    nameoutput;
+    checkboxoutput;
+    @wire(getRecord, {recordId: '$recordID',fields: [LOT_FIELD,NAME_FIELD,ACTIVE_FIELD]}) 
+    smaplelotdetails({ error, data }) {
+        if (data) {
+            console.log('hi i am inside samplelot data',data);
+            this.lotnooutput = getFieldValue(data, LOT_FIELD);
+            this.nameoutput = getFieldValue(data, NAME_FIELD);
+            this.checkboxoutput = getFieldValue(data, ACTIVE_FIELD);
+            
+        } else if (error) {
+            console.log('hi i am inside user error',error);
+            this.error = error;
+            console.log('error is',this.error);
+        }
+    }
+  
 inpputchangehandler(event){
      if(event.target.name === "SLN"){
         this.lontnojs = event.target.value;
@@ -44,6 +65,7 @@ inpputchangehandler(event){
         createRecord(recordinput)
         .then((resonse) => {
             console.log('record id is :',resonse.id);
+            this.recordID = resonse.id;
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Success',
