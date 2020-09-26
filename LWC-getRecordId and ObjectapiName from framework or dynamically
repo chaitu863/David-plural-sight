@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="Custom record type">
+        <lightning-record-form
+        record-id={recordId}
+        object-api-name={objectApiName}
+        layout-type="Full"
+        columns="2">
+</lightning-record-form>
+    </lightning-card>
+</template>
+
+
+import { LightningElement,api } from 'lwc';
+
+export default class Customrecord extends LightningElement {
+    @api recordId;
+    @api objectApiName;
+
+}
