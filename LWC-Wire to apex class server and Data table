@@ -1,0 +1,31 @@
+public with sharing class samplelotapex {
+
+    @AuraEnabled(cacheable = true)
+    public static list<Sample_Lot_vod__c> getsamplelots() {
+
+     return [SELECT Id,Name,Sample_vod__c,Active_vod__c FROM Sample_Lot_vod__c LIMIT 10];
+        
+    }
+
+}
+
+<template>
+    <lightning-card title="All Samples">
+        <lightning-datatable key-field="Id" data={samples.data} columns={columns}>
+        </lightning-datatable>
+    </lightning-card>
+</template>
+
+import { LightningElement,wire} from 'lwc';
+import GETSAMPLELOTS from '@salesforce/apex/samplelotapex.getsamplelots';
+const columns = [
+    { label: 'ID', fieldName: 'Id' },
+    { label: 'Lot #', fieldName: 'Name' },
+    { label: 'Sample Name', fieldName: 'Sample_vod__c' },
+    { label: 'Active', fieldName: 'Active_vod__c' },
+];
+export default class Samplelotlist extends LightningElement {
+    columns = columns;
+ @wire(GETSAMPLELOTS)
+ samples;
+}
