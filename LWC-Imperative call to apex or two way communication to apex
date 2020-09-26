@@ -1,0 +1,56 @@
+public with sharing class samplelotapex {
+
+    @AuraEnabled(cacheable = true)
+    public static list<Sample_Lot_vod__c> getsamplelots(integer dynamicinput) {
+
+     return [SELECT Id,Name,Sample_vod__c,Active_vod__c FROM Sample_Lot_vod__c LIMIT : dynamicinput];
+        
+    }
+
+}
+
+<template>
+    <lightning-card title="All Samples">
+        <lightning-layout multiple-rows="true">
+          <lightning-layout-item size="12">
+            <lightning-input type="number" label="Enter no of records" onchange={numberhandler}></lightning-input>
+          </lightning-layout-item>
+          <lightning-layout-item size="12">
+              <lightning-button label="Show" onclick={onclickhandler}></lightning-button>
+        </lightning-layout-item>
+        </lightning-layout>
+        <lightning-layout>
+            <lightning-datatable key-field="Id" data={samples} columns={columns}>
+            </lightning-datatable>
+        </lightning-layout>
+        
+    </lightning-card>
+</template>
+
+import { LightningElement,wire} from 'lwc';
+import GETSAMPLELOTS from '@salesforce/apex/samplelotapex.getsamplelots';
+const columns = [
+    { label: 'ID', fieldName: 'Id' },
+    { label: 'Lot #', fieldName: 'Name' },
+    { label: 'Sample Name', fieldName: 'Sample_vod__c' },
+    { label: 'Active', fieldName: 'Active_vod__c' },
+];
+export default class Samplelotlist extends LightningElement {
+    columns = columns;
+    recordsvalue;
+    samples;
+
+    numberhandler(event){
+        this.recordsvalue = event.target.value;
+    }
+    onclickhandler(){
+        GETSAMPLELOTS({dynamicinput:this.recordsvalue})
+        .then(response =>{
+            this.samples = response;
+        })
+        .catch(error =>{
+          console.log('error message',error.body.message);
+        })
+    }
+
+}
