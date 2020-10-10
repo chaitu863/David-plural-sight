@@ -1,0 +1,44 @@
+<template>
+    <lightning-card title="Account Picklist">
+        <lightning-layout multiple-rows=true>
+           
+            <lightning-layout-item padding="around-medium" size="12">
+                <template if:true={TypePicklistValues.data}>
+                    <lightning-combobox name="progress"
+                                        label="Type"
+                                        value={value}
+                                        placeholder="-Select-"
+                                        options={TypePicklistValues.data.values}
+                                        onchange={handleChange} >
+                    </lightning-combobox>
+              </template><br/>
+              you selected industry: <b>{value}</b><br/><br/>
+            </lightning-layout-item>
+           
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+import { LightningElement, track,wire } from 'lwc';
+import { getPicklistValues } from 'lightning/uiObjectInfoApi';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import ACCOUNT_OBJECT from '@salesforce/schema/Account';
+import ACCOUNT_TYPE from '@salesforce/schema/Account.Type';
+
+
+export default class HelloWorld extends LightningElement {
+
+    value;
+    
+    @wire(getObjectInfo, { objectApiName: ACCOUNT_OBJECT })
+    objectInfo;
+    @wire(getPicklistValues, {
+        recordTypeId: '$objectInfo.data.defaultRecordTypeId',
+        fieldApiName: ACCOUNT_TYPE
+    })TypePicklistValues;
+    
+    handleChange(event) {
+        this.value = event.detail.value;
+    }
+
+}
