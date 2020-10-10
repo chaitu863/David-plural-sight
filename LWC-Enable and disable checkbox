@@ -1,0 +1,59 @@
+<template>
+    <lightning-card title="Account Picklist">
+        <lightning-layout multiple-rows=true>
+           
+            <lightning-layout-item padding="around-medium" size="12">
+               <lightning-input type="checkbox" label="FIRST" name="FC" onchange={checkboxhandler}></lightning-input>
+               <template if:true={disablesecondcheckbox}>
+                <lightning-input type="checkbox" label="SECOND" name="SC" onchange={checkboxhandler} disabled></lightning-input>
+               </template>
+               <template if:false={disablesecondcheckbox}>
+                <lightning-input type="checkbox" label="SECOND" name="SC" onchange={checkboxhandler} ></lightning-input>
+               </template>
+               <lightning-input type="checkbox" label="THIRD" name="TC" onchange={checkboxhandler}></lightning-input>
+            </lightning-layout-item>
+          
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+import { LightningElement, track,wire } from 'lwc';
+
+
+export default class HelloWorld extends LightningElement {
+    firstcheckbox;
+    secondcheckbox;
+    thirdcheckbox;
+    disablefirstcheckbox;
+    disablesecondcheckbox;
+    disablethirdcheckbox;
+    checkboxhandler(event){
+        if(event.target.name ==='FC'){
+            this.firstcheckbox = event.target.checked;
+            console.log('first checkbox result is',this.firstcheckbox);
+        }
+        if(event.target.name ==='SC'){
+            this.secondcheckbox = event.target.checked;
+            console.log('first checkbox result is',this.secondcheckbox);
+        }
+        if(event.target.name ==='TC'){
+            this.thirdcheckbox = event.target.checked;
+            console.log('first checkbox result is',this.thirdcheckbox);
+        }
+
+        if(this.secondcheckbox === true || this.thirdcheckbox=== true ) {
+            this.disablefirstcheckbox = true;
+        }else
+        this.disablefirstcheckbox = false;
+
+        if(this.firstcheckbox === true || this.thirdcheckbox=== true ) {
+            this.disablesecondcheckbox = true;
+        }else
+           this.disablesecondcheckbox = false;
+        if(this.firstcheckbox === true || this.secondcheckbox=== true ) {
+            this.disablethirdcheckbox = true;
+        }else
+        this.disablethirdcheckbox = false;
+
+    }
+}
