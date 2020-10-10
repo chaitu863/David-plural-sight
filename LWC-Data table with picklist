@@ -1,0 +1,73 @@
+public with sharing class chaituapexclass {
+   
+    @AuraEnabled(cacheable=true)
+    public static list<account> getaccounts(string accounttype){
+        
+        return [SELECT Id, name, type FROM Account WHERE type =:accounttype ];
+    }
+}
+
+
+<template>
+    <lightning-card title="Account Picklist">
+        <lightning-layout multiple-rows=true>
+           
+            <lightning-layout-item padding="around-medium" size="12">
+                <template if:true={TypePicklistValues.data}>
+                    <lightning-combobox name="progress"
+                                        label="Type"
+                                        value={value}
+                                        placeholder="-Select-"
+                                        options={TypePicklistValues.data.values}
+                                        onchange={handleChange} >
+                    </lightning-combobox>
+              </template><br/>
+              you selected industry: <b>{value}</b><br/><br/>
+            </lightning-layout-item>
+            <lightning-layout-item>
+                <lightning-datatable key-field="Id" data={accounts} columns={columns}>
+                </lightning-datatable>
+            </lightning-layout-item>
+           
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+
+import { LightningElement, track,wire } from 'lwc';
+import { getPicklistValues } from 'lightning/uiObjectInfoApi';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import GETSACCOUNTS from '@salesforce/apex/chaituapexclass.getaccounts';
+import ACCOUNT_OBJECT from '@salesforce/schema/Account';
+import ACCOUNT_TYPE from '@salesforce/schema/Account.Type';
+const columns = [
+    { label: 'ID', fieldName: 'Id' },
+    { label: 'Account Name', fieldName: 'Name' },
+    { label: 'Type', fieldName: 'Type' },
+];
+
+export default class HelloWorld extends LightningElement {
+
+    value;
+    accounts;
+    columns = columns;
+    @wire(getObjectInfo, { objectApiName: ACCOUNT_OBJECT })
+    objectInfo;
+    @wire(getPicklistValues, {
+        recordTypeId: '$objectInfo.data.defaultRecordTypeId',
+        fieldApiName: ACCOUNT_TYPE
+    })TypePicklistValues;
+    
+    handleChange(event) {
+        this.value = event.detail.value;
+        GETSACCOUNTS({accounttype : this.value})
+        .then(response =>{
+            this.accounts = response;
+        })
+        .catch(error =>{
+          console.log('error message',error.body.message);
+        })
+    }
+
+}
+
