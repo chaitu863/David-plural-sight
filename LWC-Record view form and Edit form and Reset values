@@ -38,5 +38,14 @@ export default class RecordEditForm extends LightningElement {
     accountId;
     handleSuccess(event) {
         this.accountId = event.detail.id;
+        // the below code is to reset the values back to null
+                const inputFields = this.template.querySelectorAll(
+                'lightning-input-field'
+            );
+            if (inputFields) {
+                inputFields.forEach(field => {
+                    field.reset();
+                });
+            }
     }
 }
