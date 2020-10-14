@@ -1,0 +1,113 @@
+public class JJ_HomePageComponentController {
+    
+    public static String getProfile(){
+        try {
+            return [Select Id,Name from Profile where Id=: UserInfo.getProfileId()].Name;
+        } Catch(Exception ex){
+            throw new AuraHandledException('User details are not available');
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<JJ_HomePageComponent__c> getImpLinks(){
+        try {
+            return [SELECT Id,JJ_Link_Name__c, JJ_Link_URL__c, JJ_LinkType__c, JJ_Profiles__c 
+                    FROM JJ_HomePageComponent__c 
+                    WHERE JJ_Profiles__c INCLUDES (:getProfile())
+                    AND JJ_LinkType__c = 'Important Links'];
+        } Catch(Exception ex){
+            throw new AuraHandledException('Important Links are not found');
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<JJ_HomePageComponent__c> getHelpLinks(){
+        try {
+            return [SELECT Id,JJ_Link_Name__c, JJ_Link_URL__c, JJ_LinkType__c, JJ_Profiles__c 
+                    FROM JJ_HomePageComponent__c 
+                    WHERE JJ_Profiles__c INCLUDES (:getProfile())
+                    AND JJ_LinkType__c = 'Helpful Links'];
+        } Catch(Exception ex){
+            throw new AuraHandledException('Important Links are not found');
+        }
+    }
+}
+
+
+<template>
+    <div class="slds-grid slds-wrap">
+        <template if:true={hideImpLinks}>
+            <div class="slds-col slds-size_1-of-2 slds-var-p-right_small">
+                <span>
+                    <lightning-card title="Important Links" icon-name="action:info">
+                        <template for:each={impLinks} for:item="link">
+                            <p class="slds-var-p-left_xx-large slds-var-p-bottom_large" key={link.Id}>
+                                <a target='_blank' href={link.JJ_Link_URL__c}> {link.JJ_Link_Name__c}</a>
+                            </p>
+                        </template>
+                    </lightning-card>
+                </span>
+            </div>
+        </template>
+        <template if:true={hideHelpLinks}>
+            <div class="slds-col slds-size_1-of-2 ">
+                <span>
+                    <lightning-card title="Helpful Links" icon-name="action:info">
+                        <template for:each={helpLinks} for:item="link">
+                            <p class="slds-var-p-left_xx-large slds-var-p-bottom_large" key={link.Id}>
+                                <a target='_blank' href={link.JJ_Link_URL__c}> {link.JJ_Link_Name__c}</a> 
+                            </p>
+                        </template>
+                    </lightning-card>
+                </span>
+            </div>
+        </template>
+    </div>
+</template>
+
+import { LightningElement, track } from 'lwc';
+import getImpLinks from '@salesforce/apex/JJ_HomePageComponentController.getImpLinks';
+import getHelpLinks from '@salesforce/apex/JJ_HomePageComponentController.getHelpLinks';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+export default class HomePageLinks extends LightningElement {
+
+    @track impLinks;
+    @track helpLinks;
+
+    @track hideHelpLinks = false;
+    @track hideImpLinks = false;
+
+    connectedCallback(){
+        getImpLinks()
+        .then(result => {
+            this.impLinks = result;
+                if(result != ""){
+                this.hideImpLinks = true;
+            }
+        })
+        .catch(error => {
+            this.showToast('ERROR', error.body.message, 'error');
+        });
+
+        getHelpLinks()
+        .then(result => {
+            this.helpLinks = result;
+                if(result != ""){
+                this.hideHelpLinks = true;
+            }
+        })
+        .catch(error => {
+            this.showToast('ERROR', error.body.message, 'error');
+        });
+
+    }
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(evt);
+    }
+}
