@@ -1,0 +1,19 @@
+<template>
+    <lightning-card>
+        <div class="slds-var-p-left_medium">
+            <lightning-layout-item>
+                <p><b>Production Release Version:</b></p>
+                <p>{label.PRODRELVER}</p>
+            </lightning-layout-item>
+        </div>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+import PRODRELVER from '@salesforce/label/c.JJ_Production_Release_Version';
+export default class Jj_ProductionReleaseVersionLWC extends LightningElement {
+
+    label = {
+        PRODRELVER,
+    };
+}
