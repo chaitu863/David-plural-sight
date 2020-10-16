@@ -1,0 +1,29 @@
+<template>
+    <lightning-card>
+        <div class="slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-m-bottom_medium">
+            <div class="slds-col slds-p-right_medium slds-m-bottom_medium">
+              <span>
+             <lightning-combobox placeholder="All Types" options={cartypesarry} value={selectedId}
+                    onchange={comboOnchange}></lightning-combobox>
+              </span>
+            </div>
+            <div class="slds-col slds-m-top_xxx-small">
+              <span>
+                <lightning-button label="New" onclick={newButtonHandler}></lightning-button>
+              </span>
+            </div>
+        </div>
+    </lightning-card>
+</template>
+
+
+<template>
+    <div class="slds-m-bottom_medium">
+        <lightning-card title="Search Car Type">
+            <c-car-search-form oncartypeclicked={parentretrivehandler}></c-car-search-form>
+           </lightning-card>
+    </div>
+    <lightning-card>
+        <c-car-search-result childretivedid={parentselectedid}></c-car-search-result>
+    </lightning-card>
+</template>
