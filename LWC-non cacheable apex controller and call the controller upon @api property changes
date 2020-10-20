@@ -1,0 +1,118 @@
+
+public class viewExperienceController {
+
+
+    @AuraEnabled
+    public static List<Car_Experience__c> carexperiencemethod(string apexcarid){
+        List<Car_Experience__c> carviewexplist= new List<Car_Experience__c>();
+        try{
+            carviewexplist = [SELECT Id,Name,Car__c,Experience__c FROM Car_Experience__c
+            WHERE Car__c=:apexcarid];
+        }catch(Exception e){
+            System.debug(Logginglevel.ERROR, e.getMessage());
+            throw new AuraHandledException(e.getMessage());
+        }
+        return carviewexplist;
+    }  
+   
+}
+
+
+JS: NAME: carviewexperince
+
+import {
+    LightningElement,
+    api,
+    wire
+} from 'lwc';
+import {
+    refreshApex
+} from '@salesforce/apex';
+import VIEWCONTMETHOD from '@salesforce/apex/viewExperienceController.carexperiencemethod';
+export default class CarViewExperince extends LightningElement {
+    
+    privatecarid;
+    prevcarid;
+    viewcarexpjs;
+    showbool;
+    viewcarexprefesh;
+    jsonforlength;
+
+
+    @api 
+    get carid(){
+        return this.privatecarid;
+    }
+
+    set carid(value){
+        this.privatecarid=value;
+        this.getviewcontactmethod();
+    }
+
+    connectedCallback(){
+        this.getviewcontactmethod();
+    }
+
+    @api 
+    getviewcontactmethod(){
+        VIEWCONTMETHOD( {
+            apexcarid: this.privatecarid
+        }).then(respone=>{
+            //this.viewcarexprefesh=respone;
+           // this.refreshmethod();
+            this.viewcarexpjs = respone;
+            console.log('viewcarexpjs full data', JSON.stringify(this.viewcarexpjs));
+            this.jsonforlength = this.viewcarexpjs.filter(val => {
+                return val.Id;
+            }).length;
+            console.log('count is', this.jsonforlength);
+        }).catch(error=>{
+            this.showToast('ERROR', error.body.message, 'error');
+        })
+    }
+    /*@wire(VIEWCONTMETHOD, {
+        apexcarid: '$carid'
+    })
+    viewcarexpdetails(value) {
+        this.refreshmethod();
+        // Hold on to the provisioned value so we can refresh it later.
+        this.viewcarexprefesh = value; // track the provisioned value
+        const {
+            data,
+            error
+        } = value; // destructure the provisioned value
+        if (data) {
+            this.viewcarexpjs = data;
+            console.log('viewcarexpjs full data', JSON.stringify(this.viewcarexpjs));
+            this.jsonforlength = this.viewcarexpjs.filter(val => {
+                return val.Id;
+            }).length;
+            console.log('count is', this.jsonforlength);
+        } else if (error) {
+            this.showToast('ERROR', error.body.message, 'error');
+        }
+    }*/
+
+    /*refreshmethod() {
+        console.log('inside refresh apex method');
+        return refreshApex(this.viewcarexprefesh);
+    }*/
+
+
+
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(evt);
+    }
+
+    get caridcame() {
+        if (this.jsonforlength > 0) {
+            return true;
+        } else
+            return false;
+    }
+}
