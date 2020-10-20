@@ -407,7 +407,8 @@ export default class Carinfo extends LightningElement {
 </template>
 
 Name: carExperience
-this compoent create a child records(car Experience) for car parent record which we passed to this component from its parent.
+this compoent created a child records(car Experience) for car parent record which we passed to this component from its parent.
+for this we used create record LDS concept.
 
 import { LightningElement,wire,api } from 'lwc';
 import { createRecord, getRecord, getFieldValue,getFieldDisplayValue, updateRecord } from 'lightning/uiRecordApi';
@@ -445,7 +446,140 @@ export default class CarExperience extends LightningElement {
               console.log('error message is',error.body.message);
           })
     }
-
-  
-    
 }
+
+
+<template>
+    <lightning-card>
+        <lightning-layout multiple-rows>
+            <lightning-layout-item size="12" padding="around-small">
+                <lightning-input label="Title" name="TITLE" onchange={inputchangehandler}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                <lightning-input-rich-text label="Description" name="RICHTEXT" onchage={inputchangehandler}>
+                </lightning-input-rich-text>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                <lightning-button label="Add Experience" variant="brand" name="Exbutton" onclick={addexbuttonhandler}>
+                </lightning-button>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                <p>Record ID is: {recordId}</p>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+Name: carViewExprience
+
+here i am getting the car id from cardetail parent component into JS and passing it into apex controller to get all the child records(car experince) of car parent record.
+here i used refresh apex concept and calculating the no of returned records from apex.
+
+import {
+    LightningElement,
+    api,
+    wire
+} from 'lwc';
+import {
+    refreshApex
+} from '@salesforce/apex';
+import VIEWCONTMETHOD from '@salesforce/apex/viewExperienceController.carexperiencemethod';
+export default class CarViewExperince extends LightningElement {
+    @api carid;
+    prevcarid;
+    viewcarexpjs;
+    showbool;
+    viewcarexprefesh;
+    jsonforlength;
+
+    @wire(VIEWCONTMETHOD, {
+        apexcarid: '$carid'
+    })
+    viewcarexpdetails(value) {
+        this.refreshmethod();
+        // Hold on to the provisioned value so we can refresh it later.
+        this.viewcarexprefesh = value; // track the provisioned value
+        const {
+            data,
+            error
+        } = value; // destructure the provisioned value
+        if (data) {
+            this.viewcarexpjs = data;
+            console.log('viewcarexpjs full data', JSON.stringify(this.viewcarexpjs));
+            this.jsonforlength = this.viewcarexpjs.filter(val => {
+                return val.Id;
+            }).length;
+            console.log('count is', this.jsonforlength);
+        } else if (error) {
+            this.showToast('ERROR', error.body.message, 'error');
+        }
+    }
+
+    refreshmethod() {
+        refreshApex(this.viewcarexprefesh);
+    }
+
+
+
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(evt);
+    }
+
+    get caridcame() {
+        if (this.jsonforlength > 0) {
+            return true;
+        } else
+            return false;
+    }
+}
+
+<template>
+    <lightning-card>
+        <lightning-layout multiple-rows>
+            <template if:true={caridcame}>
+                <template for:each={viewcarexpjs} for:item="details">
+                    <lightning-layout-item key={details.Id} class="slds-var-m-around_medium slds-size_4-of-12">
+                        <lightning-record-view-form record-id={details.Id} object-api-name="Car_Experience__c">
+                            <div class="slds-box">
+                                <lightning-output-field field-name="Name">
+                                </lightning-output-field>
+                                <lightning-output-field field-name="Experience__c">
+                                </lightning-output-field>
+                                <P>{details.Id}</P>
+                            </div>
+                        </lightning-record-view-form>
+                    </lightning-layout-item>
+                </template>
+            </template>
+            <template if:false={caridcame}>
+                <p>No Records Found</p>
+            </template>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+
+Name: viewExperienceController
+
+public class viewExperienceController {
+   @AuraEnabled(cacheable=true)
+    public static List<Car_Experience__c> carexperiencemethod(string apexcarid){
+        List<Car_Experience__c> carviewexplist= new List<Car_Experience__c>();
+        try{
+            carviewexplist = [SELECT Id,Name,Car__c,Experience__c FROM Car_Experience__c
+            WHERE Car__c=:apexcarid];
+        }catch(Exception e){
+            System.debug(Logginglevel.ERROR, e.getMessage());
+            throw new AuraHandledException(e.getMessage());
+        }
+        return carviewexplist;
+    }  
+}
+
+
+
