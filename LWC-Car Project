@@ -1,0 +1,451 @@
+Below one is the first apex class controller where i feteched all the records from server of the car type object
+
+Name : carSearchFormController
+public class carSearchFormController {
+   
+    @AuraEnabled(cacheable=true)
+    public static List<Car_Type__c> getCarTypes(){
+        return [SELECT Id, Name FROM Car_Type__c];
+    }
+}
+
+Now i am getting all the records into js method.
+and assigning ID,NAME of the recod to Label and value. I stored them in an array of objects. so that i can use it as picklist on UI.
+and i am capturing the ID of the record whatever you are selecting on UI back into JS. Now i want to send this selected id to its parent component
+so i used events to do. I dispatched an event in the same method. so parent component can make utilize it.
+
+Name : carSearchForm
+import { LightningElement, wire } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import GETCARTYPES from '@salesforce/apex/carSearchFormController.getCarTypes'
+export default class CarSearchForm extends NavigationMixin(LightningElement) {
+
+    cartypesarry;
+    selectedId;
+    newButtonHandler(){
+        this[NavigationMixin.Navigate]({
+            type : 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Car_Type__c',
+                actionName: 'new'
+            }
+        });
+    }
+
+    comboOnchange(event){
+        console.log('event id is',event.detail.value);
+        this.selectedId=event.detail.value;
+        console.log('selected id is',this.selectedId);
+        const disevecartype = new CustomEvent('cartypeclicked',{detail:this.selectedId})
+        console.log('diseve before value',disevecartype);
+        this.dispatchEvent(disevecartype);
+        console.log('diseve after value',disevecartype);
+    }
+
+    @wire(GETCARTYPES)cartypes ({data,error}){
+        if(data){
+            this.cartypesarry=[{value:'',label:'All Types'}];
+            data.forEach(response=>{
+                console.log('response is',response);
+                const cartypesingle={}
+                cartypesingle.value=response.Id;
+                cartypesingle.label=response.Name;
+                this.cartypesarry.push(cartypesingle);
+                console.log('car type array is',this.cartypesarry);
+            })
+        }else if(error){
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'ERROR',
+                    message: error.body.message,
+                    variant: 'error'
+                }),
+            );
+        }
+    }
+
+}
+
+
+<template>
+    <lightning-card>
+        <div class="slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-m-bottom_medium">
+            <div class="slds-col slds-p-right_medium slds-m-bottom_medium">
+              <span>
+             <lightning-combobox placeholder="All Types" options={cartypesarry} value={selectedId}
+                    onchange={comboOnchange}></lightning-combobox>
+              </span>
+            </div>
+            <div class="slds-col slds-m-top_xxx-small">
+              <span>
+                <lightning-button label="New" onclick={newButtonHandler}></lightning-button>
+              </span>
+            </div>
+        </div>
+    </lightning-card>
+</template>
+
+
+below one the parent component for above component(carsearchform). here we are receving the Id whatever child component dispached in html file.
+Name: carSearch
+
+<template>
+    <div class="slds-m-bottom_medium">
+        <lightning-card title="Search Car Type">
+            <c-car-search-form oncartypeclicked={parentretrivehandler}></c-car-search-form>
+           </lightning-card>
+    </div>
+    <lightning-card>
+        <c-car-search-result childretivedid={parentselectedid}></c-car-search-result>
+    </lightning-card>
+</template>
+
+Once after i received the selected id, I passed it to JS and stored it one property(parentselectedid) and again i send it to its another child component(carSearchResult)
+by using arrtibure communication(parent to child communication).
+
+import { LightningElement } from 'lwc';
+
+export default class CarSearch extends LightningElement {
+    
+    constructor(){
+        super();
+        console.log('parent is calling or not');
+    }
+    parentselectedid;
+    parentretrivehandler(event){
+        console.log('inside parent maethod');
+        this.parentselectedid = event.detail;
+        console.log('parent selected id is',this.parentselectedid);
+    }
+}
+
+
+Now this child componet is receiving the ID in JS by @api decorator. and after we are sending this ID to apex controller(carSearchResultController)
+to get all the child records of that corresponding parent Id.
+
+Name : carSearchResult
+
+import { LightningElement,wire,api } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import GETCARDETAILS from '@salesforce/apex/carSearchResultController.getcardetails';
+export default class CarSearchResult extends LightningElement {
+    
+    @api childretivedid;
+    showbool;
+    cardetailsjs;
+    storeidinparent;
+    @wire(GETCARDETAILS,{idofcartype:'$childretivedid'})
+    childdata({ data, error}){
+     if(data){
+        this.showbool=true;
+        console.log('apex data is',data);
+        this.cardetailsjs = data;
+      }else if(error){
+        console.log('error is coming',error);
+        console.log('error stringify',JSON.stringify(error));
+        this.showbool=false;
+        this.showToast('ERROR', error.body.message, 'error');
+      }
+    }
+
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(evt);
+    }
+    idretrivedhandler(event){
+      this.storeidinparent = event.detail;
+    }
+}
+
+Name : carSearchResultController
+
+public class carSearchResultController {
+    
+    
+    @AuraEnabled(cacheable=true)
+    public static list<Car__c> getcardetails(string idofcartype){
+        System.debug('apex first retrived id is'+idofcartype);
+        if(string.isEmpty(idofcartype)){
+
+           try{
+            return [SELECT Id,Name,Car_Type__c,Geolocation__latitude__s,
+            Geolocation__longitude__s,Picture__c,Available_For_Rent__c
+            FROM Car__c 
+            WHERE Available_For_Rent__c=true
+            ];
+           }catch(Exception e) {
+            throw new AuraHandledException('catch exception on id null'+e);
+           }
+           
+        } else{
+
+            try{
+                return [SELECT Id,Name,Car_Type__c,Geolocation__latitude__s,
+                Geolocation__longitude__s,Picture__c,Available_For_Rent__c
+                FROM Car__c 
+                WHERE Available_For_Rent__c=true
+                AND Car_Type__c =:idofcartype
+                ];
+            }catch(Exception e) {
+                throw new AuraHandledException('catch exception on ID is there'+e);
+            }
+           
+        }
+      
+       
+    }
+}
+
+We passed the complete all records data from JS to html and loop through each record and used another child component to it(cartile)
+
+<template>
+    <lightning-card title="Results">
+        <lightning-layout multiple-rows>
+            <template if:true={showbool}>
+                <template for:each={cardetailsjs} for:item="details">
+                    <lightning-layout-item key={details.Id} class="slds-var-m-around_medium slds-size_4-of-12">
+                        <c-cartile singlecar={details} oncarlidfromchildtopatent={idretrivedhandler} carselectedretrived={storeidinparent}></c-cartile>
+                    </lightning-layout-item>
+                </template>
+            </template>
+            <template if:false={showbool}>
+                {error}
+            </template>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+So we get the each of single car complete data from its parent above and used @api decorator inside of it to get that data from parent.
+and one more thing to notice here is we set up css styles from JS itself once upon car selected.
+And we select any one car, we send that car id to another independent component(carDetails) by using message service concept.
+
+Name : cartile
+import { LightningElement,api,wire } from 'lwc';
+import samplemessage  from '@salesforce/messageChannel/Record_Selected__c';
+import { publish, MessageContext } from 'lightning/messageService';
+
+
+export default class Cartile extends LightningElement {
+    
+   
+    @api singlecar;
+    carselected;
+    @wire(MessageContext)
+    messageContext;
+    @api carselectedretrived;
+    tileclickhandler(event) {
+        event.preventDefault();
+        console.log('inside tileclickhandler');
+        console.log('single car id',this.singlecar.Id);
+       this.carselected = this.singlecar.Id;
+       const disevename = new CustomEvent('carlidfromchildtopatent',{detail:this.carselected})
+        this.dispatchEvent(disevename);
+        const message = {
+            messageText: this.carselected,
+        };
+       console.log('message is',message);
+        publish(this.messageContext, samplemessage, message);
+    }
+   get isselectedcss(){
+        console.log('inside isselectedcss',this.singlecar.Id);
+        console.log('this.carselected is',this.carselected);
+        if(this.carselectedretrived === this.singlecar.Id){
+            console.log('if condition true');
+            return "title selected";
+        }else
+        return "title"
+    }
+    
+}
+
+<template>
+    <div onclick={tileclickhandler}>
+        <div class={isselectedcss}>
+            <img src={singlecar.Picture__c} class="car slds-align_absolute-center">
+            <div class="title slds-align_absolute-center">
+               <p>{singlecar.Name}</p>
+            </div>
+        </div>
+    
+    </div>
+</template>
+
+CSS file
+
+.title {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+img.car {
+    height:120px;
+    max-width: initial;
+    pointer-events: none;
+}
+
+.selected {
+    border-width: medium;
+    border-radius: 4px;
+    border-color: royalblue;
+    border-style: solid;
+}
+
+through message service concept we are getting the data into this component and stored in one property. after that we used 'getRecord' LDS concept to load full record data.
+this component is parent for 3 other components.
+Name: carDetails
+
+import { LightningElement,wire} from 'lwc';
+import { subscribe, unsubscribe, MessageContext } from 'lightning/messageService';
+import samplemessage  from '@salesforce/messageChannel/Record_Selected__c';
+import AVAILABLE_RENT from '@salesforce/schema/Car__c.Available_For_Rent__c';
+import NAME from '@salesforce/schema/Car__c.Name';
+import CARTYPE from '@salesforce/schema/Car__c.Car_Type__c';
+import MILEAGE from '@salesforce/schema/Car__c.Mileage__c';
+import PICTURE from '@salesforce/schema/Car__c.Picture__c';
+import PERDAYRENT from '@salesforce/schema/Car__c.Per_Day_Rent__c';
+import CARID from '@salesforce/schema/Car__c.Id';
+import CONTACTNAME from '@salesforce/schema/Car__c.Contact__r.Name';
+import CONTACTEMAIL from '@salesforce/schema/Car__c.Contact__r.Email';
+import { getRecord, getFieldValue,getFieldDisplayValue, updateRecord } from 'lightning/uiRecordApi';
+const fields=[
+    AVAILABLE_RENT,NAME,CARTYPE,MILEAGE,PICTURE,PERDAYRENT,CARID,CONTACTNAME,CONTACTEMAIL
+];
+
+export default class CarDetail extends LightningElement {
+    @wire(MessageContext)
+    messageContext;
+    selectedtabvalue;
+    recordIdretrived;
+    carfound;
+    car;
+    @wire(getRecord, {recordId: '$recordIdretrived',fields}) 
+    cardetails ({ data,error }){
+        if(data){
+            this.carfound = true;
+            this.car=data;
+            console.log('data is ',data);
+            console.log('string data is',JSON.stringify(data));
+        }else if (error){
+            console.log('error is',error.body.message);
+        }
+    }
+
+    tabactivehandler(event){
+       this.selectedtabvalue= event.target.value;
+    }
+    connectedCallback() {
+        console.log('connected call back mrthod');
+        this.subscribeToMessageChannel();
+    }
+    subscribeToMessageChannel() {
+       console.log('inside subscribeToMessageChannel');
+        this.subscription = subscribe(
+            this.messageContext,
+            samplemessage, (message) => {
+                console.log('inside handler i am ',message.messageText);
+                this.handleMessage(message);
+            });
+    }
+    handleMessage(message) {
+        this.recordIdretrived = message.messageText;
+        console.log('subscriber message',this.recordIdretrived);
+    }
+}
+
+
+<template>
+    <lightning-card>
+        <template if:true={carfound}>
+            <lightning-layout-item size="12">
+                <lightning-tabset active-tab-value={selectedtabvalue}>
+                    <lightning-tab label="Details" value="detailvalue" onactive={tabactivehandler}>
+                       <c-carinfo car={car} recordidis={recordIdretrived}></c-carinfo>
+                    </lightning-tab>
+                    
+                    <lightning-tab label="Feedback" value="feedbackvalue" onactive={tabactivehandler}>
+                       
+                        <c-car-experience carid={recordIdretrived} ></c-car-experience>
+                    </lightning-tab>
+                    <lightning-tab label="View Feedbacks" value="viewfeedbackvalue" onactive={tabactivehandler}>
+                        <c-car-view-experince carid={recordIdretrived}></c-car-view-experince>
+                    </lightning-tab>
+                </lightning-tabset>
+            </lightning-layout-item>
+        </template>
+       
+    </lightning-card>
+</template>
+
+
+this compnent is child so it used @api and get the complete single car data to show on its UI from its parent(carDetails)
+here you can see how to get the specific field value when used LDS.
+Name: carinfo
+
+import { LightningElement,api } from 'lwc';
+
+export default class Carinfo extends LightningElement {
+
+    @api car;
+    @api recordidis;
+  
+    get carname(){
+        console.log('car name is',JSON.stringify(this.car));
+        console.log('car name is',JSON.stringify(this.car.fields.Name.value));
+        return this.car.fields.Name.value;
+    }
+}
+
+<template>
+    
+{recordidis}
+   this is from carinfo : {carname}
+</template>
+
+Name: carExperience
+this compoent create a child records(car Experience) for car parent record which we passed to this component from its parent.
+
+import { LightningElement,wire,api } from 'lwc';
+import { createRecord, getRecord, getFieldValue,getFieldDisplayValue, updateRecord } from 'lightning/uiRecordApi';
+import CAR_ID from '@salesforce/schema/Car_Experience__c.Car__c';
+import CAREXPERIENCE from '@salesforce/schema/Car_Experience__c.Experience__c';
+import TITLE from '@salesforce/schema/Car_Experience__c.Name';
+
+export default class CarExperience extends LightningElement {
+
+    @api carid;
+    titlejs;
+    richtextjs;
+    recordId;
+ 
+    inputchangehandler(event){
+        if(event.target.name==="TITLE"){
+            this.titlejs = event.target.value;
+        }
+        if(event.target.name==="RICHTEXT"){
+            this.richtextjs = event.target.value;
+        }
+    }
+
+    addexbuttonhandler(){
+        const fields = {[CAR_ID.fieldApiName]:this.carid,[CAREXPERIENCE.fieldApiName]:this.richtextjs,[TITLE.fieldApiName]:this.titlejs};
+        const recordInput = {apiname :'Car_Experience__c',fields};
+      createRecord(recordInput)
+      .then(
+          response =>{
+              console.log('response is',response);
+              console.log('response in JSON',JSON.stringify(response));
+              console.log('record id is',response.id);
+              this.recordId = response.id;
+          }).catch(error=>{
+              console.log('error message is',error.body.message);
+          })
+    }
+
+  
+    
+}
