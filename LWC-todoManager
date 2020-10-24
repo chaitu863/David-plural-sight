@@ -1,0 +1,122 @@
+<template>
+    <lightning-card>
+        <lightning-layout multiple-rows class="slds-align_absolute-center slds-text-align_center">
+            <lightning-layout-item siz="12">
+                <div class="time">{time}</div>
+            </lightning-layout-item>
+            <lightning-layout-item size="12">
+                <div class="greeting">{greeting}</div>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="12" class="slds-text-heading_small slds-p-around_x-small">
+                <p>What is in your mind?</p>
+            </lightning-layout-item>
+            <div class="slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-m-bottom_medium">
+                <div class="slds-col slds-p-right_medium slds-m-bottom_medium">
+                    <span>
+                        <lightning-input type="text" placeholder="Tell me whats next" onchange={inputhandler}></lightning-input>
+                    </span>
+                </div>
+                <div class="slds-col slds-m-top_xxx-small">
+                    <span>
+                        <lightning-button icon-name="utility:add" onclick={addhandler}></lightning-button>
+                    </span>
+                </div>
+            </div>
+
+            <lightning-layout-item size="12">
+                <p>UP COMING</p>
+             <c-todo-dispalyitems upcom = {upcomingarray}></c-todo-dispalyitems>
+                <p>COMPLETED</p>
+                <c-todo-dispalyitems upcom = {completedarray}></c-todo-dispalyitems>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+
+import { LightningElement,track } from 'lwc';
+
+export default class ToDoManager extends LightningElement {
+
+    time="13.21 PM";
+    greeting="Good Evening";
+    inputvalue;
+    @track storeinpputvalues=[];
+    connectedCallback(){
+        this.getbothtimeandgreeting();
+        setInterval(() => {
+            console.log('inside setinterval');
+            this.getbothtimeandgreeting();
+        }, 1000*60);
+    }
+
+    getbothtimeandgreeting(){
+
+        const date = new Date();
+        const hour = date.getHours();
+        const min = date.getMinutes();
+        this.time = `${this.getdoubledigit(hour)} : ${this.getmin(min)} ${this.getmidDay(hour)}`;
+        this.getgreeting(hour);
+    }
+
+    getmidDay(hour){
+        return hour >=12 ? 'PM' : 'AM';
+    }
+
+    getdoubledigit(hour){
+        return hour < 10 ? "0"+hour : hour>12 ? "0"+(hour-12) : hour;
+    }
+
+    getmin(min){
+        return min<10 ? "0"+min : min;
+    }
+
+
+    getgreeting(hour){
+      if(hour<12){
+          this.greeting = "Good Morning";
+      }else if(hour>12 && hour <17){
+          this.greeting ="Good Afternoon";
+      }else 
+           this.greeting ="Good Evening"
+    }
+
+    inputhandler(event){
+     this.inputvalue = event.target.value;
+     console.log('input value is',this.inputvalue);
+    }
+
+    addhandler(){
+        console.log('inside add handler method to clear value');
+        const inputbox = this.template.querySelector("lightning-input");
+        console.log('inputvalue before entering an array',this.inputvalue);
+        const inputvalueobj = {
+            inputid : this.storeinpputvalues.length,
+            inputvalue : this.inputvalue,
+            inputdone : false,
+            inputdate : new Date(),
+        }
+        console.log('single object is',inputvalueobj)
+        try{
+            console.log('with in try block');
+            this.storeinpputvalues.push(inputvalueobj);
+        }catch(error){
+           console.log('error messsage is',error.body.message)
+        }
+       
+        console.log('array values are',this.storeinpputvalues);
+        inputbox.value="";
+    }
+
+    get upcomingarray(){
+        return this.storeinpputvalues && this.storeinpputvalues.length ? 
+        this.storeinpputvalues.filter(test=>test.inputdone===false) : [];
+    }
+
+    get completedarray(){
+        return this.storeinpputvalues && this.storeinpputvalues.length ? 
+        this.storeinpputvalues.filter(test=>test.inputdone!==false) : [];
+    }
+
+}
