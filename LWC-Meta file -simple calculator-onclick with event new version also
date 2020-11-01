@@ -130,3 +130,67 @@ CONFIGURATION FILE:
     </targetConfigs>
     
 </LightningComponentBundle>
+
+
+
+<template>
+    <lightning-card title="Simple Calculator" icon-name="standard:client">
+        <lightning-layout multiple-rows vertical-align="center" horizontal-align="center">
+            <lightning-layout-item size="12" padding="around-small">
+                <lightning-input type="Number" label="First Name" name="FN" onchange={changehandler}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                <lightning-input type="Number" label="Second Number" name="SN" onchange={changehandler}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small" size="12">
+                <lightning-button-group >
+                    <lightning-button label="Add" icon-name="utility:add" icon-position="left" onclick={calculationhandler} name="ADD"></lightning-button>
+                    <lightning-button label="Sub" icon-name="utility:dash" icon-position="left" onclick={calculationhandler} name="SUB"></lightning-button>
+                    <lightning-button label="Mul" icon-name="utility:close" icon-position="left" onclick={calculationhandler} name="MUL"></lightning-button>
+                    <lightning-button label="Div" icon-name="utility:magicwand" icon-position="left" onclick={calculationhandler} name="DIV"></lightning-button>
+                 </lightning-button-group>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-small">
+                 <lightning-formatted-text value={addresult}></lightning-formatted-text>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+
+export default class Peoplelwc extends LightningElement {
+   
+    secondnumberjs;
+    firstnumberjs;
+    addresult;
+    changehandler(event){
+        if(event.target.name==="FN"){
+            this.firstnumberjs = event.target.value;
+            console.log('first number is',this.firstnumberjs);
+        }
+        if(event.target.name==="SN"){
+            this.secondnumberjs = event.target.value;
+            console.log('second number is',this.secondnumberjs);
+        }
+    }
+
+    calculationhandler(event) {
+        console.log('inside calculate handler');
+        if(event.target.name==="ADD") {
+            console.log('inside calculate handler if condition ADD');
+            const fistjs = parseInt(this.firstnumberjs);
+            const secondjs = parseInt(this.secondnumberjs);
+            this.addresult = `Addition of ${fistjs} and ${secondjs} is ${fistjs+secondjs}`;
+            console.log('add result finaaly is',this.addresult);
+        }
+        if(event.target.name==="SUB") {
+            console.log('inside calculate handler if condition SUB');
+            const fistjs = parseInt(this.firstnumberjs);
+            const secondjs = parseInt(this.secondnumberjs);
+            this.addresult = `Sub of ${fistjs} and ${secondjs} is ${fistjs-secondjs}`;
+            console.log('add result finaaly is',this.addresult);
+        }
+    }
+}
