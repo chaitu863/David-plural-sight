@@ -1,0 +1,665 @@
+LWC:
+Use camel case method while giving name to component. We use kebab-case while referring the component name. that means
+<template>
+    <c-my-component></c-my-component>
+</template>
+You can use underscores in component folder names, but they don’t map to kebab case in markup.
+For example, this component’s markup references the my_component component. It’s legal, it just looks a little odd.
+
+<!-- parent.html -->
+<template>
+    <c-my_component></c-my_component>
+</template>
+In the above code we used the ‘C’ before component name because default namespace is ‘C’ for any component. If you observe above for closing we have again another tag because components aren’t self-closing.
+
+The JavaScript file follows the naming convention <component>.js, such as myComponent.js. The convention is for the class name to be Pascal Case, where the first letter of each word is capitalized. For myComponent.js, the class name is MyComponent.
+A component’s JavaScript file can have a maximum file size of 128 KB (131,072 bytes).
+Every UI component must include a JavaScript file with at least this code.
+import { LightningElement } from 'lwc';
+export default class MyComponent extends LightningElement {
+
+}
+he import statement imports LightningElement from the “lwc” module.
+
+A component can include a CSS file. Use standard CSS syntax to style Lightning web components.
+If the component is called myComponent, the style sheet is myComponent.css. The style sheet is applied automatically.
+
+To share CSS style rules between components, create a module that contains only a CSS file and a configuration file. Import the module into the CSS files of Lightning web components.
+A component can include an SVG resource to use as a custom icon in Lightning App Builder and Experience Builder.
+
+In addition to the JavaScript file that creates the HTML element, a component’s folder can contain other JavaScript files. Use these JavaScript files to share code.
+
+These additional JavaScript files must be ES6 modules and must have names that are unique within the component’s folder.
+
+To create Jest tests for a component, create a folder called __tests__ at the top level of the component’s folder. Save the tests inside the __tests__ folder.
+
+myComponent
+    ├──myComponent.html
+    ├──myComponent.js
+    ├──myComponent.js-meta.xml
+    ├──myComponent.css
+    └──__tests__
+        └──myComponent.test.js
+Jest runs JavaScript files in the __tests__ directory. Test files must have names that end in .js, and we recommend that tests end in .test.js. You can have a single test file with all of your component tests, or you can have multiple files to organize related tests. Test files can be placed in sub folders.
+Component Namespaces
+Every component is part of a namespace.
+
+To reference your own components, always code with the default namespace, c. Use c regardless of where the code is running: in an org with or without a namespace, in a managed or unmanaged package.
+
+
+This component references lightning-card, which is a base Lightning component in the “lightning” namespace. It also references c-contact-tile, which is a custom component in the same project.
+// compositionBasics.html
+<template>
+    <lightning-card title="CompositionBasics" icon-name="custom:custom57">
+        <div class="slds-m-around_medium">
+            <c-contact-tile contact={contact}></c-contact-tile>
+        </div>
+    </lightning-card>
+</template>
+
+Within a JavaScript class, to reference a module (also called a service component or a library), add <namespace/module>. The forward slash character (/) separates the namespace from the module name.
+
+// example.js
+import { LightningElement } from 'lwc';
+
+import { MyNamedExport } from 'c/commonUtils';
+import MyDefaultExport from 'c/commonUtils';
+
+export default class Example extends LightningElement {
+
+}
+
+HTML Templates:
+In html file we have
+1)lightning standard components
+2)custon components
+3)if:true, if:false
+4)for:each, for:item / iterator
+
+If you want to pass the data from html to js in a single component we have “onclick” and “onchange” events. Where as if you want to pass the data from js to html store it in a property and use it in html with curly braces {}. There is again two ways to to store the value into property inside js is 1)by using get method 2) in the process of calculating some opearion also.
+
+There should not be any gaps in curly braces {  geetings  }
+It should be like {greetings}
+
+CSS:
+1) SLDS
+2) Variant
+3) SLDS Design Tokens
+4) Aura Design Tokens
+5) CSS style sheets
+
+If you don’t see a design variation that you like, or if a component doesn’t have a “variant” attribute, use “Lightning Design System” classes to achieve the styling you want. Create a custom CSS class only if you can’t find a suitable design variation or SLDS class. Don’t be afraid to experiment with SLDS classes and variants in base components.
+
+We can share css style sheets also by using import statement in js.
+
+Reactivity:
+
+1)Fields: Fields are reactive. If a field’s value changes, and the field is used in a template or in a getter of a property that’s used in a template, the component rerenders and displays the new value.
+2)There is one use case for @track. When a field contains an object or an array, there’s a limit to the depth of changes that are tracked. To tell the framework to observe changes to the properties of an object or to the elements of an array, decorate the field with @track.
+3)Public Properties: to expose a public property, decorate a field with @api. Public properties define the API for a component. Public properties used in a template are reactive. If the value of a public property used in a template changes, the component rerenders.
+Property names in JavaScript are in camel case while HTML attribute names are in kebab case (dash-separated) to match HTML standards.
+// todoItem.js
+import { LightningElement, api } from 'lwc';
+export default class TodoItem extends LightningElement {
+    @api itemName = 'New Item';
+}
+<!-- todoItem.html -->
+<template>
+    <div class="view">
+        <label>{itemName}</label>
+    </div>
+</template>
+
+<!-- todoApp.html -->
+<template>
+    <div class="listing">
+        <c-todo-item item-name="Milk"></c-todo-item>
+        <c-todo-item item-name="Bread"></c-todo-item>
+    </div>
+</template>
+4) Lightning Web Components tracks changes to the internal values of these types of fields:
+•	Primitive values
+•	Plain objects created with {…} that are annotated with @track.
+•	Arrays created with [] that are annotated with @track.
+When you click the Init button, the change is observed and the template is rerendered. Lightning Web Components observes that x is pointing to a new Date object. However, when you click Update, the template is not rerendered. Lightning Web Components doesn’t observe changes to the value of the Date object.
+When you set a property to a value that can’t be tracked, a warning is logged. If you’re trying to debug a scenario where the component isn’t rerendering on change, look in your browser console For our example, the browser console logs this helpful warning:
+Property "x" of [object:vm TrackDate] is set to a non-trackable object,
+which means changes into that object cannot be observed.
+Composed components:
+Owner/contained component ->container component-> composed component. In the below example 
+Todoapp -> todowrapper -> todoitem
+<!-- todoApp.html -->
+<template>
+    <c-todo-wrapper>
+        <c-todo-item item-name="Milk"></c-todo-item>
+        <c-todo-item item-name="Bread"></c-todo-item>
+    </c-todowrapper>
+<template>
+
+
+Communication between template to JS in same component:
+
+
+1)One way to send data from template to js, that is by using eventhandler such as “onclick” “onchange”
+2)To communicate back to template from js there are 2 ways
+•	Properties
+•	Get method
+
+Call methods on child from parent:
+From parent html, We are first getting the child component method details into parent JS. From parent js we are calling child method. This child method perform some operation and send resulted data to its child html
+                                                
+
+
+ Child html
+
+    <lightning-card title ="Select Checkbox">
+      <lightning-input onchange={inputhandler}></lightning-input>
+      <lightning-button label="Neutral" 
+                        title="Go" 
+                        onclick={handleClick}>
+
+      </lightning-button>
+      <c-public-method-child></c-public-method-child>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class PublicMethodParent extends LightningElement {
+    storeinput;
+    inputhandler(event){
+        this.storeinput = event.target.value;
+        console.log('storeinput value is',this.storeinput);
+    }
+
+    handleClick(){
+       const childcomponent = this.template.querySelector('c-public-method-child');
+       childcomponent.selectedcheckboxmethod(this.storeinput);
+    }
+}
+
+Child:
+import { LightningElement,api } from 'lwc';
+
+export default class PublicMethodChild extends LightningElement {
+    value=[];
+
+    options =[
+            { label: 'Red', value: 'red' },
+            { label: 'Blue', value: 'blue' },
+            { label: 'Green', value: 'green' },
+            { label: 'Yellow', value: 'yellow' },
+            ];
+    
+
+    @api
+    selectedcheckboxmethod(parentinput){
+        console.log('child side input from parent', parentinput);
+        const storecheckbox = this.options.find(checkbox =>{
+            return checkbox.value === parentinput;
+        })
+        console.log('matched checkbox value is',storecheckbox);
+        if(storecheckbox !==undefined){
+            this.value = storecheckbox.value;
+            console.log('value retuend finally', this.value)
+            return "Succuss";
+        }
+        this.value = [];
+        
+
+    }
+}
+
+
+<template>
+    <lightning-checkbox-group label="Checkbox Grou"
+                              options={options}
+                              value={value}>
+    </lightning-checkbox-group>
+
+</template>
+
+
+Set properties on child from parent:
+                                                 
+         
+
+
+
+
+To communicate down the containment hierarchy, an owner can set a property on a child component. An attribute in HTML turns into a property assignment in JavaScript.
+<!-- todoApp.html -->
+<template>
+    <c-todo-item item-name="Milk"></c-todo-item>
+    <c-todo-item item-name="Bread"></c-todo-item>
+</template>
+
+// todoItem.js
+import { LightningElement, api } from 'lwc';
+export default class TodoItem extends LightningElement {
+    @api itemName;
+}
+
+
+Let’s look at how the owner, c-todo-app, sets public properties on the two instances of c-todo-item
+
+Set Boolean property on child from parent:
+
+                                                 
+         
+
+
+
+
+Declare @api boolvar = false; on child component and use that “boolvar” in child component html file wherever you want conditioning. The same “boolvar” you need to pass it from parent like below if you want to make it true.
+lightning-card title="Multiple rooms info">
+        <ul class="slds-var-m-around_medium">
+            <template for:each={parentroominfo} for:item="parent">
+                <p key={parent.roomName}>
+                   <c-childlwc meetingrooninfo={parent} childbool></c-childlwc>
+                </p>
+            </template>
+        </ul>
+        {propertyvalues}
+    </lightning-card>
+
+If you don’t refer it in parent attribute place then this “childbool” variable value will be false as we already set in child component. Look below
+    <lightning-card title="Multiple rooms info">
+        <ul class="slds-var-m-around_medium">
+            <template for:each={parentroominfo} for:item="parent">
+                <p key={parent.roomName}>
+                   <c-childlwc meetingrooninfo={parent}></c-childlwc>
+                </p>
+            </template>
+        </ul>
+        {propertyvalues}
+    </lightning-card>
+
+Set markup on child from parent:
+                                              
+         
+
+
+
+
+We use slot to pass markup from parent to child. Whatever you want to pass the data that we have to place between child component tags of parent component.
+In side child component we have to add slot tags with name. we can place as many name slots but unnamed slots only one max can be placed.
+
+Parent:
+
+<template>
+    <lightning-card title="Multiple rooms info">
+        <ul class="slds-var-m-around_medium">
+            <template for:each={parentroominfo} for:item="parent">
+                <li key={parent.roomName}>
+                   <c-childlwc childbool >
+                    <div class="slds-var-m-around_large lgc-bg" slot="slotname">
+                        <lightning-tile label={parent.roomNo} href="/path/to/somewhere">
+                            <p class="slds-truncate" title={parent.roomName}>{parent.roomName}</p>
+                        </lightning-tile>
+                    </div>
+                   </c-childlwc>
+                </li>
+            </template>
+        </ul>
+       
+    </lightning-card>
+</template>
+
+Child:
+<template>
+   <template if:true={childbool}>
+   <slot name="slotname"></slot>
+    
+   </template>
+  
+</template>
+
+
+Component Life cycle:
+
+
+
+
+
+
+
+In above constructor should have super keyword inside of it.
+
+Communication from child to parent:
+
+Case 1:
+                                                
+
+
+ Child html
+
+1) on child hmtl we some event get inticate like onclick/onchange. This will call child js method.
+<template>
+    <div class="slds-var-p-around_medium lgc-bg" onclick={childtileclick}>
+        <lightning-tile label={childroomvar.roomno} href="/path/to/somewhere">
+            <p class="slds-truncate" title={childroomvar.roomName}>{childroomvar.roomName}</p>
+        </lightning-tile>
+    </div>
+</template>
+
+2)child js method create a new custom event (with name and payload)
+And dispatch that event.
+childtileclick(){
+        const disevename = new CustomEvent('tileclicked',{detail:this.childroomvar})
+        this.dispatchEvent(disevename);
+    }
+
+3)we will receive that fired event into parent html by preceding “on”before eventname = {parentjs method}.
+<li key={room.roomno}>
+<c-childroom childroomvar={room} ontileclicked={tileclickparent}></c-childroom>
+</li>
+
+4)in parent js method we will receive detail of that custom event.
+tileclickparent(event){
+
+        const storegetdata = event.detail;
+        this.storegetdataname = storegetdata.roomName;
+    }
+
+
+From there onwards we will utilize that received info in parent component
+
+Case 2:
+
+                                                
+
+
+ Child html
+
+1) on child hmtl we some event get inticate like onclick/onchange. This will call child js method.
+<template>
+    <div class="slds-var-p-around_medium lgc-bg" onclick={childtileclick}>
+        <lightning-tile label={childroomvar.roomno} href="/path/to/somewhere">
+            <p class="slds-truncate" title={childroomvar.roomName}>{childroomvar.roomName}</p>
+        </lightning-tile>
+    </div>
+</template>
+
+2)child js method create a new custom event (with name and payload and bubbles:true)
+And dispatch that event.
+childtileclick(){
+        const disevename = new CustomEvent('tileclicked',{detail:this.childroomvar, bubbles:true})
+        this.dispatchEvent(disevename);
+    }
+
+3)we will receive that fired event into parent js using below addEventListener
+ constructor(){
+        super();
+       this.template.addEventListener('tileclicked',this.tileclickparent.bind(this))
+        
+    }
+
+tileclickparent(event){
+
+        const storegetdata = event.detail;
+        this.storegetdataname = storegetdata.roomName;
+    }
+
+
+4) From there onwards we will utilize that received info in parent html component
+
+Lightning Message Service:
+
+When two independent components want to communicate each other then we use LMS.
+Look at my github (chaitu863@gmail.com) code where I added sample code for LMS
+
+Access Salesforce Data
+1)LDS JS:
+-> salesforce LDS have given chance for us to read/load the ui record along with login user details.
+import { getRecord, getFieldValue,getFieldDisplayValue, updateRecord } from 'lightning/uiRecordApi';
+@api recordId;   // this is the standard way of fetching the record id
+@wire(getRecord, { recordId: '$recordId', fields: [ORDERSTATUS_FIELD, APPROVED_FIELD] })
+    wiredRecord({ error, data }) {
+        if (data) {
+               
+        } else if (error) {
+        }
+    }
+
+In the same way we can get the login user details
+import USER_ID from '@salesforce/user/Id';
+userid = USER_ID;
+@wire(getRecord, {recordId: '$userid',fields: [USERPROFILENAME_FIELD]}) 
+ userdetails({ error, data }) {
+if (data) {
+} else if (error) {
+}
+}
+In above we used wire adaptor to load record with the help of recordid, fields.
+
+	To create a record use 
+const fields = {'Name' : this.lontnojs , 'Sample_vod__c' : this.samplenamejs, 'Active_vod__c' : this.activejs};
+        const recordinput = {apiname : 'Sample_Lot_vod__c',fields};
+        createRecord(recordinput).then(response=>{
+
+}.catch(error=>{
+
+}
+
+
+or 
+const fields = {};
+                fields[SAMREQID.fieldApiName] = this.recordId;
+                fields[ORDERSTATUS_FIELD.fieldApiName] = 'submitted';
+                fields[APPROVED_FIELD.fieldApiName] = true;
+                
+                const recordInput = { apiname:'Sample_Lot_vod__c',fields };
+                  createRecord(recordinput)
+
+you can give hard referenfe for object api name also like below
+
+import OBJENAME from '@salesforce/schema/ Sample_Lot_vod__c'';
+
+const recordInput = { apiname: OBJENAME .objectApiName,fields };
+                  createRecord(recordinput)
+
+
+or
+const fields = {[ACCOUNT_NAME.fieldApiName]:this.namejs,[ACCOUNT_SITE.fieldApiName]:this.emailjs,[ACCOUNT_PHONE.fieldApiName]:this.phonejs};
+        const recordInput = {apiname :'Account',fields};
+      createRecord(recordInput)
+
+and
+there is a way to fetch the data from field is
+this.orderstatus=getFieldDisplayValue(data,ORDERSTATUS_FIELD;
+this.approved = getFieldValue(data, APPROVED_FIELD);
+
+	To update record use like below
+const fields = {};
+                fields[SAMREQID.fieldApiName] = this.recordId;
+                fields[ORDERSTATUS_FIELD.fieldApiName] = 'submitted';
+                fields[APPROVED_FIELD.fieldApiName] = true;
+                
+                const recordInput = { fields };
+                updateRecord(recordInput )
+.then
+
+2)Form Based Components:
+
+->lightning-record-edit-form
+ Here you will mention object api name and fields details also no need js except to get record id
+->lightning-record-view-form
+Here you will mention recordId and object api name and fields to display values.
+->lightning-record-form
+Here you mention object name, layout type, mode and fields. But fields you pass from JS.
+
+the above form based components helps in creating forms on UI.
+
+3)Fetching the data from Apex
+
+import apexMethodName from '@salesforce/apex/Namespace.Classname.apexMethodReference';
+To call an Apex method, a Lightning web component can:
+
+•	Wire a property
+•	Wire a function
+•	Call a method imperatively
+Intro to @wire:
+When the wire service provisions data via a Lightning Data Service wire adapter, it provisions new values when they’re available. However, when the wire service provisions data via an Apex method, it doesn’t provision new values. 
+to use @wire to call an Apex method, you must set cacheable=true.
+Cacheable=true improve performance. But we can only use to read the data from server not on malipulating the data. Though it improve the performance you should call method by using refreshApex() when you are using @wire property or function. If you invoke an Apex method imperatively, to refresh stale data, invoke the Apex method and then call getRecordNotifyChange() to update the Lightning Data Service cache.
+
+Grant User Access for Apex Classes
+An authenticated or guest user can access an @AuraEnabled Apex method only when the user’s profile or an assigned permission set allows access to the Apex class.
+Wire an Apex Method to a Property
+public with sharing class ContactController {
+    @AuraEnabled(cacheable=true)
+    public static List<Contact> getContactList() {
+        return [
+            SELECT Id, Name, Title, Phone, Email, Picture__c
+            FROM Contact
+            WHERE Picture__c != null
+            WITH SECURITY_ENFORCED
+            LIMIT 10
+        ];
+    }
+}
+The component’s JavaScript code imports the Apex method and invokes it via the wire service. The wire service either provisions the list of contacts to the contacts.data property, or returns an error to the contacts.error property.
+// apexWireMethodToProperty.js
+import { LightningElement, wire } from 'lwc';
+import getContactList from '@salesforce/apex/ContactController.getContactList';
+
+export default class ApexWireMethodToProperty extends LightningElement {
+    @wire(getContactList) contacts;
+}
+
+
+
+<!-- apexWireMethodToProperty.html -->
+<template>
+    <lightning-card title="ApexWireMethodToProperty" icon-name="custom:custom63">
+        <div class="slds-m-around_medium">
+            <template if:true={contacts.data}>
+                <template for:each={contacts.data} for:item="contact">
+                    <p key={contact.Id}>{contact.Name}</p>
+                </template>
+            </template>
+            <template if:true={contacts.error}>
+                <c-error-panel errors={contacts.error}></c-error-panel>
+            </template>
+        </div>
+    </lightning-card>
+</template>
+Now let’s wire an Apex method that takes a parameter.
+// ContactController.cls
+public with sharing class ContactController {
+    @AuraEnabled(cacheable=true)
+    public static List<Contact> getContactList() {
+        return [
+            SELECT Id, Name, Title, Phone, Email, Picture__c
+            FROM Contact
+            WHERE Picture__c != null
+            WITH SECURITY_ENFORCED
+            LIMIT 10
+        ];
+    }
+}
+
+The component’s JavaScript code imports the Apex method and invokes it via the wire service. The wire service provisions the results to the wiredContacts() function via an object with either an error or data property. If the wire service provisions data, it’s assigned to this.contacts, which is used in the template. If it provisions error, it’s assigned to this.error, which is also used in the template. If the value of these properties change, the template rerenders.
+
+// apexWireMethodToFunction.js
+import { LightningElement, wire } from 'lwc';
+import getContactList from '@salesforce/apex/ContactController.getContactList';
+
+export default class ApexWireMethodToFunction extends LightningElement {
+    contacts;
+    error;
+
+    @wire(getContactList)
+    wiredContacts({ error, data }) {
+        if (data) {
+            this.contacts = data;
+            this.error = undefined;
+        } else if (error) {
+            this.error = error;
+            this.contacts = undefined;
+        }
+    }
+}
+
+<!-- apexWireMethodToFunction.html -->
+<template>
+    <lightning-card title="ApexWireMethodToFunction" icon-name="custom:custom63">
+        <div class="slds-m-around_medium">
+            <template if:true={contacts}>
+                <template for:each={contacts} for:item="contact">
+                    <p key={contact.Id}>{contact.Name}</p>
+                </template>
+            </template>
+            <template if:true={error}>
+                <c-error-panel errors={error}></c-error-panel>
+            </template>
+        </div>
+    </lightning-card>
+</template>
+Call an Apex Method Imperatively
+
+// apexImperativeMethod.js
+import { LightningElement, track } from 'lwc';
+import getContactList from '@salesforce/apex/ContactController.getContactList';
+
+export default class ApexImperativeMethod extends LightningElement {
+    @track contacts;
+    @track error;
+
+    handleLoad() {
+        getContactList()
+            .then(result => {
+                this.contacts = result;
+            })
+            .catch(error => {
+                this.error = error;
+            });
+    }
+}
+
+<!-- apexImperativeMethod.html -->
+<template>
+    <lightning-card title="ApexImperativeMethod" icon-name="custom:custom63">
+        <div class="slds-m-around_medium">
+            <p class="slds-m-bottom_small">
+                <lightning-button label="Load Contacts" onclick={handleLoad}></lightning-button>
+            </p>
+            <template if:true={contacts}>
+                <template for:each={contacts} for:item="contact">
+                    <p key={contact.Id}>{contact.Name}</p>
+                </template>
+            </template>
+            <template if:true={error}>
+                <c-error-panel errors={error}></c-error-panel>
+            </template>
+        </div>
+    </lightning-card>
+</template>
+
+With parameters:
+  handleSearch() {
+        findContacts({ searchKey: this.searchKey })
+            .then((result) => {
+                this.contacts = result;
+                this.error = undefined;
+            })
+            .catch((error) => {
+                this.error = error;
+                this.contacts = undefined;
+            });
+    }
+
+Html:
+<template if:true={contacts}>
+                <template for:each={contacts} for:item="contact">
+                    <p key={contact.Id}>{contact.Name}</p>
+                </template>
+            </template>
+
+
+Other Functionalities:
+
+1)Toast event
+2)Get recordId and objectApiname from framework
+3)Metafile configs (we can set the master label and description to component and configs can be set for properties of javascript)
