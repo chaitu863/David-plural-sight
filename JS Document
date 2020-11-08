@@ -1,0 +1,450 @@
+JavaScript
+
+Variables:
+->Let 
+     We can define in different ways let a1=10;
+                                                               Let a2=20;
+Is same is let a1=10,
+                       A2=20;
+No need to repeat let many times
+->Const
+Rules:
+It can start with $, _,lettersnumber
+TAKING INPUT:
+To store numbers let num1= 12;
+To store strings let st1= ‘chaitanya’;
+To store Boolean let bool1 = true;
+To store an array let array1 = [‘chaitu’,’meghana’,’sai’];
+                               Let arrya2 =[12,23,34];
+                               Let array3= [{name:’chaitanya’,
+                                                 Hight:23
+                                                 Village: ‘BMP’} ,
+                                                {name:’poori’,
+                                                 Hight:535
+                                                 Village: ‘KRE’}  ];
+To store objects let obj1 = {name:’chaitanya’,
+                                                 Hight:23
+                                                 Village: ‘BMP’};
+	If you don’t want to take any value to variable it takes “undefined” : let price;
+ Console.log(price);     // undefined
+	We can change the value of variable anytime any number of times than the initialized value we can do that like below by using “Let” keyword
+
+Let price;  // only at the first time we have to use ‘let’ keyword
+Price = 10; // here again we need not to use let because it was already defined in js.
+Console.log(price); //10
+Price = 12;
+Consol.log(price);  //12
+	When you use “const” keyword for any variable we can not change value of it later, if you try to change it through an error msg. even if you don’t pass any input value to const variable at first time it shows an eror msg.
+
+
+
+DISPLAYING OUTPUT:
+To show value of variable : just use that variable name on JS file
+For ex: obj1;
+
+NUMBERS
+We can add, multiply,division,sub to numbers
+1)Let num1=20;
+Let num2=30;
+Let combine = num1+num2;
+2) now if you want to store the result of number calculation to same variable we have shortcut notation like below
+Num1 += 4;      // num1 = num1 +4;
+3) if you want to increment/decrement variable number by just 1 value use ++,--
+Before or after variable. Ex: let price =23; 
+                                                   Console.log(price++); //23
+                                                   Console.log(++price); //23
+Numbers calculations have order of precedence.
+
+STRINGS
+1)We can use single quotes or double quotes as well. In case if you want to show single quotes inside string that can also be done like below
+let var2 = 'meghana said \'hi\' to poori';
+console.log(var2); // meghana said ‘hi’ to poori
+escape symbol is nothing but : \
+2) there is another best way of using sting is using another symbol called back quote\ backtick (symbol right below Esc button) with this button we can embedded variable inside string also. 
+let inter = `interpolation with \'hi\'`;
+console.log(inter);
+we have another benefit of using this back quote is -we can add new lines with in the string instead of using \n.
+let inter = `inter
+ion with \'hi\'`;
+console.log(inter); // inter
+                                      ion with ‘hi’
+3)String has lot many methods which can helpful to manipulate on string variables
+let tolower = '   we are not a part';
+let store1 = tolower.toUpperCase();
+let store2 = tolower.trim();
+console.log(store1); //    WE ARE NOT A PART
+console.log(store2); // we are not a part
+4) we can convert strings to number also from number to string.
+
+Boolean:
+Let boolvar1 = true;
+We can also flip the value of Boolean by using  ‘!’
+
+Object
+Object is helpful to store multiple properties with associated values into one variable
+Let person = { 
+Firstname : ‘chaianya’,
+LastName : ‘motupalli’
+}
+So for above firstname and lastname we can create two separate string variables but here we kept them in a single variable called ‘person’. 
+
+IF-ELSE
+1)We use for conditioning 
+We use === , !==, && , ||, true, false, >=, <= frequently 
+Falsy : false, 0, null , undefined, empty string(‘’, “”)
+Opposite of falsely is truthy.
+Ex : IF(Var1 === ‘chaitu’) {
+} else if(var1 !==’chaitu’){
+}
+Note: as a best practice always use === rather just == because === can compare both type and value.
+2) Ternary operator: it works with 3 different values. Its short cut for if else statement.
+let price = 70;
+let messsage = (price>30)? 'greater than 30': 'less than 30';
+console.log('show here', messsage);
+3) if you define variable by using let or const inside if block it applicable only with in that scope. It not even appear in else block also.
+let price='';
+if(price){
+    let some = 'chaitu';
+    console.log(some);
+} else {
+  console.log(some);  // uncaught reference error
+}
+
+Looping 
+1) For: In for loop only if I <10 then only we go inside for loop otherwise we can not enter into block first time also.
+For (let i=0; i<10; i++) {
+Console.log(i);
+}
+2) we have while loop but its same as for loop so better to use for loop as a habit rather while loop
+3) Do-While: this loop is slightly different than for loop, here body run first then it check condition so in this case you definitely run the body at least ONE time.
+Let i=0;
+Do {
+Consol.log (i);
+i++;
+} while (i<3);
+
+FUNCTION
+Its piece of block of code has name or sometimes no name(anonymous) and can call any number of times used to execute some logic by calling that function at particular instance for example by onclick, onchange etc. while calling we pass our variables like array/ object as a arguments and function return something and that return value can further store in some variable.
+// function definition / function statement / function declaration
+Function message () {
+}
+We can call using: message();
+If you want to store the return value also possible by assigning to new variable to the left of calling function
+Ex: let store1 = message();
+// function expressions
+let funexp = function (num1){
+  let num3 = num1* num1;
+  return num3;
+}
+let numvar = funexp(10);
+console.log(numvar); // 100
+
+in above code we did not given function name but in another way we have name (funexp) so it does not make much difference. At any point without return statement function don’t return a value( but in arrow function if you have single line of code to return then no need of return statement).
+•	We can pass function as an argument from another calling function like below and we can handler that as a input parameter. That means not only variables (number/string/Boolean/array/object) we can also pass functions
+This can be achieved no matter which kind of function it is like function declaration / function expression
+let funexp = function (num1){
+  let num3 = num1* num1;
+  return num3;
+}
+
+let prearray = [0,1,2,3,4];
+
+function map(f,a){
+  let arraysmaple = [];
+  for(let i=0; i !=a.length; i++){
+    arraysmaple [i] = f(a[i]);
+  }
+  return arraysmaple;
+}
+let storeresults = map(funexp,prearray);
+console.log(storeresults) // 0,1,4,9,16
+
+Not only that we can use functions in side for loop like above and we can render function based on if-else statement also, function can call itself also.
+var myFunc;
+if (num === 0) {
+  myFunc = function(theObject) {
+    theObject.make = 'Toyota';
+  }
+}
+
+FUNTION SCOPE: 
+Functions have scope of variables. If variable is declared outside function can be accessible to function. Whereas variables defined inside the function, only that function can access it or its child function can.
+the inner function can use the arguments and variables of the outer function, while the outer function cannot use the arguments and variables of the inner function.
+function addSquares(a, b) {
+  function square(x) {
+    return x * x;
+  }
+  return square(a) + square(b); // here square is inner function is                    accessing arguments a and b
+}
+a = addSquares(2, 3); // returns 13
+b = addSquares(3, 4); // returns 25
+c = addSquares(4, 5); // returns 41
+
+RECURSIVE FUNCTION:
+A function that calls itself is called a recursive function. In some ways, recursion is analogous to a loop. Both execute the same code multiple times, and both require a condition (to avoid an infinite loop, or rather, infinite recursion in this case).
+
+Different Functions:
+
+Here in this example we are passing arguments but we did not defined any parameters still we can access inside function using “arguments” keyword.
+function printall(){
+  for(let i=0; i<arguments.length; i++){
+    console.log(arguments[i]);
+  }
+}
+
+printall(1,2,3,4,5,6);
+
+here below example have one parent and one child function. here I want to clear two things. When you call parent() function it calls only parent not the child function that means it wont go inside child function. so here the output is just // chaitanya
+
+function parent(){
+  let message ='chaitanya';
+  function child(){
+    let message ='poori child';
+    console.log(message);
+  }
+  //child();
+  console.log(message);
+}
+
+parent();
+
+now here below I uncommented the child() so when I call parent() function it automatically calls child() function since its part of parent function. so here the output is // poori child, Chaitanya
+another point to notice is variable name is same in both parent and child even though it won’t be a problem parent variable only work in parent scope similarly child variable only work in child scope. They won’t override each other
+function parent(){
+  let message ='chaitanya';
+  function child(){
+    let message ='poori child';
+    console.log(message);
+  }
+  child();
+  console.log(message);
+}
+
+parent();
+
+IIFE (Immediately Invoked Function Expression)
+IIFE Pattern let us group our code and have it work in isolation, independent of any other code. Here below I am showing example
+function greeting(){
+  console.log('this is regular function');
+}
+greeting();
+
+// one way
+(function (){
+  console.log('this is IIFE');
+}
+)();
+
+// second way
+(function meeting2 (){
+  console.log('this is IIFE2');
+}
+)();
+
+// third way
+let greet = (function meeting2 (){
+  console.log('this is IIFE3');
+}
+)()
+
+ARROW FUNCTIONS:
+We remove function keyword, return keyword(when we have single line of code) completely and place ()=> and assign to some variable always. Lets see some examples
+// No arrow 
+function method(a,b){
+  console.log('metod with 2 params')
+  return a+b;
+}
+
+let me = method(2,3);
+console.log(me);
+
+// Arrow 
+let method1 = (a,b)=>{
+  console.log('Arrow metod with 2 params')
+  return a+b;
+}
+
+let me1 = method1(2,3);
+console.log(me1);
+
+// No arrow
+let method2 = function (a,b){
+  console.log('variable metod with 2 params')
+  return a+b;
+}
+
+let me2 = method2(3,3);
+console.log(me2);
+
+// with Arrow 
+let method3 = (a,b) => {
+  console.log('arrow variable metod with 2 params')
+  return a+b;
+}
+let me3 = method3(3,3);
+console.log(me3);
+
+// no arrow with single param
+
+let cal= function(num1){
+  return num1;
+}
+let returnval = cal(100);
+console.log(returnval);
+
+// with arrow one way
+
+let cal1= (num1) =>{
+  return num1;
+}
+let returnval2 = cal1(200);
+console.log(returnval2);
+
+// arrow second approach
+let cal2= num1 => num1;
+let returnval23 = cal2(500);
+console.log(returnval23);
+
+// No arrow no param
+
+let single1 = function(){
+  let mename = 'chaitu';
+  return mename;
+}
+let superchange = single1();
+console.log(superchange);
+
+// with arrow
+
+let single2 = ()=>{
+  let mename = 'chaitu and arrow';
+  return mename;
+}
+let superchange2 = single2();
+console.log(superchange2);
+
+// with arrow and IIFE pattern
+let single3 = (()=>{
+  let mename = 'chaitu and arrow and IIFE';
+  return mename;
+})();
+
+console.log(single3);
+
+// function declaration
+
+function sum(num1,num2){
+  return num1+num2;
+}
+let output = sum(10,20);
+console.log('output is ',output);
+
+// Arrow function
+let sum2 = (num1,num2)=> num1+num2;
+let output1 = sum2(20,20);
+console.log('outpu1 is',output1);
+
+// IIFE function
+let sum3 = (()=>{
+  let num1 = 10;
+  let num2 =100;
+  return num1+num2 ;
+})();
+console.log('outpu1 is',sum3);
+
+this keyword in Arrow function:
+we have something special in arrow function when we deal with this keyword. This keyword is always refers GLOBAL Variables not like normal functions.
+In the below example you can see how to declare normal and arrow functions inside object variable
+let human = {
+  name : 'chaitu',
+  BMI : function (){
+    console.log(this.name);// chaitu
+    let hight = 10;
+    let wight = 20;
+    return hight * wight;
+  },
+  Arrowfun : ()=>console.log('Hi'+ this.name)
+
+}
+let store = human.BMI();
+console.log(store);
+human.Arrowfun();
+console.log(this.name); // Empty value
+
+
+In javascript we can say function also a kind of object. Here below let’s see another way of defining function by using object. The behavior of this keyword also changes lets see in below example
+// normal way of funcion creation
+function mayday(){
+  console.log('hi');
+  console.log(this); // it takes wirndow reference
+}
+mayday();
+
+// creating function by taking object 
+let obj1 = {};
+obj1.sayhi = function (){
+  console.log(this); // it takes function referece
+}
+obj1.sayhi();
+
+creating constructor function by using ‘new’ keyword
+// normal way of funcion creation
+function mayday(){
+  console.log('hi');
+  console.log(this); // value of this is an empty object
+}
+ let save = new mayday();
+ console.log(save); // it holds an empty object
+
+this keyword in methods:
+if you define a glovbal variable and you want to refere that variable any plce of the code you must use ‘this’ before variable. 
+But in case you define a variable with ‘const’ then we should not use ‘this’ before variable while in using process.
+
+
+CALL method:
+It can be used to invoke (call) a method with an owner object as an argument (parameter).that means we are passing an object as an argument to function.
+// call method in JavaScript
+
+let obj1 = {name : 'chaitanya', age : 20};
+let obj2 = {name : 'poori', age : 30 };
+
+let fun1 = function (message) {
+  console.log(message +' '+ this.name);
+}
+
+fun1.call(obj1, 'hi'); // hi chaitanya
+fun1.call(obj2, 'hi'); // hi poori
+
+APPLY Method:
+The apply() method invokes a function with a given this value and arguments provided as an array. The apply() method is similar to the call() method excepts that it accepts the arguments of the function as an array instead of individual arguments(/objects).
+
+let fun1 = function (message,var1){
+  console.log(message + ' '+ var1);
+}
+
+fun1.call(undefined, 'hi', 'chaitu'); // hi chaitu
+fun1.apply(undefined, ['hi', 'poori']); // hi poori
+
+
+Try-catch
+We can use try catch in javascript
+Try {
+
+} catch(error) {
+
+}
+
+Iterate over an Array:
+
+array = [ 1, 2, 3, 4, 5, 6 ]; 
+for (index = 0; index < array.length; index++) { 
+    console.log(array[index]); 
+} 
+
+array = [ 1, 2, 3, 4, 5, 6 ]; 
+  
+array.forEach(myFunction); 
+function myFunction(item, index) 
+{ 
+    console.log(item); 
+}
