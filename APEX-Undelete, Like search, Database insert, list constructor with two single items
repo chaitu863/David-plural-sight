@@ -1,0 +1,41 @@
+string deletestring = 'TST'+'%';
+list<Home_Page_Component__c> homepagelst = [SELECT ID,name,Label__c from Home_Page_Component__c
+                                           WHERE Label__c LIKE :deletestring ALL ROWS];
+system.debug('before for loop'+homepagelst.size());
+undelete homepagelst;
+
+
+
+Home_Page_Component__c hpc = new Home_Page_Component__c(Label__c='Parent one');
+insert hpc;
+
+list<Home_Page_Component_Child__c> hmpchildlst = new list<Home_Page_Component_Child__c>{
+    new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one three'),
+    new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one four')};
+Home_Page_Component_Child__c hione = new Home_Page_Component_Child__c();
+hione.Home_Page_Component__c = hpc.id;
+hione.Description__c = 'descption of one one';
+hione.Is_It_Completed__c= true;
+hmpchildlst.add(hione);
+
+Home_Page_Component_Child__c hione2 = new Home_Page_Component_Child__c();
+//hione2.Home_Page_Component__c = hpc.id;
+hione2.Description__c = 'descption of one two';
+hione2.Is_It_Completed__c= false;
+hmpchildlst.add(hione2);
+
+database.saveResult[] results=database.insert(hmpchildlst,false);
+system.debug('resutls are '+results);
+
+for(database.saveResult re : results){
+    if(re.isSuccess()){
+        system.debug('record id is '+re.getId());
+    }else
+        for(Database.Error er: re.getErrors()){
+            system.debug('the following eror has occured ');
+            system.debug('the status code '+er.getStatusCode()+'eror message is'+er.getMessage());
+            system.debug('the field of problem'+er.getFields());
+        }
+}
+
+

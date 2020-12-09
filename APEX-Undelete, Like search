@@ -1,6 +1,0 @@
-string deletestring = 'TST'+'%';
-list<Home_Page_Component__c> homepagelst = [SELECT ID,name,Label__c from Home_Page_Component__c
-                                           WHERE Label__c LIKE :deletestring ALL ROWS];
-system.debug('before for loop'+homepagelst.size());
-undelete homepagelst;
-
