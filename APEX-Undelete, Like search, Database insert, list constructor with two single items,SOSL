@@ -39,3 +39,8 @@ for(database.saveResult re : results){
 }
 
 
+SOSL:
+list<list<sObject>> soslresult = [FIND 'TST*' IN ALL FIELDS RETURNING Home_Page_Component__c(ID,Label__c)];
+system.debug('sosl resutls are '+soslresult);
+
+
