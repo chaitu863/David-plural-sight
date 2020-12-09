@@ -1,0 +1,43 @@
+trigger helloOppTrg on Opportunity (after insert,after update) {
+    
+    list<Id>accIdlst          = new list<Id>();
+    list<string>oppOrdernolst = new list<string>();
+    for (Opportunity objOpp : Trigger.new) {
+        oppOrdernolst.add(objOpp.OrderNumber__c);
+		if(objOpp.AccountId != null)   
+			accIdlst.add(objOpp.AccountId);
+    }
+    system.debug('opp order no entering'+oppOrdernolst);
+    system.debug('account id entering'+accIdlst);
+    list<Opportunity> oppwithaccount = new list<Opportunity>();
+	oppwithaccount = [SELECT Id,AccountId,OrderNumber__c,Account.Name FROM Opportunity WHERE AccountId IN :accIdlst AND Id IN: Trigger.New];    
+	list<string>accname= new list<string>();
+    for(Opportunity acc:oppwithaccount){
+        accname.add(acc.Account.Name);
+    }
+    system.debug('account name'+accname);
+    list<Product2> matchProduct = new list<Product2>();
+    matchProduct = [SELECT Id, IsActive, ProductCode, Name FROM Product2
+                    WHERE ProductCode =:oppOrdernolst AND Name =:accname];
+    system.debug('product records'+matchProduct);
+    
+    for(Opportunity objOpp:oppwithaccount) {
+        system.debug('opp id top'+objOpp.id);
+     
+        for(Product2 proloop : matchProduct) {
+            system.debug('inside second loop');
+            if(proloop.IsActive==false && proloop.ProductCode==objOpp.OrderNumber__c
+               && proloop.Name==objOpp.Account.Name){
+                   system.debug('inside third loop');
+                   system.debug('opp id'+objOpp.id); 
+				    if(Trigger.newMap.ContainsKey(objOpp.id))  
+					{
+						Opportunity oppfromtriggernewmap = Trigger.newMap.get(objOpp.id); 
+						system.debug('just opp before error msg'+oppfromtriggernewmap); 
+						oppfromtriggernewmap.OrderNumber__c.addError('check is false so can not update/insert record MACHED'); 
+					}
+               }
+        }
+    }
+    
+}
