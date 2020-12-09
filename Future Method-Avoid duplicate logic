@@ -1,0 +1,23 @@
+global class JJ_DeleteDuplicateAttendeeFuture {
+    @future
+    public static void deleteduplicates(set<Id> setOfEvents){ 
+        List<Event_Attendee_vod__c> attendeestoDelete = new List<Event_Attendee_vod__c>();
+        Set<String> compositeKeys = new Set<String>();
+        for(Event_Attendee_vod__c ea : [SELECT ID,Medical_Event_vod__c,Event_ID_JNJ__c,Account_vod__c,User_vod__c 
+                                        FROM Event_Attendee_vod__c WHERE Medical_Event_vod__c IN: setOfEvents])
+        {
+            String compositeKey = ea.Medical_Event_vod__c + '_' + ea.Account_vod__c+'_' + ea.User_vod__c;
+            if(!compositeKeys.add(compositeKey)){
+                attendeestoDelete.add(ea);
+            }
+        }
+        try {
+            if(attendeestoDelete.size() > 0){
+                Database.delete(attendeestoDelete, false);
+            }
+        } catch(Exception ex){
+            
+        }
+        
+    }
+}
