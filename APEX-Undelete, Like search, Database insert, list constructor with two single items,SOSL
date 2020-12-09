@@ -43,4 +43,37 @@ SOSL:
 list<list<sObject>> soslresult = [FIND 'TST*' IN ALL FIELDS RETURNING Home_Page_Component__c(ID,Label__c)];
 system.debug('sosl resutls are '+soslresult);
 
+DEBUGS SCAN
+
+list<Home_Page_Component__c> soqlresultall = [SELECT ID,Label__c FROM Home_Page_Component__c limit 1];
+try{
+    Home_Page_Component__c singlesoql=soqlresultall[0];
+     system.debug('single record here is '+singlesoql);//|DEBUG|single record here is Home_Page_Component__c:{Id=a044W00000lHJQRQA4, Label__c=TST1}
+}catch(exception e){
+    system.debug('exceptio is here '+e);
+}
+
+map<Id,Home_Page_Component__c> maphompepage = new map<Id,Home_Page_Component__c>([SELECT ID,Label__c FROM Home_Page_Component__c limit 1]);
+system.debug('map results only one '+maphompepage);//|DEBUG|map results are {a044W00000lHJQRQA4=Home_Page_Component__c:{Id=a044W00000lHJQRQA4, Label__c=TST1}}
+
+list<Home_Page_Component__c> soqlresult = [SELECT ID,Label__c FROM Home_Page_Component__c];
+system.debug('soql result is '+soqlresult);//|DEBUG|soql result is (Home_Page_Component__c:{Id=a044W00000lHJQRQA4, Label__c=TST1}, Home_Page_Component__c:{Id=a044W00000lHJQSQA4, Label__c=TST2}, Home_Page_Component__c:{Id=a044W00000lHw0rQAC, Label__c=Parent one}, Home_Page_Component__c:{Id=a044W00000iBQcaQAG, Label__c=TST3}, Home_Page_Component__c:{Id=a044W00000iBQZeQAO, Label__c=TST4})
+
+map<Id,Home_Page_Component__c> maphompepage2 = new map<Id,Home_Page_Component__c>([SELECT ID,Label__c FROM Home_Page_Component__c limit 2]);
+system.debug('map results more than one '+maphompepage2);//{a044W00000lHJQRQA4=Home_Page_Component__c:{Id=a044W00000lHJQRQA4, Label__c=TST1}, a044W00000lHJQSQA4=Home_Page_Component__c:{Id=a044W00000lHJQSQA4, Label__c=TST2}}
+
+list<list<sObject>> soslresult = [FIND 'Tst*' IN ALL FIELDS RETURNING Home_Page_Component__c(ID,Label__c),
+                                  Home_Page_Component_Child__c(Id,Description__c)];
+system.debug('sosl resutls are '+soslresult);
+/*DEBUG|sosl resutls are ((Home_Page_Component__c:{Id=a044W00000iBQZeQAO, Label__c=TST4}, 
+                         Home_Page_Component__c:{Id=a044W00000lHJQSQA4, Label__c=TST2}, 
+						 Home_Page_Component__c:{Id=a044W00000lHJQRQA4, Label__c=TST1}, 
+						 Home_Page_Component__c:{Id=a044W00000iBQcaQAG, Label__c=TST3}),
+                        (Home_Page_Component_Child__c:{Id=a054W00000ik6xUQAQ, Description__c=descption of one one TST})
+                        ) */
+list<Home_Page_Component__c> onlyparent=(list<Home_Page_Component__c>)soslresult[0];
+system.debug('only parent is'+onlyparent);
+list<Home_Page_Component_Child__c> onlychild =(list<Home_Page_Component_Child__c>)soslresult[1];
+system.debug('only child is'+onlychild);
+
 
