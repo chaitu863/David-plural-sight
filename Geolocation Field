@@ -1,0 +1,6 @@
+Hi I found the root cause of it finally.
+
+in my apex class, i used the SOQL where one of the field API name is "Geolocation__c". I used it directly instead of breaking it into two like below,
+(Geolocation__latitude__s,Geolocation__longitude__s). Finally when I used these two field names in SOQL then @wire adaptor in JS is able to get the data.
+
+@Abhishek -thanks for your help
