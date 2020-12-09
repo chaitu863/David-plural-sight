@@ -1,0 +1,215 @@
+
+trigger JJ_ContentDocument on ContentDocument (before delete) {
+    
+    if(trigger.isbefore &&trigger.isdelete){
+        JJ_ContentDocumentTriggerHandler.beforeDeleteCountCRAttachments(Trigger.old);
+    }
+}
+
+
+public class JJ_ContentDocumentTriggerHandler {
+    
+    public static void beforeDeleteCountCRAttachments(List<ContentDocument> ConDoclst){
+        set<id> cdocid = new set<id>(); 
+        set<id> clinkparids = new set<id>(); 
+        
+        for(ContentDocument cd : ConDoclst){
+            cdocid.add(cd.id); 
+        }
+        list<ContentDocumentLink> clinks = [select Id, LinkedEntityId, ContentDocumentId from ContentDocumentLink where ContentDocumentId IN :cdocid];
+        for(ContentDocumentLink cl : clinks){
+            clinkparids.add(cl.LinkedEntityId);
+        }
+        
+        list<Coaching_Reports_Attachments_JNJ__c> coachinglist = [select id,JJ_No_Of_Content_Documents__c,No_of_Attachments_JNJ__c,(select Id, LinkedEntityId, ContentDocumentId from ContentDocumentLinks) from Coaching_Reports_Attachments_JNJ__c where id IN:clinkparids];
+        for(Coaching_Reports_Attachments_JNJ__c a :coachinglist){
+            integer exsiz = a.ContentDocumentLinks.size();
+            integer cdocsiz = cdocid.size();
+            integer coutsiz = exsiz - cdocsiz;
+            a.JJ_No_Of_Content_Documents__c= coutsiz;
+        }
+        if(coachinglist !=null && coachinglist.size()>0){
+            try{
+                update coachinglist;
+            }catch(DmlException  ex) {
+                system.debug('error message is'+ex.getMessage());
+            }
+            
+        }
+    }
+    
+}
+
+trigger JJ_ContentDocumentLinkTrigger on ContentDocumentLink (after insert, before delete, after update, before update) {
+    if(trigger.isInsert && trigger.isafter){
+        JJ_ContentDocumentLinkTriggerHandler.updateJCPAttachments(Trigger.new);
+        JJ_ContentDocumentLinkTriggerHandler.afterinsertcountCRAttachmentsAndNotes(Trigger.new);
+    }
+    
+    if(trigger.isdelete && trigger.isbefore){
+        JJ_ContentDocumentLinkTriggerHandler.beforedeletecountCRAttachmentsAndNotes(Trigger.old);
+     }   
+}
+
+
+    public static void beforedeletecountCRAttachmentsAndNotes(list<ContentDocumentLink> ConDocLinklst){
+     
+        set<id> cdocid = new set<id>();
+        set<id> deltinglinkid = new set<id>();
+        for(ContentDocumentLink cl : ConDocLinklst){
+            cdocid.add(cl.LinkedEntityId);
+            deltinglinkid.add(cl.ContentDocumentId);
+        }
+        list<Coaching_Reports_Attachments_JNJ__c> coachinglist = [SELECT id,JJ_No_Of_Content_Documents__c,No_of_Attachments_JNJ__c,
+                                                                  (SELECT Id, LinkedEntityId, ContentDocumentId 
+                                                                   FROM ContentDocumentLinks) 
+                                                                   FROM Coaching_Reports_Attachments_JNJ__c 
+                                                                   WHERE id IN:cdocid];
+        for(Coaching_Reports_Attachments_JNJ__c a :coachinglist){
+            integer exsiz = a.ContentDocumentLinks.size();
+            integer cdocsiz = deltinglinkid.size();
+            integer coutsiz = exsiz -cdocsiz;
+            a.JJ_No_Of_Content_Documents__c= coutsiz;
+        }
+        if(coachinglist !=null && coachinglist.size()>0){
+            try{
+               update coachinglist;
+               system.debug('complete list'+coachinglist);
+            }catch(DmlException ex) {
+                system.debug('error message is'+ex.getMessage());
+            }
+         }
+    }
+    
+    
+    
+    
+    Apex Test class for Conentdocument and contentdocument link
+ // Sample Test method for contentdocumentlink trigger
+@isTest
+    static void testDataMethod2(){
+        ContentVersion contentVersionInserttwo = new ContentVersion(
+            Title = 'Testtwo',
+            PathOnClient = 'Testtwo.jpg',
+            VersionData = Blob.valueOf('Test Content Data two'),
+            IsMajorVersion = true
+        );
+        insert contentVersionInserttwo;
+         ContentVersion contentVersionInsertthree = new ContentVersion(
+            Title = 'Testthree',
+            PathOnClient = 'Testthree.jpg',
+            VersionData = Blob.valueOf('Test Content Data three'),
+            IsMajorVersion = true
+        );
+        insert contentVersionInsertthree;
+
+        Id conDocId2 = [SELECT ContentDocumentId FROM ContentVersion WHERE Id =:contentVersionInserttwo.Id].ContentDocumentId;
+        Id conDocId3 = [SELECT ContentDocumentId FROM ContentVersion WHERE Id =:contentVersionInsertthree.Id].ContentDocumentId;
+
+        Profile p = [SELECT Id FROM Profile WHERE Name='JNJ DM - Sampling View'];
+        
+        User u = new User(Alias = 'standt', Email='standardusertwo@testorg.com',
+                          EmailEncodingKey='UTF-8', LastName='Testingtwo', LanguageLocaleKey='en_US',
+                          LocaleSidKey='en_US', ProfileId = p.Id,TimeZoneSidKey='America/Los_Angeles',
+                          UserName='testpermissionsetuserchaitu@testorg.com');
+        insert u;
+        Survey_Target_vod__c surobjrec = new Survey_Target_vod__c();
+        surobjrec.Employee_vod__c = u.Id;
+        surobjrec.Coaching_End_Date_JNJ__c=Date.today()+2;
+        surobjrec.Name='Sample name';
+        surobjrec.Start_Date_vod__c=Date.today();
+        surobjrec.End_Date_vod__c=Date.today()+7;
+        insert surobjrec;
+        Coaching_Reports_Attachments_JNJ__c CRArecord = new Coaching_Reports_Attachments_JNJ__c();
+        CRArecord.SurveytargetCR__c=surobjrec.Id; 
+        insert CRArecord;
+        List<ContentDocumentLink> cdlList = new List<ContentDocumentLink>();
+        ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = conDocId2;
+        cdl.ShareType = 'V';
+        cdl.LinkedEntityId = CRArecord.Id;
+        cdlList.add(cdl);
+        ContentDocumentLink cdl1 = new ContentDocumentLink();
+        cdl1.ContentDocumentId = conDocId3;
+        cdl1.LinkedEntityId = CRArecord.Id;
+        cdl1.ShareType = 'V';
+        cdlList.add(cdl1);
+        Insert cdlList;
+         List<ContentDocumentLink> cdldeleteList = [SELECT id,LinkedEntityId FROM ContentDocumentLink where LinkedEntityId=:CRArecord.Id];
+        delete cdldeleteList;
+        Test.startTest();
+        JJ_ContentDocumentLinkTriggerHandler.afterinsertcountCRAttachmentsAndNotes(cdlList);
+        JJ_ContentDocumentLinkTriggerHandler.beforedeletecountCRAttachmentsAndNotes(cdlList);
+        Test.stopTest();
+    }
+
+// For content Document
+
+@isTest
+public class JJ_ContentDocumentTriggerHandler_Test {
+@isTest
+    static void testDataMethod2(){
+        List<ContentVersion> converList = new List<ContentVersion>();
+        ContentVersion contentVersionInserttwo = new ContentVersion(
+            Title = 'Testfour',
+            PathOnClient = 'Testfour.jpg',
+            VersionData = Blob.valueOf('Test Content Data four'),
+            IsMajorVersion = true
+        );
+       
+        converList.add(contentVersionInserttwo);
+         ContentVersion contentVersionInsertthree = new ContentVersion(
+            Title = 'Testfive',
+            PathOnClient = 'Testfive.jpg',
+            VersionData = Blob.valueOf('Test Content Data five'),
+            IsMajorVersion = true
+        );
+       
+        converList.add(contentVersionInsertthree);
+        insert converList;
+       
+        List<ContentDocument> documents = [SELECT Id, Title, LatestPublishedVersionId FROM ContentDocument];
+       system.debug('documents are'+documents);      
+        Profile p = [SELECT Id FROM Profile WHERE Name='JNJ DM - Sampling View'];
+        
+        User u = new User(Alias = 'standt', Email='standardusertwo@testorg.com',
+                          EmailEncodingKey='UTF-8', LastName='Testingtwo', LanguageLocaleKey='en_US',
+                          LocaleSidKey='en_US', ProfileId = p.Id,TimeZoneSidKey='America/Los_Angeles',
+                          UserName='testpermissionsetuserchaitu@testorg.com');
+        insert u;
+        Survey_Target_vod__c surobjrec = new Survey_Target_vod__c();
+        surobjrec.Employee_vod__c = u.Id;
+        surobjrec.Coaching_End_Date_JNJ__c=Date.today()+2;
+        surobjrec.Name='Sample name';
+        surobjrec.Start_Date_vod__c=Date.today();
+        surobjrec.End_Date_vod__c=Date.today()+7;
+        insert surobjrec;
+        Coaching_Reports_Attachments_JNJ__c CRArecord = new Coaching_Reports_Attachments_JNJ__c();
+        CRArecord.SurveytargetCR__c=surobjrec.Id; 
+        insert CRArecord;
+        List<ContentDocumentLink> cdlList = new List<ContentDocumentLink>();
+        ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = documents[0].Id;
+        cdl.ShareType = 'V';
+        cdl.LinkedEntityId = CRArecord.Id;
+        cdlList.add(cdl);
+        ContentDocumentLink cd2 = new ContentDocumentLink();
+        cd2.ContentDocumentId = documents[1].Id;
+        cd2.LinkedEntityId = CRArecord.Id;
+        cd2.ShareType = 'V';
+        cdlList.add(cd2);
+        Insert cdlList;
+      
+        List<ContentDocumentLink> cdldeleteList = [SELECT id,ContentDocumentId,LinkedEntityId FROM ContentDocumentLink where ContentDocumentId =: documents[0].Id];
+       
+        List<ContentDocument> documentstodelete = [SELECT Id, Title, LatestPublishedVersionId FROM ContentDocument];
+        delete documentstodelete;
+        
+        CRArecord.JJ_No_Of_Content_Documents__c=documentstodelete.size();
+       
+        update CRArecord;
+        Test.startTest();
+        JJ_ContentDocumentTriggerHandler.beforeDeleteCountCRAttachments(documents);
+        Test.stopTest();
+    }
+}
