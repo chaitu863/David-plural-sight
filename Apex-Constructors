@@ -1,0 +1,49 @@
+public with sharing class PersonClass {
+
+    private string name;
+    private string education;
+    private integer age;
+    public decimal height;
+    public PersonClass(){
+        this.name='chaitanya';
+        this.education='MS';
+        this.age=27;
+        this.height=5.6;
+    }
+    public PersonClass(string nameis, string edu, integer ageis){
+        this.name=nameis;
+        this.education=edu;
+        this.age=ageis;
+    }
+    
+    public PersonClass(string nameis, string edu){
+        this.name='meghna';
+        this.education='MS3';
+        this.age=22;
+    }
+    
+    public string getname(){
+        return name;
+    }
+    public string getedu(){
+        return education;
+    }
+    
+    public integer getage(){
+        return age;
+    }
+}
+
+
+
+
+Anonymous Window
+
+PersonClass pc = new PersonClass();
+system.debug('getname method '+pc.getedu()); // MS
+system.debug('getname method '+pc.height); // 5.6
+PersonClass pc2 = new PersonClass('poornima','MS2',26);
+system.debug('getname method '+pc2.getname()); // Poornima
+system.debug('getname method '+pc2.getedu());  // MS2
+PersonClass pc3 = new PersonClass('poornima','MS2');
+system.debug('getname method '+pc3.getage()); // 22
