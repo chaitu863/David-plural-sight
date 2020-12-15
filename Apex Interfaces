@@ -1,3 +1,4 @@
+EXAMPLE 1:
 public interface animal {
  void eat();
  void sleep();
@@ -30,3 +31,39 @@ catclass c= new catclass();
 c.eat();  // cat eats
 dogclass d = new dogclass();
 d.sleep(); // dog animal sleep
+
+
+EXAMPLE2:
+
+public class Toaster implements KitchenUtilitiesInterface{
+
+    private string numberis;
+    public toaster(string model){
+        this.numberis = model;
+    }
+    public string modelnumber(){
+        return 'M'+numberis;
+    }
+}
+
+public class FridgeClass implements KitchenUtilitiesInterface{
+
+     public string modelnumber(){
+        return 'ModelFRE';
+    }
+}
+
+public interface KitchenUtilitiesInterface {
+
+    string modelnumber();
+}
+
+ANONYMOUS WINDOW:
+
+FridgeClass fc = new FridgeClass();
+toaster t= new toaster('T123');
+KitchenUtilitiesInterface[] kt = new KitchenUtilitiesInterface[] {fc,t};
+string result = kt[1].modelnumber();
+system.debug('result is '+result);  //MT123
+
+
