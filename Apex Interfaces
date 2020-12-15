@@ -27,6 +27,6 @@ public class CatClass implements animal{
 ANONYMOYS WINDOW:
 
 catclass c= new catclass();
-c.eat();
+c.eat();  // cat eats
 dogclass d = new dogclass();
-d.sleep();
+d.sleep(); // dog animal sleep
