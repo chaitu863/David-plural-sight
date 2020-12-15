@@ -1,0 +1,32 @@
+public interface animal {
+ void eat();
+ void sleep();
+}
+
+public class DogClass implements animal {
+ 
+    public void eat() {
+        system.debug('dog animal eat');
+    }
+    public void sleep() {
+        system.debug('dog animal sleep');
+    }
+}
+
+public class CatClass implements animal{
+
+    public void eat(){
+        system.debug('cat eats');
+    }
+    public void sleep(){
+        system.debug('cat sleep');
+    }
+    
+}
+
+ANONYMOYS WINDOW:
+
+catclass c= new catclass();
+c.eat();
+dogclass d = new dogclass();
+d.sleep();
