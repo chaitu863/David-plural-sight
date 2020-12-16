@@ -88,3 +88,20 @@ list<Home_Page_Component_Child__c> onlychild =(list<Home_Page_Component_Child__c
 system.debug('only child is'+onlychild);
 
 
+
+// child to parent
+list<contact> con = [SELECT ID,firstname,accountid,lastname,Account.Name,account.phone from contact limit 2];
+system.debug('contact firsname name '+con[0].account.name);
+for(contact cont: con){
+    system.debug('contact account name '+cont.account.name);
+    system.debug('contact firsname name '+cont.firstname);
+}
+
+// parent to child
+list<account> acc = [SELECT ID,name,(SELECT ID,Firstname,Lastname from Contacts) from account limit 2];
+for(account ac: acc){
+    system.debug('account name '+ac.id);
+    for(contact c:ac.contacts){
+         system.debug('account contact name '+c.lastname);
+    }
+}
