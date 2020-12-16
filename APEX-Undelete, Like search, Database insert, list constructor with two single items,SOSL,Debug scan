@@ -9,6 +9,11 @@ undelete homepagelst;
 Home_Page_Component__c hpc = new Home_Page_Component__c(Label__c='Parent one');
 insert hpc;
 
+Single Record:
+account acc = new account(name='Hi sara');
+insert acc;
+
+Multiple Records on List:
 list<Home_Page_Component_Child__c> hmpchildlst = new list<Home_Page_Component_Child__c>{
     new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one three'),
     new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one four')};
