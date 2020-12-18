@@ -1,3 +1,6 @@
+Salesforce Object Query Language (SOQL): SOQL in salesforce (YOUTUBE)
+
+
 string deletestring = 'TST'+'%';
 list<Home_Page_Component__c> homepagelst = [SELECT ID,name,Label__c from Home_Page_Component__c
                                            WHERE Label__c LIKE :deletestring ALL ROWS];
