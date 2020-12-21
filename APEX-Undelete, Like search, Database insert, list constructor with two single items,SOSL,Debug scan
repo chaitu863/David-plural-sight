@@ -108,3 +108,20 @@ for(account ac: acc){
          system.debug('account contact name '+c.lastname);
     }
 }
+
+
+CONVERT MAP TO LIST AND SET EASYLY:
+
+map<id,account> accMap = new map<id,account>([SELECT id,name FROM account limit 3]);
+system.debug('accMap is '+accMap);
+
+
+
+list<account> idLsttoSort = new list<account>(accMap.values());
+system.debug('idLsttoSort is '+idLsttoSort);
+
+set<id> setofIds = new set<id>();
+for(ID acc : accMap.keyset()){
+    setofIds.add(acc);
+}
+system.debug('set of ids are '+setofIds);
