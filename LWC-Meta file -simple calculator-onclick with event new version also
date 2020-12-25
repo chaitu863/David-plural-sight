@@ -1,3 +1,5 @@
+FIRST APPROACH:
+
 <template>
 <lightning-card title="Simple Calculator" icon-name="custom:custom14">
 <lightning-layout multiple-rows>
@@ -131,7 +133,7 @@ CONFIGURATION FILE:
     
 </LightningComponentBundle>
 
-
+SECOND APPROCH:
 
 <template>
     <lightning-card title="Simple Calculator" icon-name="standard:client">
@@ -192,5 +194,66 @@ export default class Peoplelwc extends LightningElement {
             this.addresult = `Sub of ${fistjs} and ${secondjs} is ${fistjs-secondjs}`;
             console.log('add result finaaly is',this.addresult);
         }
+    }
+}
+
+THIRD APPROACH:
+
+<template>
+    <lightning-card title="Simple Calculator">
+       <lightning-layout multiple-rows>
+        <lightning-layout-item size="12" padding="around-medium">
+            <lightning-input label ="First Number" name="FN" type="number" onchange={inputeventhandler}></lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-medium">
+            <lightning-input label ="Second Number" name="SN" type="number" onchange={inputeventhandler}></lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-medium">
+            <lightning-button-group>
+                <lightning-button name ="addname" label="ADD" icon-name="utility:add" icon-position="right" onclick={buttoneventhandler}></lightning-button>
+                <lightning-button name ="subname" label="SUB" icon-name="utility:dash" icon-position="right" onclick={buttoneventhandler}></lightning-button>
+                <lightning-button name ="mulname" label="MUL" icon-name="utility:close" icon-position="right" onclick={buttoneventhandler}></lightning-button>
+                <lightning-button name ="divname" label="DIV" icon-name="utility:magicwand" icon-position="right" onclick={buttoneventhandler}></lightning-button>
+            </lightning-button-group>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-medium">
+            <lightning-formatted-text value={currentResult}></lightning-formatted-text>
+        </lightning-layout-item>
+       </lightning-layout>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class ElephantOne extends LightningElement {
+
+    jsfirstnumber;
+    jssecondnumber;
+    currentResult;
+    inputeventhandler(event){
+        const jsinputname = event.target.name;
+        if(jsinputname === 'FN'){
+            this.jsfirstnumber = parseInt(event.target.value);
+        }
+        if(jsinputname === 'SN'){
+            this.jssecondnumber = parseInt(event.target.value);
+            
+        }
+    }
+
+    buttoneventhandler(event){
+      const jsbuttonName = event.target.name;
+      if(jsbuttonName === 'addname') {
+          this.currentResult = `Result of ${this.jsfirstnumber} + ${ this.jssecondnumber} is ${this.jsfirstnumber +this.jssecondnumber}`;
+      }
+      if(jsbuttonName ==='subname') {
+        this.currentResult = `Result of ${this.jsfirstnumber} - ${ this.jssecondnumber} is ${this.jsfirstnumber -this.jssecondnumber}`;
+      }
+      if(jsbuttonName ==='mulname') {
+        this.currentResult = `Result of ${this.jsfirstnumber} * ${ this.jssecondnumber} is ${this.jsfirstnumber * this.jssecondnumber}`;
+    }
+      if(jsbuttonName ==='divname') {
+        this.currentResult = `Result of ${this.jsfirstnumber}/ ${ this.jssecondnumber} is ${this.jsfirstnumber/this.jssecondnumber}`;
+    }
     }
 }
