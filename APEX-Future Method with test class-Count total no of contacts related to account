@@ -1,0 +1,36 @@
+public class AccountProcessor {
+    
+    map<id,account>accmap = new map<id,account>([SELECT ID from account]);
+    set<id>accidset = accmap.keyset();
+    
+    @future
+    public static void countContacts(set<id> accidset){
+      list<account> acclst = [SELECT id,name,Number_of_Contacts__c,(select id from contacts) FROM account where id in : accidset];
+        system.debug('accidsrt is '+accidset);
+        for(account acc: acclst){
+            acc.Number_of_Contacts__c =acc.contacts.size();
+            system.debug('acc field is '+acc.Number_of_Contacts__c);
+        }
+        update acclst;
+        system.debug('acclst final is '+acclst);
+    }
+}
+
+
+@isTest
+public class AccountProcessorTest {
+    
+    static testmethod void methodname(){
+        
+        list<account>acclst = new list<account>{new account(name='test one'),new account(name='test two')};
+            insert acclst;
+        list<contact>conlist = new list<contact>{new contact(lastname='poornima',accountid=acclst[0].id),new contact(lastname='chaitanya',accountid=acclst[1].id)};
+            insert conlist;
+        map<id,account>accmap = new map<id,account>([select id from account]);
+        set<id>accidset = accmap.keyset();
+        test.startTest();
+        AccountProcessor acc = new AccountProcessor();
+        AccountProcessor.countContacts(accidset);
+        test.stopTest();
+    }
+}
