@@ -1,0 +1,52 @@
+public class LeadProcessor implements
+    Database.Batchable<sObject>, Database.Stateful {
+
+        public Integer recordsProcessed = 0;
+    public Database.QueryLocator start(Database.BatchableContext bc) {
+        return Database.getQueryLocator(
+            'SELECT ID,Name,Company,NumberofLocations__c, '+
+            'LeadSource FROM Lead'          
+        );
+     }
+        
+        public void execute(Database.BatchableContext bc, List<Lead> scope){
+            list<lead>leadtoUpdate= new list<lead>();
+            system.debug('size of scope '+scope.size());
+            for(lead lsobj : scope){
+                lsobj.NumberofLocations__c=120;
+                leadtoUpdate.add(lsobj);
+            }
+            update leadtoUpdate;
+        }
+        
+        public void finish(Database.BatchableContext bc){
+        }
+}
+
+
+@isTest
+public class LeadProcessorTest {
+
+    @testSetup static void methodName() {
+
+        list<lead> leadtestlst = new list<lead>();
+        for(integer i=0;i<200;i++){
+            leadtestlst.add(new lead(lastname='motupalli'+i,company='company'+i,Status='Open - Not Contacted',
+                                     NumberofLocations__c=130));
+        }
+        insert leadtestlst;
+    }
+    static testmethod void testleadmethod() {
+        list<lead>selectedlst = [select id,lastname,company,status,NumberofLocations__c from lead limit 10];
+        list<lead>updatedleadlst = new list<lead>();
+        for(lead l:selectedlst){
+            l.NumberofLocations__c =130;
+            updatedleadlst.add(l);
+        }
+        update updatedleadlst;
+        test.startTest();
+        LeadProcessor lp = new LeadProcessor();
+        id batchjob = database.executeBatch(lp);
+        test.stopTest();
+    }
+}
