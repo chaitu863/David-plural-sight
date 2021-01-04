@@ -1,0 +1,166 @@
+/************************************************************
+    * File Name     :  jj_userProfile_assign_updated_trigger
+    * Description   :  This trigger invokes the apex class jj_sdup_functions
+    
+    * @author       :  Timothy Lu
+    * Modification Log
+    =============================================================
+    * Ver.    Date          Author              Modification
+    -------------------------------------------------------------
+    * 1.0     07/02/2019    Timothy Lu          Created
+    ************************************************************/
+trigger JJ_userProfile_assign_insert_updated_trigger on JJ_Selling_Division_UserProfile_config__c (after insert,before insert, after update,before update) { 
+    
+  if(trigger.isAfter && (trigger.isInsert || trigger.isUpdate)){
+        List<JJ_Selling_Division_UserProfile_config__c> sdupList = trigger.new;
+        Set<Id> sdupIDList = new Set<Id>();
+        Set<String> Divisions= new Set<String>();
+        for(JJ_Selling_Division_UserProfile_config__c sdup : sdupList){
+           if(sdup.IsActive__c){
+               // sdupIDList.add(sdup.Id);  
+                Divisions.add(sdup.Division__c);
+            }
+        }
+        List<JJ_Selling_Division_UserProfile_config__c> sdcList=[select Division__c,IsActive__c,Profile__c,Sector__c,Type__c from JJ_Selling_Division_UserProfile_config__c where IsActive__c=true and Division__c in:Divisions ]; 
+        if(!sdcList.isempty()){
+            for(JJ_Selling_Division_UserProfile_config__c sdup : sdcList){
+                    sdupIDList.add(sdup.Id);  
+                }
+    }
+    if(!sdupIDList.isempty()){
+            JJ_sdup_functions.assignProfile(sdupIDList);
+    }
+        
+    }
+    if(trigger.isbefore ){
+        JJ_sdup_functions.updateUniqueIdentifier(trigger.new);
+        
+    }
+
+}
+
+/************************************************************
+* File Name     :  JJ_sdup_functions
+* Description   :  This class methods are invoked from trigger JJ_userProfile_assign_insert_updated_trigger
+*                  Assigns profile to user based off the specifications given from the JJ_Selling_Division_UserProfile_config__c
+
+* @author       :  Timothy Lu
+* Modification Log
+=============================================================
+* Ver.    Date          Author              Modification
+-------------------------------------------------------------
+* 1.0     07/03/2019    Timothy Lu          Created
+************************************************************/
+
+public without sharing class JJ_sdup_functions{
+    
+    private JJ_sdup_functions(){
+        
+    }
+    
+    public static void updateUniqueIdentifier(List<JJ_Selling_Division_UserProfile_config__c> newList){                  
+        for(JJ_Selling_Division_UserProfile_config__c selDiv : newList){
+            selDiv.Unique_Identifier__c = selDiv.Type__c+'-'+selDiv.Division__c;              
+        }        
+    }
+    
+    @future
+    public static void assignProfile(Set<Id> sdupIDList){
+        
+        //pulls List of selling division from a given set of ids
+        List<JJ_Selling_Division_UserProfile_config__c> sdupList = [Select Division__c, Profile__c, Type__c
+                                                                    From JJ_Selling_Division_UserProfile_config__c
+                                                                    Where IsActive__c = True 
+                                                                    AND Id In : sdupIDList];
+        
+        
+        //stores results into strings, created map to use later in final for loop logic
+        List<String> selectedProfiles = new List<String>();
+        List<String> selectedDivision = new List<String>();
+        Map<String,Map<String,JJ_Selling_Division_UserProfile_config__c>>  SDMAP =new Map<String,Map<String,JJ_Selling_Division_UserProfile_config__c>> ();
+        for(JJ_Selling_Division_UserProfile_config__c sdup : sdupList){
+            selectedProfiles.add(sdup.Profile__c);
+            selectedDivision.add(sdup.Division__c);
+            if(SDMAP.get(sdup.Division__c)==null){
+                SDMAP.put(sdup.Division__c,new Map<string,JJ_Selling_Division_UserProfile_config__c>());
+            }
+            SDMAP.get(sdup.Division__c).put(sdup.Type__c+'~'+sdup.Division__c,sdup);
+        }
+        List<Id> AdminProfId = jj_updateuser_trigger_functions_ver2.getAdminUsers();
+        
+        //getting list of user of a division, got from sdupList, and who do not have profile of admin
+        List<User> userList = [SELECT Id,Selling_Division__c,Territory_JNJ__c, ProfileId FROM User 
+                               WHERE 
+                               isActive = True
+                               AND Selling_Division__c IN :selectedDivision
+                               AND UserRoleId != Null
+                               AND profileId NOT IN :AdminProfId];        
+        
+        //storing territory name recieved from userList
+        Map<String,List<user>> userMap = new Map<String,List<User>>();
+        List<String> terNameList = New List<String>();
+        for(user u : userList){
+            if(userMap.get(u.Selling_Division__c)==null){
+                userMap.put(u.Selling_Division__c, new list<user>());
+            }
+            userMap.get(u.Selling_Division__c).add(u);
+            terNameList.add(u.Territory_JNJ__c);
+        }
+        
+        JJ_sdup_functions classVar = new JJ_sdup_functions();
+        classVar.listofTerrOfSameTerritory(sdupList,terNameList,selectedProfiles,userMap,SDMAP);
+    }
+    
+    /******************************************************************
+    * Method  Name : listofTerrOfSameTerritory.
+    * Description  : Getting list of territories that have the same territory name, to that of user from ____ division
+    * Return Type  : Void
+    * *****************************************************************/ 
+    
+    Public void listofTerrOfSameTerritory(List<JJ_Selling_Division_UserProfile_config__c> sdupList,List<String> terNameList,List<String> selectedProfiles,Map<String,List<user>> userMap,Map<String,Map<String,JJ_Selling_Division_UserProfile_config__c>>  SDMAP){
+        List<Territory> territoryList = jj_updateuser_trigger_functions_ver2.getTerr(terNameList);
+        map<String, Territory> terMap =  new map<String, Territory>(); //created map used for final for loop logic
+        for(Territory t: territoryList)
+        {   
+            terMap.put(t.Name, t);
+        }
+        
+            
+        //Getting list of profile that match the sdupList, storing name into a List<String> and create a map for final for loop logic
+        Map<String, Profile> profMap = new Map<String, Profile>();
+        profMap=jj_updateuser_trigger_functions_ver2.getProf(selectedProfiles);
+        
+        //iterating through maps to assign profile Id.
+        List<User> usertoUpdate = New List<User>();
+        for(JJ_Selling_Division_UserProfile_config__c s : sdupList){
+            List<User> uL = userMap.get(s.Division__c);
+            Map<String,JJ_Selling_Division_UserProfile_config__c> SDTypeMap=SDMAP.get(s.Division__c);
+            if(uL !=null && ul.size()>0) {
+            for(user u : uL){
+                Territory t = terMap.get(u.Territory_JNJ__c);
+                String stype = t.Territory_Type_JNJ__c;
+                String division=u.Selling_Division__c;
+                
+                if(stype==null){
+                    stype='Default';
+                }             
+                
+                JJ_Selling_Division_UserProfile_config__c sd=SDTypeMap.get(stype+'~'+division);
+                if(sd==null){
+                    sd=SDTypeMap.get('Default'+'~'+division);
+                }
+                if(sd!=null ){
+                    Profile p = profMap.get(sd.Profile__c);
+                    if(u.ProfileId != p.Id){
+                        u.ProfileId = p.Id;
+                        usertoUpdate.add(u);
+                    }
+                }
+            }  
+            }
+        }
+        if(!usertoUpdate.isempty()){
+            database.update(usertoUpdate, false);
+        }
+    }
+}
