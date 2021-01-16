@@ -1,0 +1,29 @@
+public class UserTrigggerHandler {
+
+    public static void methodOne(set<id> userid){
+       list<profile> profileDeatails = [SELECT ID,name FROM Profile where id in :getadminuserslist()];
+       system.debug('set of ids '+profileDeatails);
+        set<id> adminprofileId =getadminuserslist(); 
+       list<user> usersfinal = nonAdminusers(userid,adminprofileId);
+        system.debug(' non admin users are '+usersfinal);
+    }
+    
+    public static set<Id> getadminuserslist(){
+       list<ProfileCustomMetadata__mdt> custometadata = new list<ProfileCustomMetadata__mdt>();
+        set<id>adminid = new set<id>();
+       custometadata = [SELECT DeveloperName,isActive__c,Profile_ID__c,Profile_Name__c FROM ProfileCustomMetadata__mdt];
+        for(ProfileCustomMetadata__mdt meta: custometadata){
+            if(meta.Profile_Name__c =='System Administrator'){
+                adminid.add(meta.Profile_ID__c);
+            }
+         }
+        return adminid;
+    }
+    
+    public static list<user> nonAdminusers(set<id> userid,set<id> adminprofileId){
+        return  [SELECT ID,name,Username,ProfileId,UserRoleId,IsActive
+                                        FROM USER
+                                        WHERE ID IN :userid
+                                        AND ProfileId NOT IN:adminprofileId];
+    }
+}
