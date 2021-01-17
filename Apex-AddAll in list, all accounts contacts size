@@ -1,0 +1,10 @@
+list<contact> conlst = new list<contact>();
+list<contact> conlsttotal = new list<contact>();
+for(account acc: [Select id,(select id,lastname from contacts) from account limit 2]){
+    system.debug('accoint is '+acc.id);
+    conlst = acc.contacts;
+        system.debug('contacts associated account is '+conlst);
+        system.debug('contacts associated account is '+conlst.size());
+conlsttotal.addAll(conlst);
+}
+system.debug('contacts associated account is '+conlsttotal.size());
