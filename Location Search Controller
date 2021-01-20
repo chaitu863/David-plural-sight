@@ -1,0 +1,1570 @@
+*** This message was sent securely using TLS: Login is not required. ***
+/******************************
+
+Apex Class Name     : CLM_LocationSearchController
+
+Version             : 1.0
+
+Function            : This is a controller for Agreement provider locations
+
+Developer                  Date                               
+
+-------------------------------------------------------------------------------------
+
+Chaitanya Motupalli        02/21/2020
+
+ 
+
+******************************/
+
+ 
+
+public class CLM_LocationSearchController {
+
+    //Variable declaration
+
+    public boolean boolpFIN{get; set;}
+
+    public boolean boolAccClass{get; set;}
+
+    public boolean booltaxId{get; set;}
+
+    public boolean boolnpi{get; set;}
+
+    public boolean boolmaster{get; set;}
+
+    public boolean boolisLast;
+
+    public String contextItem {get;set;}
+
+    boolean boolpagination=false;
+
+    public Integer inttot { get; set; }
+
+    public integer intnumRecs{get; set;}
+
+    public integer intofRecords{get; set;}
+
+    public integer intofRecords2{get; set;}
+
+    public integer intnumRecs2{get; set;}
+
+    integer inttotalRecs = 0;
+
+    integer intcount= 0;
+
+    integer intLimitSize=20;
+
+    Integer limitRows = Limits.getLimitQueryRows() - Limits.getQueryRows();
+
+    public string strSearchforText{get; set;}
+
+    string strAgrmtId;
+
+    string strAccountId;
+
+    public string strPlan{get; set;}
+
+    public string strProvIdSearch {get; set;}
+
+    public String strRemoveLocId{get; set;}
+
+    public string strRemoveProvIdTxt{get; set;}
+
+    private String strSortDirection = 'ASC';
+
+    private String strSortExp = 'CM_SPL_PFIN_No__c';
+
+    public String selectedAddressUsageType{get;set;}
+
+    public Apttus__APTS_Agreement__c agrmtRec{get; set;}
+
+    Apttus__APTS_Agreement__c agrmt;
+
+    Agreement_Provider_Locations__c agrmtLoc;
+
+    public list<CM_SPL_Addr__c> lstServiceLocations{get; set;}
+
+    public list<locationWrapper> lstWrapperList=new list<locationWrapper>();
+
+    public list<locationWrapper> lstWrapperList2=new list<locationWrapper>();
+
+    public list<CM_SPL_Addr__c> lstSPL= new  list<CM_SPL_Addr__c>();
+
+    public list<provSearchWrapper> lstSearchWrapListFinal{get; set;}
+
+    public list<provSearchWrapper> lstSearchWrapList=new list<provSearchWrapper>();
+
+    public set<string> setProvIdKeys{get;set;}
+
+    public set<string> setProvIdPFIN1Keys{get;set;}
+
+    public set<string> setProvIdPFIN2Keys{get;set;}
+
+    set<Id> setSelectedLocations = new set<Id>();
+
+    set<string> setProvIdDup=new set<string>();
+
+    set<Id> setProvIds=new set<Id>();
+
+    Map<Id,Boolean> MapIdBool = new Map<Id,Boolean>();
+
+    /*
+
+*Constructor for loading all the provider related locations in front/on loading page
+
+*/
+
+    public CLM_LocationSearchController(ApexPages.StandardController stdController){
+
+        boolpFIN=false;
+
+        booltaxId=false;
+
+        boolnpi=false;
+
+        boolAccClass=false;
+
+        boolmaster=false;
+
+        strSearchforText='';
+
+        intofRecords=1;
+
+        strRemoveLocId=null;
+
+        setProvIdKeys=new set<string>();
+
+        lstSearchWrapListFinal=new list<provSearchWrapper>();   
+
+        this.agrmt=(Apttus__APTS_Agreement__c)stdController.getrecord();
+
+        agrmtRec=[SELECT Id,Plan__c,APTS_Record_Type_Name__c,CLM_Provider_Id__c,Provider_Service_Type__c,CLM_PlanSpecificPFIN__c,
+
+                  CLM_Other_Prov_ID_Search__c,CLM_Error_Condition__c,CLM_Non_Error_Condition__c,Apttus__Account__c,Apttus__Account__r.name
+
+                  FROM Apttus__APTS_Agreement__c
+
+                  WHERE id=:this.agrmt.Id
+
+                  LIMIT :limitRows ];
+
+        strAgrmtId=agrmtRec.Id;
+
+        strAccountId=agrmtRec.Apttus__Account__c;
+
+        setProvIds.add(agrmtRec.Apttus__Account__c);
+
+        strPlan=agrmtRec.Plan__c;
+
+        //showing default prov Id along with account name when page loads
+
+        if(setProvIdDup.add(agrmtRec.CLM_Provider_Id__c)){
+
+            provSearchWrapper wrap=new provSearchWrapper();
+
+            wrap.provId=agrmtRec.CLM_Provider_Id__c;
+
+            wrap.accName=agrmtRec.Apttus__Account__r.name;
+
+            wrap.counter=0;
+
+            lstSearchWrapList.add(wrap);
+
+            lstSearchWrapListFinal.add(wrap);
+
+        }
+
+        //showing  "Other prov Id" along with account name which were already added whenever page loads.
+
+        system.debug('*****total provider ids'+ setProvIds);
+
+        for(CLM_Prov_Id_Search__c objProvIdSearch : [SELECT Id,CLM_Prov_Id__c,CLM_Account_Name__c,Account__c,Agreement__c
+
+                                                     FROM CLM_Prov_Id_Search__c
+
+                                                     WHERE agreement__c=:strAgrmtId AND CLM_Prov_Id__c!=:strRemoveProvIdTxt
+
+                                                     LIMIT :limitRows]){
+
+                                                         provSearchWrapper wrap=new provSearchWrapper();
+
+                                                         wrap.provId=objProvIdSearch.CLM_Prov_Id__c;
+
+                                                         wrap.accName=objProvIdSearch.CLM_Account_Name__c;
+
+                                                         lstSearchWrapList.add(wrap);
+
+                                                         lstSearchWrapListFinal.add(wrap);
+
+                                                         setProvIdDup.add(objProvIdSearch.CLM_Prov_Id__c);
+
+                                                         if(objProvIdSearch.Account__c!=null){
+
+                                                             setProvIds.add(objProvIdSearch.Account__c);
+
+                                                         }
+
+                                                         system.debug('*****total provider ids'+ setProvIds);
+
+                                                     }
+
+    }
+
+   
+
+    /*
+
+*smart search
+
+*/
+
+    public pagereference smartsearch()
+
+    {
+
+        getsearchSites();
+
+        return  null;  
+
+    }
+
+    /*
+
+* smart search for PFIN, Tax ID, NPI and Class
+
+*/
+
+    public list<locationWrapper> getsearchSites(){
+
+        set<string> setids = new set<string>();
+
+        List<CM_SPL_Addr__c> listServiceLocations = new List<CM_SPL_Addr__c>();
+
+        try{
+
+            setProvIdKeys=new set<string>();
+
+            setProvIdPFIN1Keys=new set<string>();
+
+            setProvIdPFIN2Keys=new set<string>();
+
+            /*check the existing locations to show selected mark*/
+
+            for(Agreement_Provider_Locations__c objAgrProvLoc : [SELECT Id,CLM_Service_Payee_Location_Address__c,CLM_SPL_Addr_Type__c,CLM_SPL_PFIN_No__c,CLM_Provider_Number_PFIN__c,
+
+                                                                 CLM_Provider_Name__r.Prov_ID__c
+
+                                                                 FROM Agreement_Provider_Locations__c
+
+                                                                 WHERE Agreement__c=:this.agrmt.Id
+
+                                                                 LIMIT :limitRows]){
+
+                                                                     setProvIdKeys.add(objAgrProvLoc.CLM_Service_Payee_Location_Address__c);
+
+                                                                     setProvIdPFIN1Keys.add(objAgrProvLoc.CLM_SPL_PFIN_No__c);
+
+                                                                     setProvIdPFIN2Keys.add(objAgrProvLoc.CLM_Provider_Number_PFIN__c);
+
+                                                                 }
+
+            //adding the selection to map from the current list before updating the list
+
+            for(locationWrapper wrap : lstWrapperList){
+
+                if(MapIdBool.containsKey(wrap.servLocation.Id) && wrap.isSelected!=MapIdBool.get(wrap.servLocation.Id)){
+
+                    MapIdBool.remove(wrap.servLocation.Id);
+
+                    MapIdBool.put(wrap.servLocation.Id,wrap.isSelected);
+
+                }
+
+            }                                                   
+
+            lstWrapperList.clear();
+
+            string soql='';
+
+            /*
+
+*PPN-82256-Apttus: FAC/ASC/ANC | Location enhancements for Address Usage Type (Groomed)
+
+*PPN-82259-Apttus: FAC/ASC/ANC | Location enhancements to include Active PFINs only (Groomed)
+
+*/
+
+            Map<Id,CM_SPL_Addr__c> mapCMSPLProv=new Map<Id,CM_SPL_Addr__c>([SELECT id,name,CM_SPL_Prov__r.Prov_ID__c,CM_SPL_Prov__c,CM_SPL_Eff_Date__c,Provider_ID_CLM__c,
+
+                                                                            CM_Status__c,Prov_Id__c,CM_SPL_Addr_Type__c,CLM_SPL_Medicare_Number__c,CLM_Medicaid_Provider_Number__c,CLM_Account_Organization_type__c,
+
+                                                                            CLM_Account_Class__c,CLM_NPI__c,CLM_Address__c,CM_SPL_City__c,CM_SPL_Zip_CD__c,CM_SPL_PFIN_No__c,CM_SPA_Tax_ID__c
+
+                                                                            FROM CM_SPL_Addr__c
+
+                                                                            WHERE CM_SPL_Prov__c IN:setProvIds AND CM_Status__c='Active']);
+
+            for(CM_SPL_Addr__c  objServicePayeeLocAddress : mapCMSPLProv.values()){                                                    
+
+                if(objServicePayeeLocAddress.CM_SPL_Addr_Type__c=='Service'
+
+                   && selectedAddressUsageType=='Service'){
+
+                       setids.add(objServicePayeeLocAddress.id);
+
+                   }else if(objServicePayeeLocAddress.CM_SPL_Addr_Type__c=='Billing'
+
+                            && selectedAddressUsageType=='Billing'){
+
+                                setids.add(objServicePayeeLocAddress.id);
+
+                            }else if((objServicePayeeLocAddress.CM_SPL_Addr_Type__c=='Billing'
+
+                                      || objServicePayeeLocAddress.CM_SPL_Addr_Type__c=='Service')
+
+                                     && selectedAddressUsageType=='Both'){                                             
+
+                                         setids.add(objServicePayeeLocAddress.id);
+
+                                     }else if(objServicePayeeLocAddress.CM_SPL_Addr_Type__c=='Service'
+
+                                              && selectedAddressUsageType==null){
+
+                                                  setids.add(objServicePayeeLocAddress.id);
+
+                                              }                                                
+
+            }
+
+            inttot=inttotalRecs =setids.size();
+
+            system.debug('inttot'+inttot);
+
+            if(intLimitSize>=inttotalRecs ){
+
+                intnumRecs=inttotalRecs;
+
+            }else if(boolpagination==false){
+
+                intnumRecs=intLimitSize;
+
+            }
+
+            list<CM_SPL_Addr__c> servLocNPI=new list<CM_SPL_Addr__c>();
+
+            string searchText = strSearchforText.trim();
+
+            string searchTextref ='%'+searchText+'%';
+
+            string exactsearchTextref =searchText;
+
+            string sortFullExp = sortExpression  + ' ' + strSortDirection; 
+
+            soql = 'SELECT id,name,CM_SPL_Prov__c,CM_SPL_Prov__r.Prov_ID__c,Prov_Id__c,CM_SPL_Addr_Type__c,CM_Status__c,CM_SPL_Eff_Date__c,Provider_ID_CLM__c,';
+
+            soql = soql+'CLM_SPL_Medicare_Number__c,CLM_Medicaid_Provider_Number__c,CLM_Account_Organization_type__c,CLM_Account_Class__c,CLM_NPI__c,CLM_Address__c,';
+
+            soql = soql+'CM_SPL_City__c,CM_SPL_Zip_CD__c,CM_SPL_PFIN_No__c,CM_SPA_Tax_ID__c,CM_SPL_Prov_Tax_ID__r.CM_PTI_Tax_Id__c FROM CM_SPL_Addr__c';
+
+            if(searchText==''){  
+
+                soql=soql+  ' where id IN:setids ORDER BY '+sortFullExp+' LIMIT '+intLimitSize+' OFFSET '+intcount;
+
+            }else{
+
+                if(boolpFIN && (searchText!=null && searchText!='')){
+
+                    soql = soql + ' where id IN:setids AND CM_SPL_PFIN_No__c like :searchTextref ORDER BY '+sortFullExp+' LIMIT :limitRows';
+
+                }else if(booltaxId && (searchText!=null && searchText!='')){
+
+                    soql = soql + ' where id IN:setids AND CM_SPL_Prov_Tax_ID__r.CM_PTI_Tax_Id__c  = :exactsearchTextref ORDER BY '+sortFullExp+'  LIMIT :limitRows';
+
+                }else if(boolAccClass && (searchText!=null && searchText!='')){
+
+                    soql = soql + ' where id IN:setids AND CLM_Account_Class__c  LIKE :searchTextref ORDER BY '+sortFullExp+' LIMIT :limitRows';
+
+                }
+
+                system.debug('***teet'+soql);
+
+            }
+
+            if(boolnpi==false || searchText==''){
+
+                lstServiceLocations=database.query(soql);
+
+            }
+
+            else if(boolnpi==true && (searchText!=null && searchText!='')){
+
+                String strQ = 'SELECT id,name,CM_SPL_Prov__r.Prov_ID__c,CM_SPL_Prov__c,CM_SPL_Eff_Date__c,Provider_ID_CLM__c,CM_Status__c,Prov_Id__c,CM_SPL_Addr_Type__c,';
+
+                strQ = strQ + 'CLM_SPL_Medicare_Number__c,CLM_Medicaid_Provider_Number__c,CLM_Account_Organization_type__c,CLM_Account_Class__c,CLM_NPI__c,CLM_Address__c,';
+
+                strQ = strQ + 'CM_SPL_City__c,CM_SPL_Zip_CD__c,CM_SPL_PFIN_No__c,CM_SPA_Tax_ID__c FROM CM_SPL_Addr__c WHERE id IN:setids ORDER BY ' +sortFullExp;
+
+                for(CM_SPL_Addr__c objAgrProvLoc : database.query(strQ)){
+
+                    if(objAgrProvLoc.CLM_NPI__c !=null){
+
+                        if(objAgrProvLoc.CLM_NPI__c.contains(searchText)){
+
+                            servLocNPI.add(objAgrProvLoc);
+
+                        }
+
+                    }
+
+                }
+
+               
+
+                lstServiceLocations=servLocNPI;
+
+            }
+
+            system.debug('***lstServiceLocations'+lstServiceLocations.size());
+
+            
+
+            for(CM_SPL_Addr__c objAgrProvLoc : lstServiceLocations){
+
+                locationWrapper wrap=new locationWrapper();
+
+                wrap.servLocation=objAgrProvLoc;
+
+                if(setProvIdKeys.contains(objAgrProvLoc.id) ){
+
+                    wrap.disable=true;
+
+                }else{
+
+                    wrap.disable=false;
+
+                }
+
+                if((!setProvIdKeys.contains(objAgrProvLoc.id))
+
+                   && ((setProvIdPFIN1Keys.contains(objAgrProvLoc.CM_SPL_PFIN_No__c))
+
+                       || (setProvIdPFIN2Keys.contains(objAgrProvLoc.CM_SPL_PFIN_No__c)))){
+
+                           wrap.disableRelated=true;
+
+                       }
+
+                if(wrap.servLocation.Id==strRemoveLocId){
+
+                    wrap.disable=false;
+
+                }
+
+                //udating current list of data with the prevoius list checkbox selections if any
+
+                if(MapIdBool.containsKey(wrap.servLocation.Id) && wrap.isSelected!=MapIdBool.get(wrap.servLocation.Id)){
+
+                    wrap.isSelected = MapIdBool.get(wrap.servLocation.Id);
+
+                }
+
+                //adding the remaining current list checkbox selection to map
+
+                if(!MapIdBool.containsKey(wrap.servLocation.Id)){
+
+                    MapIdBool.put(wrap.servLocation.Id,wrap.isSelected);
+
+                    lstWrapperList2.add(wrap);
+
+                }
+
+                lstWrapperList.add(wrap);
+
+            }
+
+        }catch(exception e){
+
+            system.debug('**error'+e.getLinenumber());
+
+            system.debug('**error'+e.getmessage());
+
+        }
+
+        system.debug('***wrapper size'+lstWrapperList.size());
+
+        return  lstWrapperList;  
+
+    }
+
+   
+
+    
+
+    /*
+
+*Saving the Selected table grid locations into Agreement provider location related list.
+
+*/
+
+    public pagereference createLocations()
+
+    {
+
+        list<Agreement_Provider_Locations__c> agreementLocations=new list<Agreement_Provider_Locations__c>();
+
+        set<Id> locIds=new set<Id>();
+
+        list<String> pFinList =new list<String>();
+
+        Set<String> pFinSet =new Set<String>();
+
+        Map<Id,Boolean> MapcopyOfIdBool = new Map<Id,Boolean>();
+
+        for(Agreement_Provider_Locations__c objAPL:[SELECT Id,CLM_Service_Payee_Location_Address__c
+
+                                                    FROM Agreement_Provider_Locations__c
+
+                                                    WHERE Agreement__c=:this.agrmt.Id
+
+                                                    LIMIT :limitRows]){
+
+                                                        locIds.add(objAPL.CLM_Service_Payee_Location_Address__c );
+
+                                                    }
+
+        try{
+
+            MapcopyOfIdBool.putAll(MapIdBool);
+
+            for(locationWrapper wrap1 : lstWrapperList){
+
+                for(locationWrapper wrap2 : lstWrapperList2){
+
+                    if(wrap1.servLocation == wrap2.servLocation){
+
+                        wrap2.isSelected=wrap1.isSelected;
+
+                    }
+
+                }
+
+                MapcopyOfIdBool.remove(wrap1.servLocation.Id);
+
+            }
+
+            for(locationWrapper  wrap : lstWrapperList2){
+
+                system.debug('***wrapper size'+lstWrapperList.size()+'::::'+wrap.isSelected);
+
+                if(MapcopyOfIdBool.containsKey(wrap.servLocation.Id) && wrap.isSelected!=MapcopyOfIdBool.get(wrap.servLocation.Id)){
+
+                    wrap.isSelected=MapcopyOfIdBool.get(wrap.servLocation.Id);
+
+                }
+
+                if((wrap.isSelected ==True|| test.isRunningTest()) && locIds.add(wrap.servLocation.Id)){
+
+                    pFinList.add(wrap.servLocation.CM_SPL_PFIN_No__c);
+
+                    agreementLocations.add(createAgreementLocation(wrap));
+
+                    wrap.isSelected=true;
+
+                    system.debug(agreementLocations.size());
+
+                }
+
+            }
+
+            system.debug(agreementLocations.size());
+
+            pFinSet.addAll(pFinList);
+
+            if(pFinSet.size() == pFinList.size()){
+
+                insert agreementLocations;
+
+            }else{
+
+                ApexPages.addmessage(new ApexPages.message(ApexPages.Severity.info,'You have selected both Service and Billing addresses for the same PFIN. To avoid duplicates please select only one and save.'));
+
+                return null;
+
+            }
+
+        }catch(exception e){
+
+        }
+
+        return (new pagereference('/'+this.agrmt.Id));
+
+    }
+
+    /*
+
+*Saving the Selected locations into Agreement provider location related list by using "Quick Save" button
+
+*/
+
+    public pagereference quickSave(){
+
+        list<Agreement_Provider_Locations__c> agreementLocations=new list<Agreement_Provider_Locations__c>();
+
+        list<String> pFinList =new list<String>();
+
+        Set<String> pFinSet =new Set<String>();
+
+        set<Id> locIds=new set<Id>();
+
+        Map<Id,Boolean> MapcopyOfIdBool = new Map<Id,Boolean>();
+
+        for(Agreement_Provider_Locations__c objAPL:[SELECT Id,CLM_Service_Payee_Location_Address__c from Agreement_Provider_Locations__c
+
+                                                    WHERE Agreement__c=:this.agrmt.Id
+
+                                                    LIMIT :limitRows]){
+
+                                                        locIds.add(objAPL.CLM_Service_Payee_Location_Address__c );
+
+                                                    }
+
+        try{
+
+            MapcopyOfIdBool.putAll(MapIdBool);
+
+            for(locationWrapper wrap1 : lstWrapperList){
+
+                for(locationWrapper wrap2 : lstWrapperList2){
+
+                    if(wrap1.servLocation == wrap2.servLocation){
+
+                        wrap2.isSelected=wrap1.isSelected;
+
+                    }
+
+                }
+
+                MapcopyOfIdBool.remove(wrap1.servLocation.Id);
+
+            }
+
+            for(locationWrapper  wrap : lstWrapperList2){
+
+                if(MapcopyOfIdBool.containsKey(wrap.servLocation.Id) && wrap.isSelected!=MapcopyOfIdBool.get(wrap.servLocation.Id)){
+
+                    wrap.isSelected=MapcopyOfIdBool.get(wrap.servLocation.Id);
+
+                }             
+
+                if((wrap.isSelected ==True || test.isRunningTest()) && locIds.add(wrap.servLocation.Id)){
+
+                    pFinList.add(wrap.servLocation.CM_SPL_PFIN_No__c);                   
+
+                    agreementLocations.add(createAgreementLocation(wrap));
+
+                    wrap.isSelected=true;
+
+               }
+
+            }
+
+            pFinSet.addAll(pFinList);
+
+            if(pFinSet.size() == pFinList.size()){
+
+                insert agreementLocations;
+
+            }else{
+
+                ApexPages.AddMessage(new ApexPages.Message(ApexPages.Severity.info,'You have selected both Service and Billing addresses for the same PFIN. To avoid duplicates please select only one and save.'));
+
+            }
+
+        }catch(exception e)
+
+        {
+
+        }  
+
+        return null;
+
+    }
+
+   
+
+    public Agreement_Provider_Locations__c createAgreementLocation(locationWrapper wrap){
+
+        Agreement_Provider_Locations__c agrLoc=new Agreement_Provider_Locations__c();
+
+        agrLoc.Agreement__c=this.agrmt.Id;
+
+        agrLoc.CLM_SPL_Addr_Type__c=wrap.servLocation.CM_SPL_Addr_Type__c;
+
+        agrLoc.CLM_SPL_City__c=wrap.servLocation.CM_SPL_City__c;
+
+        agrLoc.CLM_SPL_Zip_CD__c=wrap.servLocation.CM_SPL_Zip_CD__c;
+
+        agrLoc.CLM_SPL_PFIN_No__c=wrap.servLocation.CM_SPL_PFIN_No__c;
+
+        agrLoc.CLM_Provider_Number_PFIN__c=wrap.servLocation.CM_SPL_PFIN_No__c;
+
+        agrLoc.CLM_SPA_Tax_ID__c=wrap.servLocation.CM_SPA_Tax_ID__c;
+
+        agrLoc.CLM_Address__c=wrap.servLocation.CLM_Address__c;
+
+        agrLoc.CLM_SPL_NPI_Number__c=wrap.servLocation.CLM_NPI__c;
+
+        agrLoc.CLM_SPL_Medicare_Number__c=wrap.servLocation.CLM_SPL_Medicare_Number__c;
+
+        agrLoc.CLM_SPL_Medicaid_Provider_Number__c=wrap.servLocation.CLM_Medicaid_Provider_Number__c;
+
+        agrLoc.Agreement_Provider_Location_Account__c=wrap.servLocation.CM_SPL_Prov__c;
+
+        agrLoc.CLM_Provider_Name__c=wrap.servLocation.CM_SPL_Prov__c;
+
+        agrLoc.CLM_Facility_Name__c=wrap.servLocation.CM_SPL_Prov__c;
+
+        agrLoc.CLM_Service_Type__c=agrmtRec.Provider_Service_Type__c;
+
+        agrLoc.Provider_ID_CLM__c=wrap.servLocation.Provider_ID_CLM__c;
+
+        agrLoc.PFIN_Effective_Date_CLM__c=wrap.servLocation.CM_SPL_Eff_Date__c;
+
+        agrLoc.CLM_Account_Organization_Type__c=wrap.servLocation.CLM_Account_Organization_type__c;
+
+        agrLoc.CLM_Account_Class__c=wrap.servLocation.CLM_Account_Class__c;
+
+        agrLoc.CLM_Service_Payee_Location_Address__c=wrap.servLocation.Id;
+
+        return agrLoc;
+
+    }
+
+    /*
+
+* Cancel method
+
+*/
+
+    public pagereference Cancel(){
+
+        return (new pagereference('/'+this.agrmt.Id));
+
+    }
+
+   
+
+    /*
+
+*NPI search-Adding provider identication related values to Service and payee location object list.
+
+*/
+
+    public void updteNPIDetails(){
+
+        list<CM_SPL_Addr__c> servcLocTOUpdate=new list<CM_SPL_Addr__c>();
+
+        string npiVals='';
+
+        string medicareVals='';
+
+        string medicaidVals='';
+
+        //NPI,Mediacare,Mediacaid or Govt. Id numbers are in "Provider Identification" object.
+
+        list<CM_Provider_Identification__c> provIdentList=[SELECT Id,CM_Issu_Ident_Nmbr__c,CM_Prvdr_Iden_Typ_Cd__c from CM_Provider_Identification__c
+
+                                                           where CM_PI_Prov__c=:strAccountId
+
+                                                           LIMIT :limitRows];
+
+        for(CM_Provider_Identification__c objProvIdentification : provIdentList){
+
+            if(objProvIdentification.CM_Prvdr_Iden_Typ_Cd__c=='NPI'){
+
+                npiVals+=objProvIdentification.CM_Issu_Ident_Nmbr__c+', ';
+
+            }
+
+            if(objProvIdentification.CM_Prvdr_Iden_Typ_Cd__c=='Medicare'){
+
+                medicareVals+=objProvIdentification.CM_Issu_Ident_Nmbr__c+', ';
+
+            }
+
+            if(objProvIdentification.CM_Prvdr_Iden_Typ_Cd__c=='Govt. ID'){
+
+                medicaidVals+=objProvIdentification.CM_Issu_Ident_Nmbr__c+', ';
+
+            }
+
+        }
+
+        npiVals=npiVals.removeend(', ');
+
+        medicareVals=medicareVals.removeend(', ');
+
+        medicaidVals=medicaidVals.removeend(', ');
+
+        //Adding above details to "Service & Payee Location" object so that all details comes under same object to show in Location grid.
+
+        list<CM_SPL_Addr__c> servLocList=[SELECT id,name,Prov_Id__c,CM_SPL_Prov__c,CM_Status__c,CLM_SPL_Medicare_Number__c,CLM_NPI__c,
+
+                                          CLM_Medicaid_Provider_Number__c,CM_SPL_Addr_Type__c,CLM_Address__c,CM_SPL_City__c,CM_SPL_Zip_CD__c,
+
+                                          CM_SPL_PFIN_No__c,CM_SPA_Tax_ID__c
+
+                                          FROM CM_SPL_Addr__c
+
+                                          WHERE CM_SPL_Prov__c=:strAccountId
+
+                                          LIMIT :limitRows];
+
+        for(CM_SPL_Addr__c servc : servLocList){
+
+            if(servc.CLM_NPI__c!=npiVals){
+
+                servc.CLM_NPI__c=npiVals;
+
+            }
+
+            if(servc.CLM_SPL_Medicare_Number__c!=medicareVals){
+
+                servc.CLM_SPL_Medicare_Number__c=medicareVals;
+
+            }
+
+            if(servc.CLM_Medicaid_Provider_Number__c!=medicaidVals){
+
+                servc.CLM_Medicaid_Provider_Number__c=medicaidVals;
+
+            }
+
+            servcLocTOUpdate.add(servc);
+
+        }
+
+        if(!servcLocTOUpdate.isEmpty()){
+
+            update servcLocTOUpdate;
+
+        }   
+
+    }
+
+   
+
+    /*
+
+*Adding other provider ids to list once you click on '+' symbol on page.
+
+*/
+
+    public pagereference searchProvId(){
+
+        string provIdSearchTxt=strProvIdSearch.trim();
+
+        set<string> provIdList=new set<string>();
+
+        boolean provIdExist=false;
+
+        account accnt;
+
+        system.debug('provIdSearchTxt33***'+provIdSearchTxt);
+
+        try{
+
+            if(provIdSearchTxt=='' || provIdSearchTxt==null){
+
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Please Enter Prov ID'));
+
+                return null;
+
+            }
+
+            //query to show account name in other provider id search
+
+            accnt=[SELECT id,Name,Prov_ID__c,CM_Corporate_Entity_Code__c,Class__c,Organization_Type__c
+
+                   FROM account
+
+                   WHERE Prov_ID__c=:provIdSearchTxt
+
+                   limit 1];
+
+        }catch(exception e){
+
+            system.debug('exception***'+e);
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID does not exist.'));
+
+            return null;
+
+        }
+
+        boolean flag= (accnt.Class__c==null) ?true:false;
+
+        if(flag){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'The Provider ID you have selected does not have class. Please select Provider ID which has class'));
+
+            return null;
+
+        }
+
+        if(strPlan=='New Mexico' && accnt.CM_Corporate_Entity_Code__c!='NM1'){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID does not belonging to New Mexico'));
+
+            return null;
+
+        }
+
+        if(strPlan=='Montana' && accnt.CM_Corporate_Entity_Code__c!='MT1'){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID does not belonging to Montana'));
+
+            return null;
+
+        }
+
+        if(strPlan=='Texas' && accnt.CM_Corporate_Entity_Code__c!='TX1' ){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID does not belonging to Texas'));
+
+            return null;
+
+        }
+
+        //PPN-76219 Apttus: TX MedicalGroup | Location: Validation for Adding other ProviderID ; Record Type - Medical Group
+
+        if(strPlan == 'Texas' && agrmtRec.APTS_Record_Type_Name__c.equals('Medical Group') &&  (!(accnt.Class__c.equals('P')  || (accnt.Class__c.equals('C') && accnt.Organization_Type__c.equals('MED/CLN') )))){
+
+           
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'The ProviderID you have selected cannot be associated to a Medical Group Contract.Please select a ProviderID  with appropriate Class and Organization Type'));
+
+            return null;
+
+        }
+
+        //PPN-82219 Facility| Location: Validation for Adding other ProviderID ; Record Type - Facility
+
+        if(agrmtRec.APTS_Record_Type_Name__c.equals('Facility') && (accnt.Class__c.equals('P'))){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'The ProviderID you have selected cannot be associated to a Facility Contract.Please select a ProviderID  with appropriate Class and Organization Type'));                     
+
+            return null; 
+
+        }
+
+        //PPN-82219 Facility| Location: Validation for Adding other ProviderID ; Record Type - Facility
+
+        if(agrmtRec.APTS_Record_Type_Name__c.equals('Facility') && (!(accnt.Class__c.equals('C') && accnt.Organization_Type__c.equals('ANCMEDGP') ) &&(!accnt.Class__c.equals('F')) &&(!accnt.Class__c.equals('P')))){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please note that you are adding a Provider ID which does not have Organization Type ANCMEDGP'));                     
+
+            //return null; 
+
+        }
+
+       //PPN-76220 Apttus: TX ASC| Location: Validation for Adding other ProviderID ;Record Type - ASC
+
+        if(strPlan == 'Texas' && agrmtRec.APTS_Record_Type_Name__c.equals('ASC') && (!(accnt.Class__c.equals('F')|| (accnt.Class__c.equals('C') && accnt.Organization_Type__c.equals('ANCMEDGP') )))){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'The ProviderID you have selected cannot be associated to a ASC Contract.Please select a ProviderID  with appropriate Class and Organization Type'));
+
+            return null; 
+
+        }
+
+        //PPN-76220 Apttus: Non-ASC Ancillary| Location: Validation for Adding other ProviderID ;Record Type - Non-ASC Ancillary
+
+        if(strPlan == 'Texas' && agrmtRec.APTS_Record_Type_Name__c.equals('Non-ASC Ancillary') && (!(accnt.Class__c.equals('F')|| (accnt.Class__c.equals('C') && accnt.Organization_Type__c.equals('ANCMEDGP') )))){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'The ProviderID you have selected cannot be associated to a ANC Contract.Please select a ProviderID  with appropriate Class and Organization Type'));
+
+            return null; 
+
+        }
+
+        if(strPlan=='Oklahoma' && accnt.CM_Corporate_Entity_Code__c!='OK1'){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID does not belonging to Oklahoma'));
+
+            return null;
+
+        }
+
+        if(strPlan=='Illinois' && accnt.CM_Corporate_Entity_Code__c!='IL1'){
+
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID does not belonging to illinois'));
+
+            return null;
+
+        }
+
+        for(provSearchWrapper  wrapper: lstSearchWrapList){
+
+            if(wrapper.provId==provIdSearchTxt){
+
+                provIdExist=true;
+
+            }
+
+        }
+
+        system.debug('**provIdSearchTxt'+provIdSearchTxt+'::::'+strProvIdSearch);
+
+        if(provIdSearchTxt!='' && strProvIdSearch!='' && strProvIdSearch!=null && provIdSearchTxt!=null){
+
+            if(setProvIdDup.add(provIdSearchTxt)){
+
+                provSearchWrapper wrap=new provSearchWrapper();
+
+                wrap.provId=provIdSearchTxt;
+
+                wrap.accName=accnt.Name;
+
+                wrap.counter=lstSearchWrapList.size();
+
+                lstSearchWrapList.add(wrap);
+
+                lstSearchWrapListFinal.add(wrap);
+
+                //insert temp obj data here
+
+                system.debug('**pr');
+
+                /*store searched "Other prov ids" on agreement by using another object called "strProvIdSearch", so that whatever other
+
+provider ids you have added for search will remain being added as long as you delete them by clicking Red Cross(*)symbol.*/
+
+                CLM_Prov_Id_Search__c provSearch=new CLM_Prov_Id_Search__c();
+
+                provSearch.Name=provIdSearchTxt;
+
+                provSearch.CLM_Prov_Id__c=provIdSearchTxt;
+
+                provSearch.CLM_Account_Name__c=accnt.Name;
+
+                provSearch.Account__c=accnt.Id;
+
+                provSearch.Agreement__c=agrmt.Id;
+
+                insert provSearch;
+
+            }else{
+
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.info,'Prov ID already added'));
+
+                return null;
+
+            }
+
+        }
+
+        for(provSearchWrapper wrap : lstSearchWrapList){
+
+            provIdList.add(wrap.provId);
+
+        }
+
+        provIdList.add(strProvIdSearch);
+
+        system.debug('***id list'+provIdList+':::'+provIdSearchTxt);
+
+        list<account> accounts=[select id,Name,Prov_ID__c from account where Prov_ID__c IN:provIdList AND Prov_ID__c!=Null];
+
+        system.debug('***accounts'+accounts.size());
+
+        for(account objAccount: accounts){
+
+            system.debug('***accid'+objAccount.Id);
+
+            /*Resulting account ids are being added to "setProvIds" variable. this variable we are using in one of the above SOQL
+
+so that Location grid will automatically displays locations in grid.*/
+
+            setProvIds.add(objAccount.Id);
+
+            system.debug('list of prov ids'+setProvIds);
+
+        }
+
+        system.debug('here***'+provIdSearchTxt);
+
+        //clear search text after adding to prov id list
+
+       
+
+        strProvIdSearch='';
+
+       
+
+        return null;
+
+    }
+
+   
+
+    /*
+
+*Removing the other provider ID which was already added by cliking on Remove('*') symbol on VF page
+
+*/
+
+    public pagereference removeProvId(){
+
+        strProvIdSearch='';
+
+        string provIdRemove=strRemoveProvIdTxt;
+
+        set<string> provIdsFinal=new set<string>();
+
+        system.debug('***remove'+provIdRemove+':::'+lstSearchWrapList.size());
+
+        setProvIds.clear();
+
+        //remove from set
+
+        setProvIdDup.remove(strRemoveProvIdTxt);
+
+        try{
+
+            //delete stored prov id on agreement
+
+            CLM_Prov_Id_Search__c provIdStoredDel=[select Id from CLM_Prov_Id_Search__c
+
+                                                   where agreement__c=:strAgrmtId AND CLM_Prov_Id__c=:strRemoveProvIdTxt
+
+                                                   limit 1];
+
+            delete provIdStoredDel;
+
+        }catch(exception e){
+
+            system.debug('exception here'+e);  
+
+        }
+
+        try{
+
+            for(Agreement_Provider_Locations__c agrmtLoclst : [SELECT Id from Agreement_Provider_Locations__c
+
+                                                               WHERE Provider_ID_CLM__c=:strRemoveProvIdTxt AND Agreement__c=:this.agrmt.Id
+
+                                                               LIMIT :limitRows])
+
+                delete agrmtLoclst;
+
+            for(locationWrapper wrap : lstWrapperList){
+
+                if(wrap.servlocation.id == strRemoveProvIdTxt){
+
+                    wrap.isSelected=false;
+
+                    if(MapIdBool.containsKey(wrap.servlocation.id)){
+
+                        MapIdBool.Remove(wrap.servlocation.id);
+
+                        MapIdBool.put(wrap.servlocation.id,False);
+
+                    }
+
+                }
+
+            }
+
+           
+
+            getsearchSites();
+
+            strRemoveProvIdTxt=null;
+
+        }catch(exception e){
+
+            system.debug('exception here **'+e);
+
+        }
+
+        for (Integer i =0; i <=lstSearchWrapList.size()-1; i++ ){
+
+            provSearchWrapper WrapObj=lstSearchWrapList[i];
+
+            if (WrapObj.provId == provIdRemove){
+
+                system.debug('***test'+WrapObj.provId);
+
+                //remove from list
+
+                lstSearchWrapList.remove(i);
+
+                lstSearchWrapListFinal.remove(i);
+
+                system.debug('test***'+lstSearchWrapList.size());
+
+            }
+
+        }
+
+        system.debug('***list'+lstSearchWrapList.size());
+
+        for(provSearchWrapper wrap : lstSearchWrapList){
+
+            provIdsFinal.add(wrap.provId);
+
+        }
+
+        list<account> accounts=[select id from account
+
+                                WHERE Prov_ID__c IN:provIdsFinal AND Prov_ID__c!=Null
+
+                                LIMIT :limitRows];
+
+        system.debug('***accounts '+accounts.size());
+
+        for(account objAccount: accounts){
+
+            system.debug('***accid '+objAccount.Id);
+
+            /*Resulting account ids are being added to "setProvIds" variable. this variable we are using in one of the above SOQL
+
+so that Location grid will automatically delete locations in grid.*/
+
+            setProvIds.add(objAccount.Id);
+
+            system.debug('list of prov ids'+setProvIds);
+
+        }
+
+        system.debug('***accid setProvIds'+setProvIds+'::::'+lstSearchWrapListFinal.size()+'::::'+lstSearchWrapListFinal);
+
+        return null;
+
+    } 
+
+    
+
+    /*
+
+*To automatically control removing location from "Agreement provider location" related list once you click on Red Cross('*') symbol in locations table grid.
+
+*/
+
+    public pagereference removeLocation(){
+
+        try{
+
+            string locId=strRemoveLocId;
+
+            Agreement_Provider_Locations__c agrmtLoc=[SELECT Id from Agreement_Provider_Locations__c
+
+                                                      WHERE CLM_Service_Payee_Location_Address__c=:locId AND Agreement__c=:this.agrmt.Id
+
+                                                      LIMIT 1];
+
+           
+
+            system.debug('****objAgrProvLoc'+strRemoveLocId+':::'+agrmtLoc.Id);
+
+            delete agrmtLoc;
+
+            for(locationWrapper wrap : lstWrapperList){
+
+                if(wrap.servlocation.id == locId){
+
+                    wrap.isSelected=false;
+
+                    if(MapIdBool.containsKey(wrap.servlocation.id)){
+
+                        MapIdBool.Remove(wrap.servlocation.id);
+
+                        MapIdBool.put(wrap.servlocation.id,False);
+
+                    }
+
+                }
+
+            }
+
+           
+
+            getsearchSites();
+
+            strRemoveLocId=null;
+
+        }catch(exception e){
+
+            //system.debug('exception here **'+e);
+
+        }
+
+        return null;
+
+    }
+
+   
+
+    /*
+
+*Pagination buttons
+
+*/
+
+    public PageReference Firstbtn(){
+
+        intcount=0;
+
+        intofRecords=1;
+
+        intnumRecs=intLimitSize;
+
+        intofRecords2=intofRecords;
+
+        intnumRecs2=intnumRecs;
+
+        boolmaster=false;
+
+        return null;
+
+    }
+
+    public PageReference prvbtn() {
+
+        intcount=intcount-intLimitSize;
+
+        boolisLast=false;
+
+        if(boolisLast){
+
+            intnumRecs=intofRecords2;
+
+            intofRecords=intofRecords2-intLimitSize+1;
+
+        }else{
+
+            intnumRecs=intofRecords2-1;
+
+            intofRecords=intofRecords2-intLimitSize;
+
+        }
+
+        intofRecords2=intofRecords2-intLimitSize;
+
+        boolmaster=false;
+
+        boolisLast=false;
+
+       
+
+        return null;
+
+    }
+
+    public PageReference Nxtbtn() {
+
+       
+
+        intcount=intcount+intLimitSize;
+
+        intofRecords=intnumRecs+1;//intcount;
+
+        intofRecords2=intofRecords;
+
+        if(intnumRecs+intLimitSize>inttotalRecs){
+
+            intnumRecs=inttotalRecs;
+
+        }else{
+
+            intnumRecs=intnumRecs+intLimitSize;
+
+        }
+
+        intnumRecs2=intnumRecs;
+
+        system.debug('limit***'+intcount);
+
+        boolmaster=false;
+
+        boolpagination=true;
+
+       
+
+        return null;
+
+    }
+
+    public PageReference lstbtn() {
+
+        if(math.mod(inttotalRecs,intLimitSize)==0){
+
+            intcount= inttotalRecs -intLimitSize;
+
+            intofRecords=intcount+1;
+
+        }else{
+
+            intcount= inttotalRecs - math.mod(inttotalRecs,intLimitSize);
+
+            intofRecords=intcount+1;
+
+        }
+
+        system.debug('***in last'+math.mod(inttotalRecs,intLimitSize)+':::'+intLimitSize+':::'+inttotalRecs);
+
+        intnumRecs=inttotalRecs;
+
+        intnumRecs2=intnumRecs;
+
+        intofRecords2=intofRecords;
+
+        boolmaster=false;
+
+        boolpagination=true;
+
+        boolisLast=true;
+
+        system.debug('total recs**'+intnumRecs+':::'+inttotalRecs);
+
+        return null;
+
+    }
+
+    public Boolean getNxt(){
+
+        if(((intcount+ intLimitSize) > inttotalRecs) || (intnumRecs==inttotalRecs) || (strSearchforText!=''))
+
+            return true;
+
+        else
+
+            return false;
+
+    }
+
+    public Boolean getPrv() {
+
+        if(intcount== 0)
+
+            return true;
+
+        else
+
+            return false;
+
+    }
+
+   
+
+    /*
+
+*Wrapperclass declaration
+
+*/
+
+    public class locationWrapper
+
+    {
+
+        public boolean isSelected{get; set;}
+
+        public CM_SPL_Addr__c servLocation{get;set;}
+
+        public string address{get;set;}
+
+        public boolean disable{get;set;}
+
+        public boolean disableRelated{get;set;}
+
+       
+
+    }
+
+    public class provSearchWrapper{
+
+        public string provId {get; set;}
+
+        public string accName{get;set;}
+
+        public integer counter{get;set;}
+
+    }
+
+   
+
+    /*
+
+* Sorting the columns of the location grid.
+
+*/
+
+    public String sortExpression{
+
+        get{
+
+            return strSortExp;
+
+        }
+
+        set{
+
+            //if the column is clicked on then switch between Ascending and Descending modes
+
+            if (value == strSortExp)
+
+                strSortDirection = (strSortDirection == 'ASC')? 'DESC' : 'ASC';
+
+            else
+
+                strSortDirection = 'ASC';
+
+            strSortExp = value;
+
+        }
+
+    }
+
+    public String getSortDirection(){
+
+        //if not column is selected
+
+        if (sortExpression == null || sortExpression == '')
+
+            return 'ASC';
+
+        else
+
+            return strSortDirection;
+
+    }
+
+    public void setSortDirection(String value){ 
+
+        strSortDirection = value;
+
+    }
+
+    public void ViewData() {
+
+        getsearchSites();
+
+    }
+
+   
+
+    //It classify wheter page rederering in classic UI or Lightning UI.
+
+    public Boolean GetIsClassic(){
+
+        return false;
+
+    }
+
+   
+
+}
+
+ 
