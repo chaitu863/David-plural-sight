@@ -1,0 +1,29 @@
+public with sharing class elephantWrapperApex {
+   
+    @AuraEnabled(cacheable=true)
+    public static list<wrapperClass> methodName(){
+        list<wrapperClass> wraplst = new list<wrapperClass>();
+        try {
+            for(account ac:[SELECT id,name,(select id,firstname,lastname from contacts) from account limit 5]){
+            wraplst.add(new wrapperClass(ac,ac.contacts));
+            }
+            return wraplst;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    public class wrapperClass{
+        @auraEnabled public account acc;
+        @auraEnabled public list<contact> conlst;
+   
+        public wrapperClass(account acc,list<contact>conlst){
+            try {
+                this.acc = acc;
+                this.conlst = conlst;
+            } catch (Exception e) {
+                throw new AuraHandledException(e.getMessage());
+            }
+        }
+    }
+}
