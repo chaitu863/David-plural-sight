@@ -1,0 +1,57 @@
+<apex:page controller="contactWrapperCon">
+    <apex:form >
+        <apex:pageBlock title="contacts Wrapper Example">
+            <apex:commandButton value="submit" action="{!submit}"/>
+            <apex:pageBlockSection title="Top 10 contacts">
+                <apex:dataTable value="{!conwrapperlst}" var="cw" >
+                    <apex:column headervalue="select">
+                        <apex:inputCheckbox value="{!cw.flag}">
+                        </apex:inputCheckbox>
+                    </apex:column>
+                       <apex:column value="{!cw.con.firstname}" headervalue="firstname"/>
+                        <apex:column value="{!cw.con.lastname}" headervalue="lastname"/>
+                        <apex:column value="{!cw.con.phone}" headervalue="phone"/>
+                </apex:dataTable>
+            </apex:pageBlockSection> 
+            <apex:pageBlockSection title="Selected contacts">
+                   <apex:dataTable value="{!selectedConlst}" var="sc" >
+
+                    <apex:column value="{!sc.firstname}" headervalue="firstname"/>
+                    <apex:column value="{!sc.lastname}" headervalue="lastname"/>
+                    <apex:column value="{!sc.phone}" headervalue="phone"/> 
+                </apex:dataTable>
+            </apex:pageBlockSection> 
+           
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
+
+public class contactWrapperCon {
+
+    public list<contactWrapper> conwrapperlst {get;set;}
+    public list<contact> selectedConlst {get;set;}
+    public class contactWrapper {
+        public contact con{get;set;}
+        public boolean flag{get;set;}
+    }
+    public contactWrapperCon(){
+        conwrapperlst = new list<contactWrapper>();
+        selectedConlst = new list<contact>();
+        list<contact> querycontact = [SELECT id,firstname,lastname,phone from contact limit 10];
+        for(contact co:querycontact){
+            contactWrapper cw = new contactWrapper();
+            cw.con = co;
+            cw.flag = false;
+            conwrapperlst.add(cw);
+        }
+    }
+    
+    public void submit(){
+        for(contactWrapper conlst : conwrapperlst){
+            if(conlst.flag){
+                selectedConlst.add(conlst.con);
+                conlst.flag=true;
+            }
+        }
+    }
+}
