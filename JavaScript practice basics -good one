@@ -1,0 +1,115 @@
+<template>
+    <lightning-card>
+        string variable is :{stringVar} <br/>
+        boolean var is : {jsstringlet}  <br/>
+        jsnumvar var is : {jsnumvar}  <br/>
+        jsarrayisempty var is : {jsarrayisempty}  <br/>
+        jsarrayvalues var is : {jsarrayvalues}  <br/>
+        jsarraydiff is : {jsarraydiff} <br/>
+        jsarraywithObj is : {jsarraywithObj} <br/>
+        jsarraywithObj is 2 : <ul class="slds-m-around_medium">
+            <template for:each={jsarraywithObj} for:item="singleObj">
+                <li key={singleObj.state}>
+                    {singleObj.name}, {singleObj.Age}
+                </li>
+            </template>
+        </ul> <br/>
+
+      constant value is : {jsgetmethod} <br/>
+      js caluclated values are : {jscaluculates}<br/>
+      booleancal value is : {booleancal} <br/>
+      second bool value is : {getboolmethod}<br/>
+      IIFE method with no param : {iifemethod}<br/>
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+
+export default class TestJSfile extends LightningElement {
+    
+    salesofrcesrg = 'DEVELOPER';
+    stringVar =`chaitanya is a \'salesofrce\' ${this.salesofrcesrg}`;
+    jsstringlet = false;
+    getbooltwo = false;
+    jsnumvar = 30;
+    jsiifepatt = false;
+    jsarrayisempty = [];
+    jsarrayvalues =['chaitanya','poornima','meghana','sai'];
+    jsarraydiff = ['chaitanya',true,20];
+    jsarraywithObj = [
+        {name:'chaitanya1',
+        state :'CA',
+        Age : 20},
+        {name:'chaitanya2',
+        state :'CA2',
+        Age : 21},
+        {name:'chaitanya3',
+        state :'CA3',
+        Age : 22}
+    ];
+
+    get jsgetmethod(){
+        const jscon=20;
+        return jscon;
+    }
+
+    get jscaluculates(){
+        let num1 = 10;
+        let num2 = 20;
+        let total = num1 + num2;
+        total += 40;
+        return total;
+    }
+
+    get booleancal(){
+        if(this.jsstringlet){
+            console.log('boolean first method');
+           let mohanvar = this.ternaryfunction();
+           return mohanvar;
+        }else if(!this.jsstringlet){
+            let falsevar = function(){
+                return 'this is anonymous function';
+            }
+            return falsevar();
+        }
+    }
+
+        connectedCallback(){
+            //ternaryfunction();
+        }
+        ternaryfunction(){
+            console.log('boolean second method');
+            return (this.jsnumvar ===20) ? 'number var is 20': 'number var is not 20';
+        }
+    
+        get getboolmethod(){
+            if(this.getbooltwo){
+                let storehere = ()=>{
+                    return 'this is arrow funtion no name no param';
+                }
+                return storehere();
+            }else {
+                let storehere = (a,b)=>{
+                    return a+b;
+                }
+                return storehere(2,3);
+            }
+        }
+      
+        get iifemethod(){
+            if(this.jsiifepatt){
+                let iifevar = (()=>{
+                    return 'this is IIFE method without param';
+                })();
+                return iifevar;
+            }else {
+                let a=15;
+                let b=20;
+                let iifevar = (()=>{
+                    return a+b;
+                })(a,b);
+                return iifevar;
+            }
+        }
+}
