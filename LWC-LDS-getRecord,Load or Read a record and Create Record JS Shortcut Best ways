@@ -1,3 +1,6 @@
+FIRST APPROCH:
+
+(second approach covered all scenarios)
 ON HOME PAGE I PLACED this component.
 here i used create record syntax shortcut mainly for fields attribute)and loading record(specially using getfieldvalue method)
 
@@ -84,5 +87,101 @@ export default class ChaituCreateRecord extends LightningElement {
           }).catch(error=>{
               console.log('error message is',error.body.message);
           })
+    }
+}
+
+SECOND APPROACH:
+
+which covers all of it well than first approach.
+
+<template>
+    <lightning-card title="LDS Different">
+        <lightning-layout multiple-rows>
+            <lightning-layout-item size="12" padding="around-medium">
+                <lightning-input label="Name" name="NAME" onchange={namehandler}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-medium">
+                <lightning-input label="Phone" name="Phone" type="Phone" onchange={phonehandler}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-medium">
+                <lightning-input label="Url" name="URL" type="url" onchange={urlhandler}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="12" padding="around-medium">
+                <lightning-button label="Create Account" name="CA" onclick={createAccountHandler}></lightning-button>
+            </lightning-layout-item><br/>
+            Name is : {nametopass}<br/>
+            Phone is :{phonetopass}<br/>
+            Email using get method is : {getaccountemail}<br/>
+            email second way is :{emailtopass}<br/>
+
+            
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+
+import { LightningElement ,wire} from 'lwc';
+import { createRecord,getFieldDisplayValue,getRecord, getFieldValue} from 'lightning/uiRecordApi';
+import ACCOUNTOBJ from '@salesforce/schema/Account';
+import ACCOUNTPHONE from '@salesforce/schema/Account.Phone';
+export default class GoatLDS extends LightningElement {
+
+    accountname;
+    phonejs;
+    urlhandlerjs;
+    recordId;
+    nametopass;
+    phonetopass;
+    emailtopass;
+    phonetopasstwo;
+    @wire(getRecord, { recordId: '$recordId', fields: [ACCOUNTPHONE,'Account.Name','Account.Email__c']})
+    wiredRecord({ error, data }) {
+        if (data) {
+               console.log('inside data'+JSON.stringify(data));
+               this.nametopass = getFieldValue(data,'Account.Name');
+               this.phonetopass = getFieldValue(data,ACCOUNTPHONE);
+               this.emailtopass = data.fields.Email__c.value; 
+              
+               console.log('name in data is '+this.nametopass );
+               console.log('phone in data is '+this.phonetopass );
+        } else if (error) {
+            console.log('error message is '+error.body.message);
+        }
+    }
+
+    @wire(getRecord, { recordId: '$recordId', fields: ['Account.Email__c']})
+    wiredRecordtwo;
+    
+
+    namehandler(event){
+        this.accountname = event.target.value;
+    }
+
+    phonehandler(event){
+        this.phonejs = event.target.value;
+    }
+
+    urlhandler(event){
+        this.urlhandlerjs = event.target.value;
+    }
+
+    createAccountHandler(){
+
+        const fields = {'Name':this.accountname,[ACCOUNTPHONE.fieldApiName]:this.phonejs,'Email__c':this.urlhandlerjs};
+        const recordinput = {apiName:ACCOUNTOBJ.objectApiName,fields}; // OR const recordinput = {apiName:'Account',fields};
+        createRecord(recordinput).then(Response=>{
+           console.log('account id is : '+Response.id);
+           this.recordId = Response.id;
+        }).catch(error=>{
+            console.error('error message is'+ error.body.message);
+        });
+    }
+
+    get getaccountemail(){
+        if(this.wiredRecordtwo.data){
+            console.log('inside get method'+this.wiredRecordtwo.data.fields.Email__c);
+          return this.wiredRecordtwo.data.fields.Email__c.value;
+        }else
+        return undefined;
     }
 }
