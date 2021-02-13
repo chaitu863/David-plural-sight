@@ -36,6 +36,7 @@ import { createRecord, getRecord, getFieldValue,getFieldDisplayValue, updateReco
 import {
     LightningElement,wire
 } from 'lwc';
+import ACCOUNTOBJ from '@salesforce/schema/Account';
 import ACCOUNT_NAME from '@salesforce/schema/Account.Name';
 import ACCOUNT_SITE from '@salesforce/schema/Account.Site';
 import ACCOUNT_PHONE from '@salesforce/schema/Account.Phone';
@@ -72,7 +73,7 @@ export default class ChaituCreateRecord extends LightningElement {
 
     handleclick(){
         const fields = {[ACCOUNT_NAME.fieldApiName]:this.namejs,[ACCOUNT_SITE.fieldApiName]:this.emailjs,[ACCOUNT_PHONE.fieldApiName]:this.phonejs};
-        const recordInput = {apiname :'Account',fields};
+        const recordInput = {apiname :ACCOUNTOBJ.objectApiName,fields};
       createRecord(recordInput)
       .then(
           response =>{
