@@ -1,0 +1,11 @@
+LINK IS : http://www.saravanansfdc.com/2020/06/how-to-use-refreshapex-to-refresh-list.html
+
+How to use refreshApex to refresh the list in LWC
+
+In this post , we will see the how to refresh the list in lwc using refreshApex concept.
+
+List of topics covered in this post as below.
+Display the contacts related to selected Account with sortable column & row actions
+Adding new button on top of the account to create new contact
+if user creating the new contact using new button ,the contact list will update automatically.
+if user deleting the any contact using row actions,the contact list will update automatically.
