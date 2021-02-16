@@ -1281,3 +1281,151 @@ public class JJMSLCoverageController
         }
     
 }
+
+
+/************************************************************
+* File Name     :  JJMSLCoverageControllerTest
+* Description   :  Which covers the code for JJMSLCoverageController 
+* @author       :  Cognizant
+
+* Modification Log : 
+=============================================================
+* Ver.    Date          Author     Modification
+-------------------------------------------------------------
+* 1.0   08/27/2020      Cognizant    File Created
+************************************************************/
+@isTest
+public class JJMSLCoverageControllerTest {
+    
+   @testSetup static void setup() {
+        Profile p = [SELECT Id FROM Profile WHERE Name IN ('JNJ MSL Platform-Admin','JNJ MSL Platform','JNJ VE Platform') LIMIT 1]; 
+        UserRole  roles = [Select id from UserRole  where Name='105-HT-0000000' limit 1];
+
+        List<JJ_Zip_to_Terr__c> testZiptoTerr = new List<JJ_Zip_to_Terr__c>();
+        for(Integer i=0;i<10;i++) {
+            testZiptoTerr.add(new JJ_Zip_to_Terr__c(Territory_Name__c = '105-HT-0000000',Zip_Code__c='10000'+i,
+                                                    City_JNJ__c='city'+i,JJ_County__c='county'+i,Primary_Assignment_JNJ__c='105-HT-0000000',
+                                                    JJ_Coverage_Type__c = 'MSL',
+                                                    Primary_Assignment_Terr_Id__c='04T4P0000004nSGUA'+i,Territory_SFDC_ID__c='04T4P0000004nSGUA'+i,
+                                                    State_JNJ__c='IL'+i));
+        }
+     	insert testZiptoTerr; 
+        
+        List<JJ_Territory_Institution__c> terrToInst = new List<JJ_Territory_Institution__c>();
+        for(Integer i=0;i<10;i++) {
+            terrToInst.add(new JJ_Territory_Institution__c(JJ_Account_Name__c = 'AccountName'+i,JJ_Territory_Name__c='TerritoryName'+i,
+                                                           JJ_Primary_Territory_Assignment__c='105-HT-0000000',JJ_Coverage_Type__c ='CVM',
+                                                           JJ_Primary_Assignment_SFDC_Id__c='05T4P0000004nSGUA'+i,JJ_Territory_SFDC_Id__c='05T4P0000004nSGUA'+i
+                                                          ));
+        }
+        insert terrToInst; 
+        
+        List<JJ_Org_to_Specialty__c> orgtoSpe = new List<JJ_Org_to_Specialty__c>();
+        for(Integer i=0;i<10;i++) {
+            orgtoSpe.add(new JJ_Org_to_Specialty__c(Active__c=true,Org_Code__c='105-54'+i,Specialty__c='Specialty'+i
+                                                   ));
+        }
+        insert orgtoSpe;
+     
+        User u = new User();
+        u.Id = UserInfo.getUserId();
+        System.runAs(u) {
+            User usr = new User(Alias = 'TRR', Email='trr11@testorg.com', 
+                          EmailEncodingKey='UTF-8', LastName='Testing11', LanguageLocaleKey='en_US', 
+                          LocaleSidKey='en_US', ProfileId = p.Id, TimeZoneSidKey='America/Los_Angeles', 
+                                UserName='trr11@testorg.com',UserRoleId = roles.Id);
+        	insert usr;
+            User usr2 = new User(Alias = 'TRR', Email='trr12@testorg.com', 
+                          EmailEncodingKey='UTF-8',LastName='Testing12',LanguageLocaleKey='en_US', 
+                          LocaleSidKey='en_US', ProfileId = p.Id, TimeZoneSidKey='America/Los_Angeles', 
+                                UserName='trr12@testorg.com',UserRoleId = roles.Id);
+        	insert usr2;
+            Territory terr = new Territory(Name='TerritoryName0');
+            insert terr; 
+            Territory terr2 = new Territory(Name='105-540');
+            insert terr2; 
+        }
+    }
+    
+    public static testmethod void method1()
+    {  
+        User u = [Select Id,Name from User where Email='trr11@testorg.com'];
+        JJ_Org_to_Specialty__c orgtospevalue= [select id,Specialty__c,Org_Code__c,Active__c FROM JJ_Org_to_Specialty__c where Specialty__c = 'Specialty1' limit 1];
+        System.runAs(u) {
+            Test.startTest();
+                PageReference pageRef = Page.MSL_Coverage;
+                Test.setCurrentPage(pageRef);
+                JJMSLCoverageController contr1 = new JJMSLCoverageController();
+                contr1 = new JJMSLCoverageController ();
+           		contr1.strTerritoryName='105-HT-0000000';
+                contr1.selectedSpeciality = 'Specialty0';
+                contr1.strstate = 'IL0';
+                contr1.strcity = 'it';
+                contr1.strCounty='ount';
+                contr1.strPrimaryNameUsr= u.Name;
+            	contr1.fieldVariable = 'search';
+                contr1.doSearch();
+            	contr1.fieldVariable = 'update';
+            	contr1.strUpdTerritoryName = '105-HT-0000000';
+                contr1.getFilterItems();
+                contr1.fetchzipterr();
+                contr1.clear();
+                contr1.lookupPage();
+                contr1.doCancel();
+                contr1.getOrgCode();
+                contr1.doSearchandclear();
+                contr1.next();
+                contr1.previous();
+                contr1.dosort();
+                contr1.doUpdate();
+                contr1.doSelectAll();
+                contr1.getobjType();
+                contr1.setTerrName();
+            	Boolean flag =true;                    
+                String strUserName ;           
+                string strprimaryname ;            
+                JJ_Zip_to_Terr__c zip;             
+                JJ_Territory_Institution__c zip2;
+             Test.stopTest();
+        }
+    }
+    
+    
+    public static testmethod void method2()
+    {  
+        User u = [Select Id from User where Email='trr11@testorg.com'];
+        JJ_Org_to_Specialty__c orgtospevalue= [select id,Specialty__c,Org_Code__c,Active__c FROM JJ_Org_to_Specialty__c where Specialty__c = 'Specialty1' limit 1];
+        System.runAs(u) {
+            Test.startTest();  
+                PageReference pageRef = Page.MSL_Coverage;
+                Test.setCurrentPage(pageRef);
+                JJMSLCoverageController contr1 = new JJMSLCoverageController();
+                contr1.selectedObjType = 'Zip to Territory';
+                contr1.selectedCoverage = 'V&E';
+                contr1.doSearch();
+            Test.stopTest();
+        }
+    }
+    
+    public static testmethod void method3()
+    {  
+        User u = [Select Id,Name from User where Email='trr11@testorg.com'];
+        JJ_Org_to_Specialty__c orgtospevalue= [select id,Specialty__c,Org_Code__c,Active__c FROM JJ_Org_to_Specialty__c where Specialty__c = 'Specialty1' limit 1];
+        System.runAs(u) {
+            Test.startTest();  
+            try{
+                PageReference pageRef = Page.MSL_Coverage;
+                Test.setCurrentPage(pageRef);
+                JJMSLCoverageController contr1 = new JJMSLCoverageController();
+                contr1.selectedObjType = 'Territory to Institution';
+                contr1.strTerritoryName='TerritoryName0';
+                contr1.strPrimaryNameUsr= u.Name;
+                contr1.strInstitutionName = 'ccountName';
+                contr1.doSearch();
+                contr1.dosort();
+             }catch(exception e){} 
+            Test.stopTest();
+        }
+    }
+
+}
