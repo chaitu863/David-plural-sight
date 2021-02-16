@@ -1,0 +1,860 @@
+<!--
+@author Saritha Chinnasani
+*      @date   10/17/2014 
+*      @description    VF Page for searching for Rep. 
+*      Modification Log:
+*      ------------------------------------------------------------------------------------
+*      Developer                       Date                Description
+*      ------------------------------------------------------------------------------------
+*       Saritha Chinnasani           10/17/2014            Original Version
+*       Cognizant                    01/07/2021            Added title column to table and make firstname,lastname as links
+*       Cognizant                    02/08/2021            Added radio buttons to define parameters and allow multiple entries for Zip/Postal Code search
+*		Cognizant					 02/09/2021			   Added buttons to export table as PDF or Excel file
+--> 
+<apex:page controller="RepSearch" lightningStylesheets="true">
+    <apex:form >
+        <div class="slds-scope" >
+            <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"/>
+            <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"/>
+            <apex:includeScript value="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.17.8/js/jquery.tablesorter.min.js"/>
+            <apex:stylesheet value="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.17.8/css/theme.blue.css"   />  
+            
+            <apex:pageBlock mode="edit" id="block" title="Search For Rep">
+                <br/>
+                <apex:pagemessages ></apex:pagemessages> 
+                <apex:panelGroup >                                        
+                    <span style="display:inline-block; width: 0.5%;"></span>
+                    <apex:outputLabel >Last Name</apex:outputLabel>              
+                    <span style="display:inline-block; width: 0.5%;"></span>
+                    <apex:inputText id="lastName" Value="{!lastName}" size="10"/>
+                    <span style="display:inline-block; width: 3%;"></span>
+                    <apex:outputLabel >First Name</apex:outputLabel> 
+                    <span style="display:inline-block; width: 0.5%;"></span>                         
+                    <apex:inputText id="firstName" Value="{!firstName}" size="10"/>
+                    <span style="display:inline-block; width: 3%;"></span>
+                    
+                    <apex:outputLabel >State</apex:outputLabel>
+                    <span style="display:inline-block; width: 0.5%;"></span>                         
+                    <apex:inputText id="state" Value="{!state}" size="7"/>
+                    
+                </apex:panelGroup><br/><br/>
+                    <apex:panelGrid columns="3" style="align:left;">
+                        <apex:outputLabel >Zip/Postal Code</apex:outputLabel>
+                        <apex:selectRadio id="zipstype" value="{!zipstype}">
+                            <apex:selectOption itemValue="Starts with" itemLabel="Starts with"/>
+                            <apex:selectOption itemValue="Contains" itemLabel="Contains"/>
+                            <apex:selectOption itemValue="Exact" itemLabel="Exact"/>
+                        </apex:selectRadio>
+                        
+                        <apex:inputText id="zipcode" Value="{!zipcode}" size="7"/>
+                </apex:panelGrid>
+                <br/>
+                
+                <span style="display:inline-block; width: 0.5%;"></span>
+                <apex:outputLabel >SD - Org Name</apex:outputLabel>
+                <span style="display:inline-block; width: 0.5%;"></span>
+                <!-- <apex:inputText id="orgCode" Value="{!orgCode}" size="10"/> -->
+                <apex:selectList value="{!orgCode}" multiselect="false" size="1">
+                    <apex:selectOptions value="{!sellDivList}"/>
+                </apex:selectList>
+                <br/>
+                
+                <center>
+                    <apex:commandButton value="Search" action="{!search}" />
+                    <apex:commandButton value="Reset" action="{!reset}" />
+                </center>
+                <br/>
+                <apex:pageBlockSection title="Results" columns="1" collapsible="false">
+                    
+                    <apex:outputPanel rendered="{!AND(NOT(ISBLANK(userList)),userList.size > 0)}" layout="block" html-align="center">
+                         <apex:commandButton value="Export as Excel" action="{!saveasExcel}" />
+                         <apex:commandButton value="Export as PDF" action="{!saveasPDF}"/>
+                    </apex:outputPanel>
+        
+                    <apex:pageBlockTable styleClass="tablesorter" value="{!userList}" var="eachUserRecord"  id="pbt" styleclass="slds-table--bordered slds-table--cell-buffer slds-table_col-bordered">
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Last Name" />
+                            </apex:facet>
+                            <apex:outputLink target="_blank" value="/{!eachUserRecord.UserId}">{!eachUserRecord.lastName}</apex:outputLink>
+                        </apex:column> 
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="First Name" />
+                            </apex:facet>
+                            <apex:outputLink target="_blank" value="/{!eachUserRecord.UserId}">{!eachUserRecord.firstName}</apex:outputLink>
+                        </apex:column>                    
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Title" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.Title}" />
+                        </apex:column>  
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Phone" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.phone}" />
+                        </apex:column>   
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Email" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.email}" />
+                        </apex:column>                                  
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Manager Name" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.managerId}" />
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Manager Email" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.managerEmail}" />
+                        </apex:column>                                     
+                        
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="Territory" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.territory}" />
+                        </apex:column>    
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:outputText styleClass="header" value="SD - Org Name" />
+                            </apex:facet>
+                            <apex:outputText value="{!eachUserRecord.sdOrg}" />
+                        </apex:column>                                  
+                    </apex:pageBlockTable>
+                        
+                </apex:pageBlockSection>
+                
+                <script type="text/javascript">
+                $(document).ready(function() 
+                                  { 
+                                      $("[id$='pbt']").tablesorter({theme: 'blue'}); 
+                                  });   
+                </script>
+                <br/>           
+            </apex:pageBlock>
+        </div>
+    </apex:form>
+</apex:page>
+
+/**
+  *      @author Saritha Chinnasani
+  *      @date   10/17/2014 
+  *      @description    Class for searching for Rep. 
+  *      Modification Log:
+  *      ------------------------------------------------------------------------------------
+  *      Developer                       Date                Description
+  *      ------------------------------------------------------------------------------------
+  *       Saritha Chinnasani           10/17/2014            Original Version
+  *       Cognizant                    01/07/2021            Added title column to table and make firstname,lastname as links
+  *       Cognizant                    02/08/2021            Added radio buttons to define parameters and allow multiple entries for Zip/Postal Code search
+  *		  Cognizant					   02/09/2021			 Added buttons to export table as PDF or Excel file
+**/
+
+public class RepSearch {
+	
+    String zipcode='';
+    String zipstype='Starts with';
+    String state='';
+    String firstName = '';
+    String lastName = '';
+    String orgCode = '--None--';
+    List<UserWrapper> userList;
+    List<User> tempList;
+    List<UserTerritory> userTerrList;
+    String userQuery;
+    String zipToTerrQuery ;
+    List<SelectOption> sellDivList;
+    Set<SelectOption> sellDivSet;  
+    Integer count = 0;
+    String countZipToTerrQuery;
+    String countUserQuery;
+    Boolean flag = false;
+    Boolean userFlag = true;
+    Boolean errFlag = false;
+    Boolean zipStateOrgFlag = false;
+    Boolean NameFlag = false;
+    String lName;
+    String fName;
+    String nm;
+    String ph;
+    String mail;
+    String pCode;
+    String sta;
+    String mgName;
+    String mgEmail;
+    String alnStatus;
+    String terr='';
+    String sdName='';
+    Integer c = 0;
+    list <String> zipcodes;
+    
+    public RepSearch (){
+        List<SelectOption> sellDivList = new List<SelectOption>();
+        sellDivList.add(new SelectOption('','--None--'));
+    }
+    
+    public List<SelectOption> getSellDivList(){
+        Set<SelectOption> sellDivSet = new Set<SelectOption>();
+        List<SelectOption> sellDivList = new List<SelectOption>();
+        List<JJ_Selling_Division__c> tempList = [select SD_Org_Name_JNJ__c from JJ_Selling_Division__c];
+        sellDivSet.add(new SelectOption('','--None--'));
+        for(JJ_Selling_Division__c j : tempList){
+            if(j != null){
+                sellDivSet.add(new SelectOption(j.SD_Org_Name_JNJ__c , j.SD_Org_Name_JNJ__c ));
+            }
+        }
+        sellDivList.addAll(sellDivSet);
+        sellDivList.sort();
+        return sellDivList;
+    }
+    
+    public void setSellDivList(List<SelectOption> s){
+        sellDivList = s;
+    }
+    
+    public Set<SelectOption> getSellDivSet(){
+        return sellDivSet;
+    }
+    
+    public void setSellDivSet(Set<SelectOption> s){
+        sellDivSet = s;
+    }
+    
+    public String getZipcode() {
+        return zipcode;
+    }
+    
+    public void setZipcode(String s) {
+        zipcode = s;
+    }
+    
+    public String getzipstype() {
+        return zipstype;
+    }
+    
+    public void setzipstype(String s) {
+        zipstype = s;
+    }
+    
+    public String getOrgCode() {
+        return orgCode;
+    }
+    
+    public void setOrgCode(String s) {
+        orgCode = s;
+    }
+    
+    public String getFirstName() {
+        return firstName;
+    }
+    
+    public void setFirstName(String s) {
+        firstName = s;
+    }
+    
+    public String getLastName() {
+        return lastName;
+    }
+    
+    public void setLastName(String s) {
+        lastName = s;
+    }
+    
+    public List<UserWrapper> getUserList() {
+        return userList;
+    }
+    
+    public List<User> getTempList(){
+        return tempList;
+    }
+      
+    public String getState() {
+        return state;
+    }
+    
+    public void setState(String s) {
+        state= s;
+    }
+
+   
+
+    public void reset(){
+        userList = new List<UserWrapper>();
+        tempList = new List<User>();        
+        zipcode = '';
+        state = '';
+        firstName = '';
+        lastName = '';
+        orgCode = '';
+    }
+    
+    /**
+      * Method to fetch the userList based on the zipCode, State, Selling Division criteria. 
+      *
+      **/
+    public List<User> userZipStateOrgSearch(String zipToTerrQuery) {      
+        List<String>  terrIdList = new List<String>();
+        List<User> zipStateOrgUserList = new List<User>();
+        List<Id> userIds = new List<Id>();
+
+        Map<String,Territory> tempMap = new Map<String,Territory>();
+        for(Territory te :[select Id,Name from Territory] ){
+            tempMap.put(te.Name,te);
+        }
+        c = tempMap.size();
+        system.debug(tempMap.size());
+        system.debug('Count is : ' + tempMap.size());
+        List <JJ_Zip_to_Terr__c> zipToTerrList = new List<JJ_Zip_to_Terr__c>();
+        if (!zipCodes.isEmpty()){
+            zipToTerrList = database.query(ziptoTerrQuery+' and Zip_Code__c LIKE :zipcodes LIMIT 10000');
+        }
+        else{
+            zipToTerrQuery += ' LIMIT 10000';
+            zipToTerrList = Database.Query(zipToTerrQuery);
+        }
+        system.debug('ZipToTerrQuery is: ' + zipToTerrQuery);
+        for(JJ_Zip_to_Terr__c jj : zipToTerrList){      
+            Territory t = new Territory();
+            t = tempMap.get(jj.Territory_Name__c);
+            if(t != null){
+                terrIdList.add(t.Id);
+            }
+        } 
+        system.debug('TerrIdLIst is: ' + terrIdList);
+        
+        userTerrList = (List<UserTerritory>)[select UserId from UserTerritory where TerritoryId =: terrIdList LIMIT 5000];
+        system.debug('TerrList: ' + userTerrList );
+        for(UserTerritory u : userTerrList) {
+            userIds.add(u.userId);
+        }
+        system.debug('UserIDs : ' + userIds);
+        
+        if(!userQuery.contains('userIds')){
+            userQuery+= 'and id  in :userIds  LIMIT 3000';
+        }   
+        System.debug('User Query is:' + userQuery);
+        zipStateOrgUserList= (List<User>)(DATABASE.QUERY(userQuery));
+        return zipStateOrgUserList;                  
+       
+    }
+    
+    /**
+      * Method to fetch the userList based on the firstName criteria. 
+      *
+      **/
+    public List<User> firstNameSearch() {
+        List<User> firstNameList = new List<User>();
+        userQuery+= ' and FirstName like \'%' + firstName.trim() + '%\'';
+        countUserQuery = 'Select count() from User where IsActive=true and MyAlign_Status_JNJ__c=\'1-Active\' and FirstName like \'%' + firstName.trim() + '%\' LIMIT 5000';
+        count = Database.countQuery(countUserQuery);
+        System.Debug('Record Count in Fname ---->' + count);
+        if(count > 1000){
+            errFlag = true;
+        }else{
+            errFlag = false;
+            firstNameList= (List<User>)(Database.Query(userQuery));
+            system.debug('-------> inside FNs' + firstNameList);
+        }       
+        return firstNameList;
+    }
+
+  
+    /**
+      * Method to fetch the userList based on the lastName criteria. 
+      *
+      **/
+    
+    public List<User> NameSearch() {
+        List<User> lastNameList = new List<User>();
+        if(firstName!=' ' && firstName !=''){
+           if(firstName.length() > 1){
+                userQuery+= ' and LastName like \'%' + lastName.trim() + '%\' and FirstName like \'%' + firstName.trim() + '%\'';
+                countUserQuery = 'Select count() from User where IsActive=true and MyAlign_Status_JNJ__c=\'1-Active\' and LastName like \'%' + lastName.trim() + '%\' and FirstName like \'%' + firstName.trim() + '%\' LIMIT 5000';
+            }else{
+               NameFlag = true;
+               //ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'First Name should contain atleast 2 characters.'));
+            }
+        }else{
+            userQuery+= ' and LastName like \'%' + lastName.trim() + '%\'';
+            countUserQuery = 'Select count() from User where IsActive=true and MyAlign_Status_JNJ__c=\'1-Active\' and LastName like \'%' + lastName.trim() + '%\' LIMIT 5000';
+        }
+        if(NameFlag == false){
+            count = Database.countQuery(countUserQuery);
+            System.Debug('Record Count in Lname ---->' + count);
+            if(count > 1000){
+                errFlag = true;
+            }else{
+                errFlag = false;
+                lastNameList= (List<User>)(Database.Query(userQuery));
+                system.debug('-------> inside LNs' + lastNameList);
+            }      
+        }
+        return lastNameList;
+    }
+    
+    /**
+      * Entry method for all the criteria's 
+      *
+      **/
+    public void search(){
+        flag = false;
+        errFlag = false;
+        NameFlag = false;
+        zipStateOrgFlag = false;
+        userList = new List<UserWrapper>();
+        tempList = new List<User>();
+        List<JJ_Selling_Division__c> sllngdvsn = new List<JJ_Selling_Division__c>();//added by swathi
+        String slgdvn = '';//added by swathi
+        String slgcode = '';//added by swathi
+        terr = '';
+		zipcodes = new List <String>();
+        
+        if(orgCode == null){
+            orgCode = '--None--';
+        }
+        
+        userQuery= 'select Id,LastName,FirstName,Title,Name,Phone,Email,Postalcode,State,Manager.Name,Manager.Email,MyAlign_Status_JNJ__c,Territory_JNJ__c from user where IsActive=true and MyAlign_Status_JNJ__c=\'1-Active\' '; 
+        zipToTerrQuery = 'Select Territory_Name__c from JJ_Zip_to_Terr__c where Territory_Name__c != NULL ';
+        //countZipToTerrQuery = 'Select count() from JJ_Zip_to_Terr__c where Territory_Name__c != NULL ';
+        //countUserQuery = 'Select count() from User where MyAlign_Status_JNJ__c=\'1-Active\' ';         
+
+        try{
+            if(lastName != ' ' && lastName != ''){
+               if(lastName.length()>1){
+                tempList= NameSearch();
+                flag = true;
+                }else
+                {
+                 NameFlag = true;
+                }
+            }
+            
+            if(firstName != ' ' && firstName != ''){
+               if(firstName.length() > 1){
+                    if(lastName == ' ' || lastName == ''){
+                        tempList = firstNameSearch();
+                        flag = true;
+                    }
+                }else{
+                    //ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'First Name should contain atleast 2 characters.'));
+                    NameFlag = true;
+                }
+            }
+            
+            if(zipcode != ' ' && zipcode != ''){
+                if(zipstype != '' && zipstype != null){
+                    if(zipstype=='Starts with'){
+                        zipcodes= zipcode.split(',');
+                        for(Integer i=0; i<zipcodes.size(); i++){
+                            zipcodes[i]= zipcodes[i].trim() +'%';
+                        }
+                    }
+                    else if(zipstype=='Contains'){
+                        zipcodes= zipcode.split(',');
+                        for(Integer i=0; i<zipcodes.size(); i++){
+                            zipcodes[i]= '%' + zipcodes[i].trim() +'%';
+                        }
+                    }
+                    else if(zipstype=='Exact'){
+                        zipcodes= zipcode.split(',');
+                        for(Integer i=0; i<zipcodes.size(); i++){
+                            zipcodes[i]= zipcodes[i].trim();
+                        }
+                    }
+                }
+                countZipToTerrQuery = 'Select count() from JJ_Zip_to_Terr__c where Territory_Name__c != NULL and Zip_Code__c LIKE: ';
+                count = Database.countQuery(countZipToTerrQuery + 'zipcodes LIMIT 5000');
+                System.debug('count is : ' + count);
+                if(count >= 20000){
+                    if(firstName == '' && lastName == ''){
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'Too many records returned, please modify your search criteria.'));
+                    }
+                }else{
+                    tempList = userZipStateOrgSearch(zipToTerrQuery);
+                    if(tempList.size()>0){
+                        zipStateOrgFlag = false;
+                        flag = true;
+                    }else{
+                        zipStateOrgFlag = true;
+                    }
+                }
+                
+            }
+                    
+            if(state != ' ' && state != ''){
+                zipToTerrQuery  += ' and State_JnJ__c = \'' + state.trim() + '\'';
+                
+                countZipToTerrQuery = 'Select count() from JJ_Zip_to_Terr__c where Territory_Name__c != NULL and State_JnJ__c = \'' + state.trim() + '\' LIMIT 5000';
+                count = Database.countQuery(countZipToTerrQuery);
+                System.debug('count is : ' + count);
+                if(count >= 20000){
+                    if(firstName == '' && lastName == ''){
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'Too many records returned, please modify your search criteria.'));
+                    }
+                }else{
+                    tempList = userZipStateOrgSearch(zipToTerrQuery);
+                    if(tempList.size()>0){
+                        zipStateOrgFlag = false;
+                        flag = true;
+                    }else{
+                        zipStateOrgFlag = true;
+                    }
+                }  
+            }
+            
+           // Selling Division desc added
+           sllngdvsn = (List<JJ_Selling_Division__c>)[select Selling_Division_JNJ__c,SD_Org_Name_JNJ__c from JJ_Selling_Division__c where SD_Org_Name_JNJ__c =:orgCode];  
+           for(JJ_Selling_Division__c j : sllngdvsn){
+                slgdvn = j.SD_Org_Name_JNJ__c;
+                slgcode= j.Selling_Division_JNJ__c;
+           }
+           System.debug('Org Description is' + slgdvn + 'Org Code is' + slgcode);   
+            
+           if(orgCode == slgdvn){
+               zipToTerrQuery  += ' and Org_Code__c = \'' + slgcode.trim() + '\'';    
+               countZipToTerrQuery = 'Select count() from JJ_Zip_to_Terr__c where Territory_Name__c != NULL and Org_Code__c = \'' + slgcode.trim() + '\' LIMIT 5000';
+               count = Database.countQuery(countZipToTerrQuery);
+               System.debug('count is : ' + count);
+               if(count >= 20000){
+                   if(firstName == '' && lastName == ''){
+                       ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'Too many records returned, please modify your search criteria.'));
+                   }
+               }else{
+                   tempList = userZipStateOrgSearch(zipToTerrQuery);
+                   if(tempList.size()>0){
+                        zipStateOrgFlag = false;
+                        flag = true;
+                    }else{
+                        zipStateOrgFlag = true;
+                    }
+               }
+           } 
+            
+            // Forming the display data
+            List<UserTerritory> terId = new List<UserTerritory>();
+            List<String> tName = new List<string>();
+            List<JJ_Zip_To_Terr__c> tempFullOrgCode = new List<JJ_Zip_To_Terr__c>();
+            String fullOrgCode = '';
+            Map<String, User> finalUserMap = new Map<String, User>();
+            Map<String, String> finalUserTerrMap = new Map<String, String>();
+            Map<String, String> finalTerrMap = new Map<String, String>();            
+            Map<String, String> finalMap = new Map<String, String>();
+            Map<String, String> orgCodeMap = new Map<String, String>();                                                                    
+            Map<String, String> tempOrgCodeMap = new Map<String, String>();                                                
+            
+            for(User u : tempList){
+                finalUserMap.put(u.Id, u);
+            }
+            System.debug('Final User Map is ' + finalUserMap);
+            
+            terId = [select TerritoryId,UserId from UserTerritory where UserId in : tempList];
+            for(UserTerritory ut : terId){
+                finalUserTerrMap.put(ut.TerritoryId,ut.UserId);
+            }
+            System.debug('Final UserTerr Map is ' + finalUserTerrMap);
+            
+            for(Territory t: [select Id,Name from Territory where id in : finalUserTerrMap.keySet()]){
+                finalTerrMap.put(t.Id,t.Name);
+            }
+            System.debug('Final Terr Map is ' + finalTerrMap);
+            
+            String oldUser = '';
+            for(String s : finalUserTerrMap.keySet()){
+                String currentUser = finalUserTerrMap.get(s);
+                if(oldUser != currentUser){
+                    oldUser = currentUser;
+                    terr = '';
+                } 
+                String temp = finalTerrMap.get(s) + ';';
+                terr += temp;
+                finalMap.put(finalUserTerrMap.get(s),terr);
+            }
+            System.debug('Final Map is ' + finalMap);
+           
+            List<JJ_Selling_Division__c> OrgName = [select Selling_Division_JNJ__c,SD_Org_Name_JNJ__c from JJ_Selling_Division__c] ; 
+            for(JJ_Selling_Division__c o: OrgName  ){
+                tempOrgCodeMap.put(o.Selling_Division_JNJ__c,o.SD_Org_Name_JNJ__c);                
+            }
+            
+            for(String s : finalMap.keySet()){
+                String subTerrName = finalMap.get(s);
+                if( subTerrName != null && !''.equals(subTerrName)){
+                    subTerrName = subTerrName.substring(0,6);
+                }
+                orgCodeMap.put(s,tempOrgCodeMap.get(subTerrName));
+            }
+            System.debug('Org Code Map is ' + OrgCodeMap);
+                                   
+            if(zipStateOrgFlag == false && errFlag == false && NameFlag == false){
+                if(flag == true){
+                    for(User u: finalUserMap.values()){
+                        userList.add(new UserWrapper(u,finalMap,orgCodeMap));
+                    } 
+                 }       
+                 system.debug('UserList is: ' + userList);      
+                 if(userList.size() == 0 && errFlag == false){
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'No Records found.'));
+                 }
+             }else{   
+                  if(zipcode == ''&& state == '' && firstName == '' && lastName == '' && orgCode == '--None--'){
+                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'No Records found.'));
+                   }
+                   if(zipStateOrgFlag == true){
+                        errFlag = false;
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'No Records found.'));
+                   }
+                   if(NameFlag == true){
+                       errFlag = false;
+                       ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'First Name, Last Name should contain atleast 2 characters.'));
+                   }      
+                   if(errFlag == true){
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info,'Too many records returned, please modify your search criteria.'));
+                   }
+                      
+              }
+          }catch(QueryException e){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error,'Unknown error, please contact System Administrator.'));
+          }
+    }
+    
+    public PageReference sort() { /** Define sorting method. **/
+        /** Do nothing here. **/
+        return null;
+    }
+    
+    /**
+      * Wrapper class to display the user details along with Territory and Organization Name.
+      *
+      **/
+    public Class UserWrapper{
+        
+        public User uUser {get;set;}
+        public Territory terr {get;set;}        
+        public JJ_Selling_Division__c sellDiv {get; set;}        
+        
+        String lastName {get;set;}
+        String firstName {get;set;}
+        String name {get;set;}
+        String UserId {get;set;}
+        String phone {get;set;}
+		String title {get;set;}
+        String email {get;set;}
+        String postalcode {get;set;}
+        String state {get;set;}
+        String managerId {get;set;}
+        String managerEmail {get;set;}
+        String myAlignStatus {get;set;}
+        String userRoleName {get;set;}
+        List<string> tName {get;set;}
+        string territoryWrap {get;set;}
+        String territory='';
+        String sdOrg='';
+    
+        
+        public String getLastName() {
+            return lastName;
+        }
+
+        public String getFirstName() {
+            return firstName;
+        }
+		public String getTitle () {
+            return title;
+        }
+        public String getterritoryWrap () {
+            return territoryWrap;
+        }
+         public String getName() {
+            return name;
+        }
+		
+         public String getPhone () {
+            return phone;
+        }
+        
+         public String getUserId () {
+            return UserId;
+        }
+         public String getEmail() {
+            return email;
+        } 
+        public String getPostalCode() {
+            return postalcode;
+        } 
+        public String getState() {
+            return state;
+        } 
+        public String getManagerId() {
+            return managerId;
+        } 
+        public String getManagerEmail() {
+            return managerEmail;
+        }
+         public String getMyAlignStatus() {
+            return myAlignStatus;
+        }
+        public String getTerritory() {
+            return territory;
+        }
+        
+        public void setTerritory(String s) {
+            territory = s;
+        }
+             
+        public String getSdOrg() {
+            return sdOrg;
+        }
+        
+        public void setSdOrg(String s) {
+            sdOrg = s;
+        }
+     
+        public UserWrapper(){
+        
+        }
+        
+        public UserWrapper(User u, Map<String,String> fMap, Map<String, String> uoMap){
+            System.debug('Inside wrapper constructor');
+                lastName = u.lastName;
+                firstName = u.FirstName;
+                name = u.Name;
+                UserId=u.id;
+                phone = u.Phone;
+                title=u.title?.SubStringBefore('|');
+                email = u.Email;
+                postalcode = u.Postalcode;
+                state = u.State;
+                managerId = u.Manager.Name;
+                managerEmail = u.Manager.Email;
+                myAlignStatus = u.MyAlign_Status_JNJ__c;
+                territory = fMap.get(u.Id);
+                territoryWrap= territory?.replaceAll(';','; ');
+                sdOrg = uoMap.get(u.Id);
+        }
+    }
+    
+    public pagereference saveasExcel(){
+        pagereference pr = new pagereference('/apex/JJ_RepSearchpageExcel');
+        return pr;
+    }
+    
+    public pagereference saveasPDF(){
+        pagereference pr = new pagereference('/apex/JJ_RepSearchpagePDF');
+        pr.getHeaders().put('content-disposition', 'attachment; filename=Rep Results.pdf');
+        return pr;
+    }
+}
+
+<!--
+PageName     : JJ_RepSearchpagePDF
+Description  : AEBQ-19264 - Page to export the Rep Finder search results in PDF Format.
+Author       : Cognizant.
+Created Date : 07-Feb-2021.
+-->
+<apex:page showHeader="false" controller="RepSearch" contentType="application/pdf#Rep Results.pdf" renderAs="PDF" applyBodyTag="false" applyHtmlTag="false">
+    <html>
+        <head>
+            <style>
+                @page{
+                size: A4 landscape;
+                }
+            </style>
+        </head>
+        <body>
+            <table>
+                <tr>
+                    <td>
+                        <apex:outputLabel style="font-weight:bold;" value="Rep Finder Results"/>
+                    </td>
+                </tr>
+            </table>
+            <br/>
+            <br/>
+            <table border="1" style="border 1px solid black;table-layout: fixed;">
+                <tr>
+                    <th width="8%">
+                        <apex:outputLabel value="Last Name"/>
+                    </th>
+                    <th width="8%">
+                        <apex:outputLabel value="First Name"/>
+                    </th>
+                    <th width="9%">
+                        <apex:outputLabel value="Title"/>
+                    </th>
+                    <th width="10%">
+                        <apex:outputLabel value="Phone"/>
+                    </th>
+                    <th width="15%">
+                        <apex:outputLabel value="Email"/>
+                    </th>
+                    <th width="11%">
+                        <apex:outputLabel value="Manager Name"/>
+                    </th>
+                    <th width="15%">
+                        <apex:outputLabel value="Manager Email"/>
+                    </th>
+                    <th width="12%">
+                        <apex:outputLabel value="Territory"/>
+                    </th>
+                    <th width="12%">
+                        <apex:outputLabel value="SD-Org Name"/>
+                    </th>
+                </tr>
+                <apex:repeat value="{!userList}" var="a">
+                    <tr>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="8%">
+                            <apex:outputLabel value="{!a.lastName}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="8%">
+                            <apex:outputLabel value="{!a.firstName}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="9%">
+                            <apex:outputLabel value="{!a.Title}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="10%">
+                            <apex:outputLabel value="{!a.phone}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="15%">
+                            <apex:outputLabel value="{!a.email}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="11%">
+                            <apex:outputLabel value="{!a.ManagerId}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="15%">
+                            <apex:outputLabel value="{!a.ManagerEmail}"/>
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="12%">
+                            <apex:outputLabel value="{!a.territoryWrap}"/> 
+                        </td>
+                        <td style="font-family:times new roman;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;font-size:10px;" width="12%">
+                            <apex:outputLabel value="{!a.sdOrg}"/>
+                        </td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </body>
+    </html>
+</apex:page>
+
+<!--
+PageName     : JJ_RepSearchpageExcel
+Description  : AEBQ-19264 - Page to export the Rep Finder search results in Excel Format.
+Author       : Cognizant.
+Created Date : 07-Feb-2021.
+-->
+<apex:page controller="RepSearch" contentType="text/csv#Rep Results.csv">"Last Name","First Name","Title","Phone","Email","Manager Name","Manager Email","Territory","SD-Org Name"
+    <apex:repeat value="{!userList}" var="a">
+"{!a.lastName}","{!a.firstName}","{!a.title}","{!a.phone}","{!a.email}","{!a.managerId}","{!a.managerEmail}","{!a.territory}","{!a.sdOrg}"
+    </apex:repeat>
+</apex:page>
