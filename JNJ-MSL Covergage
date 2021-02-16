@@ -1,0 +1,1283 @@
+<!--/************************************************************
+* File Name     :  MSL_Coverage
+* Description   :  MSL Coverage
+* @author       :  Cognizant
+
+* Modification Log : 
+=============================================================
+* Ver.    Date          Author     Modification
+-------------------------------------------------------------
+* 1.0   10/31/2016     Cognizant    File Created
+* 1.1   1/11/2019      Cognizant    Update Coverage txt box is disabled in UI.
+* 1.2   08/19/2020     Cognizant    Applying lightning styles to VF page and Displaying Terr to Institution records also
+************************************************************-->
+<apex:page showHeader="true" sidebar="true"  controller="JJMSLCoverageController" id="pageId" lightningStyleSheets="true">
+    <script type="text/javascript">
+    
+    var newWin=null;
+    var fieldValue=null;
+    function setValue(terrName)
+    {
+        passTerrNameToCntrl(terrName,fieldValue);
+    }
+ 
+    function openLookupPopup(objtype,covtype,name,terrid,fieldVal)
+    {
+        fieldValue=fieldVal;
+        var url="/apex/MSLLookpPage?objtype="+objtype+"&covtype="+covtype +"&speciality=" + name +"&namefield="+terrid + "&terupd="+fieldVal;
+        
+        newWin=window.open(url, 'Popup','height=500,width=600,left=100,top=100,resizable=no,scrollbars=yes,toolbar=no,status=no');
+        if (window.focus) 
+        {
+            newWin.focus();
+        }
+        
+        return false;
+    } 
+    
+
+    
+    function closeLookupPopup()
+    {
+        if (null!=newWin)
+        {
+            newWin.close();
+        }  
+    }
+    function checkUncheck() {
+        var radios = document.getElementsByTagName('input');
+        for(i=0; i<radios.length; i++ ) 
+        {
+            radios[i].onclick = function(e)
+            {
+                if(e.ctrlKey) 
+                {
+                    this.checked = true;
+                }
+            }
+        }
+    }
+    
+    </script>
+
+   
+    
+    <apex:form id="formId">
+        <apex:outputPanel rendered="{! $User.UIThemeDisplayed == 'Theme4d' }">
+            <apex:slds />
+       </apex:outputPanel>
+      <div class="slds-scope" >
+          
+
+<apex:actionStatus id="refreshstatus">
+    <apex:facet name="start">
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color:#fff;">
+                &nbsp;
+            </div>
+            <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                    <img src="/img/loading.gif"  style="float: left;margin: 8px;" />
+                    <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                </div>
+            </div>
+        </apex:facet>
+</apex:actionStatus>
+       
+            <apex:actionFunction name="passTerrNameToCntrl" action="{!setTerrName}" reRender="ter,ter1,ter2,ter4">
+                <apex:param name="terName" value="" assignTo="{!territoryName}"/>
+                <apex:param name="terName1" value="" assignTo="{!fieldVariable}"/>
+            </apex:actionFunction>
+            
+           
+            <apex:pageblock id="pblkId">
+                <apex:actionRegion >
+                    <apex:pageMessages id="MSLError"></apex:pageMessages>
+                    
+                    <apex:pageBlockSection columns="1" title="Select Coverage Type" id="pgobjtype" >
+                        <apex:pageblocksectionItem id="pb5">
+                            <apex:actionRegion >
+                                <apex:outputpanel style="padding-left: 20px;">
+                                    <apex:outputText value="Coverage Type " /> 
+                                    &nbsp;&nbsp;<apex:selectList value="{!selectedObjType}"  size="1" id="objTypeId">
+                                    <apex:selectOptions value="{!objType}"/>
+                                    <apex:actionsupport event="onchange" action="{!clear}" rerender="formId"  status="refreshstatus"/>
+                                    </apex:selectList>
+                                </apex:outputpanel> 
+                            </apex:actionRegion>
+                        </apex:pageblocksectionItem>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection columns="1" title="Field Type" id="pgcovtype" rendered="{!IF(selectedObjType =='Zip to Territory',true,false)}">
+                        <apex:pageblocksectionItem id="pb2_1">
+                            <apex:actionRegion >
+                                <apex:outputpanel style="padding-left: 48px;">
+                                    <apex:outputText value="Field Type " /> 
+                                    &nbsp;&nbsp;<apex:selectList value="{!selectedCoverage}"  size="1" id="covTypeId">
+                                    <apex:selectOptions value="{!coverageType}"/>
+                                    <apex:actionsupport event="onchange" action="{!clear}" rerender="formId" status="refreshstatus"/>
+                                    </apex:selectList>
+                                </apex:outputpanel> 
+                            </apex:actionRegion>
+                        </apex:pageblocksectionItem>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection columns="1" title="Field Type" id="pgcovtype2" rendered="{!IF(selectedObjType =='Territory to Institution',true,false)}">
+                        <apex:pageblocksectionItem id="pb6">
+                            <apex:actionRegion >
+                                <apex:outputpanel style="padding-left: 50px;">
+                                    <apex:outputText value="Field Type " /> 
+                                    &nbsp;&nbsp;<apex:selectList value="{!selectedCoverage2}"  size="1" id="covTypeId2">
+                                    <apex:selectOptions value="{!coverageType2}"/>
+                                    <apex:actionsupport event="onchange" action="{!clear}" rerender="formId" status="refreshstatus"/>
+                                    </apex:selectList>
+                                </apex:outputpanel> 
+                            </apex:actionRegion>
+                        </apex:pageblocksectionItem>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageblocksection title="Search" columns="1" id="pb1" rendered="{!IF(selectedObjType =='Zip to Territory',true,false)}">
+                        <apex:pageblocksectionItem id="pb2" rendered="{!IF(selectedCoverage =='MSL',true,false)}">
+                            <apex:outputpanel style="padding-left: 54px;">
+                                <apex:outputText value="Speciality " /> 
+                                &nbsp;&nbsp;<apex:selectList value="{!selectedSpeciality}" size="1" id="selectListId">
+                                <apex:selectOptions value="{!lstSpeciality}" />
+                                </apex:selectList>
+                            </apex:outputpanel> 
+                        </apex:pageblocksectionItem>
+                        
+                        <apex:pageblocksectionItem id="pb3" >
+                            <apex:outputpanel style="padding-left: 46px;">
+                                <apex:outputText value="Select MSL " rendered="{!IF(selectedCoverage =='MSL',true,false)}" />
+                                <apex:outputText value="Select V&E " rendered="{!IF(selectedCoverage =='V&E',true,false)}"/>
+                                &nbsp;&nbsp; 
+                                <apex:inputtext value="{!strTerritoryName}" id="ter"/> 
+                                &nbsp;&nbsp;<apex:image rendered="{!IF(selectedCoverage =='MSL',true,false)}" id="theImage" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype.pb2_1.covTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pb1.pb2.selectListId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pb1.pb3.ter}').value,'search'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                                <apex:image id="theImage2" rendered="{!IF(selectedCoverage =='V&E',true,false)}" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype.pb2_1.covTypeId}').value,'',document.getElementById('{!$Component.pageId.formId.pblkId.pb1.pb3.ter}').value,'search'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                            </apex:outputpanel>
+                        </apex:pageblocksectionItem>
+                        
+                        <apex:pageblocksectionItem id="pb4">
+                            <apex:outputpanel style="padding-left: 86px;">
+                                <apex:outputText value="City " style="padding-left: 3px;" />
+                                &nbsp;&nbsp; 
+                                <apex:inputtext html-placeholder="Enter City" label="City" value="{!strcity}" id="tercity"/>
+                                &nbsp;&nbsp; 
+                                <!-- updating for County Name Cidec17-->
+                                <apex:outputText value=" County "  />
+                                &nbsp;&nbsp;                 
+                                <apex:inputtext html-placeholder="Enter County Name" value="{!strCounty}" id="tercounty" style="margin-left: 50px;"/> 
+                                <!-- end here--> <br/><br/>
+                                
+                                <apex:outputText value="State" style="padding-left: 77px;" />
+                                &nbsp;
+                                <apex:inputtext html-placeholder="Enter State" value="{!strstate}" id="terstat"/> 
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" Primary Name "  />
+                                &nbsp;&nbsp;                 
+                                <apex:inputtext html-placeholder="Enter Primary Name" value="{!strPrimaryNameUsr}" id="terprimeusr"/> 
+                                
+                            </apex:outputpanel>
+                        </apex:pageblocksectionItem>
+                    </apex:pageblocksection>
+                    
+                    <apex:pageblocksection title="Search" columns="1" id="pb7" rendered="{!IF(selectedObjType =='Territory to Institution',true,false)}">
+                        <apex:pageBlockSectionItem id="TerrIns">
+                            <apex:outputpanel style="padding-left: 13px;">
+                                <apex:outputText value="Select CVM MSL " rendered="{!IF(selectedCoverage2 =='CVM',true,false)}" />
+                                <apex:outputText value="Select V&E MSL " rendered="{!IF(selectedCoverage2 =='V&E',true,false)}"/>
+                                &nbsp;&nbsp; 
+                                <apex:inputtext value="{!strTerritoryName}" id="ter2"/> 
+                                &nbsp;&nbsp;<apex:image rendered="{!IF(selectedCoverage2 =='CVM',true,false)}" id="theImage3" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype2.pb6.covTypeId2}').value,'',document.getElementById('{!$Component.pageId.formId.pblkId.pb7.TerrIns.ter2}').value,'search'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                                <apex:image id="theImage4" rendered="{!IF(selectedCoverage2 =='V&E',true,false)}" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype2.pb6.covTypeId2}').value,'',document.getElementById('{!$Component.pageId.formId.pblkId.pb7.TerrIns.ter2}').value,'search'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                             </apex:outputpanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputpanel style="padding-left: 12px;">
+                                <apex:outputText value="Institution Name" />&nbsp;&nbsp; 
+                                <apex:inputtext html-placeholder="Enter Name " value="{!strInstitutionName}"   id="inst1"/>
+                                </apex:outputpanel>
+                        </apex:pageBlockSectionItem>
+                     </apex:pageblocksection>
+                    
+                    <div align="Center" style="margin-top: 5px;"> 
+                        <apex:commandButton action="{!doSearchandclear}" value="Search" status="refreshstatus"/> 
+                        <apex:commandButton action="{!clear}" value="Clear" reRender="pblk,pblkId,pblkcid,table1" status="refreshstatus"/>
+                    </div>
+                </apex:actionRegion>
+            </apex:pageblock>
+            
+            <apex:pageBlock id="table1">
+                <apex:outputPanel style="font-weight:bold;font-size:12px;text-align:left;font-height:12px;">
+                    <apex:outputText value="{!PaginationCount}"/> 
+                </apex:outputPanel>
+                <apex:pageBlockButtons location="bottom">
+                    <apex:commandButton value="<<Previous" action="{!previous}" rendered="{!hasPrevious}" reRender="table1" status="refreshstatus" />
+                    <apex:commandButton value="Next >>" action="{!next}" rendered="{!hasNext}" reRender="table1" status="refreshstatus"/>
+                </apex:pageBlockButtons>
+                
+                <apex:pageblocksection title="Details"  columns="1">
+                    <apex:actionRegion >
+                        <apex:outputPanel id="pblk">
+                            <apex:pageblocktable value="{!lstSetController}" var="zipRec" rendered="{!IF(selectedObjType =='Zip to Territory',true,false)}" styleclass="slds-table--bordered slds-table--cell-buffer slds-table_col-bordered">
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:inputCheckbox value="{!isSelectAll}">
+                                            <apex:actionSupport event="onclick" action="{!doSelectAll}"  rerender="pblk" status="refreshstatus"/>
+                                        </apex:inputCheckbox>
+                                    </apex:facet>
+                                    <apex:inputCheckbox value="{!zipRec.flag}"/>
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:commandLink value="Zip Code {!IF(strSortBy =='Zip_Code__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk" status="refreshstatus">
+                                            <apex:param name="strSortBy" value="Zip_Code__c" assignTo="{!strSortBy}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec.zip.Zip_Code__c}
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:commandLink value="City {!IF(strSortBy =='City_JNJ__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk" status="refreshstatus">
+                                            <apex:param name="strSortBy" value="City_JNJ__c" assignTo="{!strSortBy}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec.zip.City_JNJ__c}
+                                </apex:column>
+                                
+                                <!--Cidec17 County adding start here-->
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:commandLink value="County {!IF(strSortBy =='JJ_County__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk" status="refreshstatus">
+                                            <apex:param name="strSortBy" value="JJ_County__c" assignTo="{!strSortBy}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec.zip.JJ_County__c}
+                                </apex:column>
+                                <!--Cidec17 end here-->
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:commandLink value="State {!IF(strSortBy =='State_JNJ__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk" status="refreshstatus">
+                                            <apex:param name="strSortBy" value="State_JNJ__c" assignTo="{!strSortBy}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec.zip.State_JNJ__c}
+                                </apex:column>
+                                <apex:column >
+                                    <apex:facet name="header" >
+                                        <apex:commandLink value="Primary Assignment{!IF(strSortBy =='Primary_Assignment_JNJ__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk" status="refreshstatus"  >
+                                            <apex:param name="strSortBy" value="Primary_Assignment_JNJ__c" assignTo="{!strSortBy}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec.zip.Primary_Assignment_JNJ__c}
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Primary Name
+                                    </apex:facet>
+                                    {!zipRec.strprimaryname}
+                                    <apex:outputText value="Vacant" rendered="{!zipRec.strprimaryname==null}"></apex:outputText>
+                                </apex:column>
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Coverage Territory
+                                    </apex:facet>
+                                    {!zipRec.zip.Territory_Name__c}
+                                </apex:column>
+                                
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Coverage Name
+                                    </apex:facet>
+                                    {!zipRec.strUserName}
+                                    <apex:outputText value="Vacant" rendered="{!zipRec.strUserName==null}"></apex:outputText>
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Field Type
+                                    </apex:facet>
+                                    {!zipRec.zip.JJ_Coverage_Type__c}
+                                    
+                                </apex:column>
+                            </apex:pageblocktable>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel id="pblk2">
+                           <apex:pageblocktable value="{!lstSetController}" var="zipRec2" rendered="{!IF(selectedObjType =='Territory to Institution',true,false)}" styleclass="slds-table--bordered slds-table--cell-buffer slds-table_col-bordered">
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:inputCheckbox value="{!isSelectAll}">
+                                            <apex:actionSupport event="onclick" action="{!doSelectAll}"  rerender="pblk2"/>
+                                        </apex:inputCheckbox>
+                                    </apex:facet>
+                                    <apex:inputCheckbox value="{!zipRec2.flag}"/>
+                                </apex:column>
+                                
+                               <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:commandLink value="Institution Name{!IF(strSortBy2 =='JJ_Account_Name__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk2" status="refreshstatus">
+                                            <apex:param name="strSortBy2" value="JJ_Account_Name__c" assignTo="{!strSortBy2}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec2.zip2.JJ_Account_Name__c}
+                                </apex:column>
+                                
+                               
+                               <apex:column >
+                                    <apex:facet name="header">
+                                        <apex:commandLink value="Primary Assignment{!IF(strSortBy2 =='JJ_Primary_Territory_Assignment__c',IF(sortDir = 'desc','▼','▲'),'')}" action="{!dosort}" rerender="pblk2" status="refreshstatus">
+                                            <apex:param name="strSortBy2" value="JJ_Primary_Territory_Assignment__c" assignTo="{!strSortBy2}"/>
+                                        </apex:commandLink>
+                                    </apex:facet>
+                                    {!zipRec2.zip2.JJ_Primary_Territory_Assignment__c}
+                                </apex:column>
+            
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Primary Name
+                                    </apex:facet>
+                                    {!zipRec2.strprimaryname}
+                                    <apex:outputText value="Vacant" rendered="{!zipRec2.strprimaryname==null}"></apex:outputText>
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Coverage Territory
+                                    </apex:facet>
+                                    {!zipRec2.zip2.JJ_Territory_Name__c}
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Coverage Name
+                                    </apex:facet>
+                                    {!zipRec2.strUserName}
+                                    <apex:outputText value="Vacant" rendered="{!zipRec2.strUserName==null}"></apex:outputText>
+                                </apex:column>
+                                
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Field Type
+                                    </apex:facet>
+                                    {!zipRec2.zip2.JJ_Coverage_Type__c}
+                                   
+                                </apex:column>
+                            </apex:pageblocktable>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel style="font-weight:bold;font-size:12px;text-align:right;font-height:12px;">
+                            <apex:outputText value="{!PaginationCount}"/> 
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{! IF(ISBLANK(listWrapper), true, false) }">
+                            <apex:outputText style="font-weight:bold" value="No records to display with the search results"/>
+                        </apex:outputPanel>
+                    </apex:actionRegion>
+                </apex:pageblocksection>
+            </apex:pageBlock>
+            
+            <apex:pageBlock id="pblkcid">
+                <apex:actionRegion >
+                    <!-- start: this block render only when user "select update coverage" is Zip to Territory on UI -->
+                    <apex:pageBlockSection columns="1" title="Update Coverage" id="pgbid" rendered="{!IF(selectedObjType =='Zip to Territory',true,false)}">
+                        <apex:pageblocksectionItem id="pbsecid">
+                            <apex:outputpanel >
+                                <apex:outputText value="Update Coverage " />   
+                                <apex:inputText value="{!strUpdTerritoryName}" id="ter1" disabled="true"/>  
+                                &nbsp;&nbsp;<apex:image rendered="{!IF(selectedCoverage =='MSL',true,false)}" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype.pb2_1.covTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pb1.pb2.selectListId}').value,document.getElementById('{!$Component.pageId.formId.pblkcid.pgbid.pbsecid.ter1}').value,'update'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                                <apex:image rendered="{!IF(selectedCoverage =='V&E',true,false)}" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype.pb2_1.covTypeId}').value,'',document.getElementById('{!$Component.pageId.formId.pblkcid.pgbid.pbsecid.ter1}').value,'update'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                            </apex:outputpanel>
+                        </apex:pageblocksectionItem>
+                    </apex:pageBlockSection> 
+                    <!-- End -->
+                    
+                    <!-- start: this block render only when user "select update coverage" is Territory to Institution on UI-->
+                    <apex:pageBlockSection columns="1" title="Update Coverage" id="pgbid2" rendered="{!IF(selectedObjType =='Territory to Institution',true,false)}">
+                        <apex:pageblocksectionItem id="pbsecid2">
+                            <apex:outputpanel >
+                                <apex:outputText value="Update Coverage " />   
+                                <apex:inputText value="{!strUpdTerritoryName}" id="ter4" disabled="true"/>  
+                                &nbsp;&nbsp;<apex:image rendered="{!IF(selectedCoverage2 =='CVM',true,false)}" id="theImage7" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype2.pb6.covTypeId2}').value,'',document.getElementById('{!$Component.pageId.formId.pblkcid.pgbid2.pbsecid2.ter4}').value,'update'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                                <apex:image id="theImage8" rendered="{!IF(selectedCoverage2 =='V&E',true,false)}" onclick="openLookupPopup(document.getElementById('{!$Component.pageId.formId.pblkId.pgobjtype.pb5.objTypeId}').value,document.getElementById('{!$Component.pageId.formId.pblkId.pgcovtype2.pb6.covTypeId2}').value,'',document.getElementById('{!$Component.pageId.formId.pblkcid.pgbid2.pbsecid2.ter4}').value,'update'); return false"  value="{!$Resource.lookupicon}" width="20" height="15" />
+                            </apex:outputpanel>
+                        </apex:pageblocksectionItem>
+                    </apex:pageBlockSection> 
+                    <!-- End -->
+                    
+                    <div align="Center">                 
+                        <apex:commandButton value="Submit" action="{!doUpdate}" status="refreshstatus" />
+                        <apex:commandButton value="Cancel" action="{!doCancel}" reRender="pblk" status="refreshstatus" />                  
+                    </div> 
+                </apex:actionRegion>
+            </apex:pageBlock>
+        </div> 
+    </apex:form>
+</apex:page>
+
+
+/************************************************************
+* File Name     :  JJMSLCoverageController
+* Description   :  Which support MSL_coverage VF page
+* @author       :  Cognizant
+
+* Modification Log : 
+=============================================================
+* Ver.    Date          Author     Modification
+-------------------------------------------------------------
+* 1.0   10/31/2016     Cognizant    File Created
+* 1.1   08/19/2020     Cognizant    Fetching the Terr to Institution records
+************************************************************/
+
+public class JJMSLCoverageController
+{
+    
+    public string selectedSpeciality            {get;set;}
+    public string selectedCoverage              {get;set;}
+    public string selectedCoverage2             {get;set;}
+    public string strTerritoryName              {get;set;}
+    public String strInstitutionName            {get;set;}
+    public string strUpdTerritoryName           {get;set;}
+    public string strSortBy                     {get;set;}
+    public string strSortBy2                    {get;set;}
+    public List<SelectOption> lstSpeciality     {get;set;}
+    public List<SelectOption> coverageType      {get;set;}
+    public List<SelectOption> coverageType2     {get;set;}
+    public List<WrapperClass> listWrapper       {get;set;}
+    public String selectedObjType               {get;set;}
+    public string strFilter                     {get;set;}
+    public String sortDir                       {get;set;}
+    public Boolean selectAll                    {get;set;}
+    public boolean isSelectAll                  {get;set;}
+    public List<WrapperClass> lstSetController  {get;set;}
+    CustomIterable obj                          {get;set;}
+    public string territoryName                 {get;set;}
+    public string institutionName                 {get;set;}
+    Public String Trname                        {get;set;}
+    public string fieldVariable                 {get;set;}
+    public String[] filter                      {get;set;}
+    public static string PaginationCount        {get;set;}
+    public boolean isError                      {get;set;}
+    public string strstate                      {get;set;}      
+    public string strcity                       {get;set;}
+    public string strPrimaryNameUsr             {get;set;}   
+    public String strCounty                     {get;set;}     // Cidec17
+    public string queryFields = '';     
+    public string queryCount = '';      
+    public string strQuery_stub = '';       
+    public string strQuery_SortOrder = '';      
+    public integer Querylimit = 7000;
+   
+   public class applicationException extends Exception {}
+   
+    public JJMSLCoverageController()
+    {
+        selectedSpeciality = '';
+        selectedCoverage = 'MSL';
+        selectedCoverage2 = 'CVM';
+        selectedObjType ='Zip to Territory';
+        selectAll = False; 
+        isSelectAll = False;
+        strTerritoryName = '';
+        strInstitutionName = '';
+        strstate='';        
+        strcity = '';
+        strCounty = '';  // Cidec17
+        strPrimaryNameUsr='';
+        strUpdTerritoryName='';
+        strSortBy = 'Zip_Code__c';
+        strSortBy2 = 'JJ_Account_Name__c';
+        sortDir = 'desc';
+        filter= new String[]{};
+        Trname='';
+        fieldVariable='';
+        isError=false;
+        lstSpeciality = new List<SelectOption>();
+        coverageType = new List<SelectOption>();
+        coverageType2 = new List<SelectOption>();
+        listWrapper = new List<WrapperClass>();
+        lstSetController = new List<WrapperClass>();
+        
+        //lstSpeciality.add(new SelectOption('All','All'));
+        
+        for(JJ_Org_to_Specialty__c objSpeacilty: [select id,Org_Code__c,Specialty__c from JJ_Org_to_Specialty__c where Active__c = true limit 200 ])
+        {
+            lstSpeciality.add(new SelectOption(objSpeacilty.Specialty__c, objSpeacilty.Specialty__c));
+        }
+        obj = new CustomIterable (listWrapper); 
+        obj.setPageSize = 200;
+        for(String str : getPicklistValues('JJ_Zip_to_Terr__c','JJ_Coverage_Type__c')){
+            coverageType.add(new SelectOption(str, str));
+        }
+        for(String str : getPicklistValues('JJ_Territory_Institution__c','JJ_Coverage_Type__c')){
+            coverageType2.add(new SelectOption(str, str));
+        }
+        next();
+    }
+    public List<SelectOption> getFilterItems() {
+        List<SelectOption> options = new List<SelectOption>(); 
+        options.add(new SelectOption('City','City')); 
+        options.add(new SelectOption('State','State'));
+        options.add(new SelectOption('Primary Name','Primary Name'));        
+        return options; 
+    }
+    public void setTerrName(){
+       if(fieldVariable=='search'){
+           strTerritoryName=territoryName;
+       }
+       else if(fieldVariable=='update')
+           strUpdTerritoryName=territoryName;
+    
+    }
+    public void fetchzipterr()
+    {
+    
+    }
+    
+    public void clear()
+    {
+        strTerritoryName='';
+        strInstitutionName ='';
+        strUpdTerritoryName='';
+        listWrapper.clear();
+        lstSetController.clear();
+        strFilter='';
+        filter.clear();
+        isSelectAll = false;
+        strstate='';
+        strCounty=''; // Cidec17
+        strcity='';
+        strPrimaryNameUsr='';
+    }
+    
+    public PageReference doCancel(){
+        pageReference page = new pageReference('/apex/MSL_Coverage');
+        page.setRedirect(true);
+        return page;
+     }
+    public pagereference lookupPage()
+    {
+        return null;
+    }
+    
+    public pagereference doSelectAll() {
+    
+        if(isSelectAll == true){
+            selectAll = isSelectAll;
+        }else{
+            selectAll =false;
+        }
+
+        for(WrapperClass temp : listWrapper)
+        {
+            temp.flag = selectAll;        
+        }
+        
+        return null;
+    }
+    
+    public List<selectOption> getOrgCode()
+    {
+        return new List<selectOption>();
+    }
+    
+    public pageReference doSearchandclear()     
+    {       
+        strUpdTerritoryName = '';  
+        strFilter='';     
+        filter.clear();    
+        return doSearch();      
+    }
+    
+    public PageReference doSearch()
+    {
+        
+        if(String.ISBlank(strTerritoryName) && selectedObjType =='Zip to Territory'  && selectedCoverage=='MSL')      
+        {      
+                 
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please Select MSL'));          
+            return null;      
+        } else if(String.ISBlank(strTerritoryName) && selectedObjType =='Zip to Territory'  && selectedCoverage=='V&E')      
+        {      
+                
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please Select V&E'));          
+            return null;      
+        }else if((String.ISBlank(strTerritoryName) && String.isBlank(strInstitutionName))&& selectedObjType =='Territory to Institution')      
+        {      
+                 
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please Select Either MSL or Institution'));          
+            return null;      
+        }
+        
+        String strQuery = '';
+        String strUserName = '';
+        String strOrgCode = '';
+        String strprimass='';
+        String strprimaryname='';
+        // User objUser;
+        User objUserprim;
+        JJ_Zip_to_Terr__c ziptoterrs;
+        listWrapper = new List<WrapperClass>();
+        List<JJ_Zip_to_Terr__c> lstZipToTerr = new List<JJ_Zip_to_Terr__c>();
+		List<JJ_Territory_Institution__c> lstTerrtoInst = new List<JJ_Territory_Institution__c>();
+        
+        strTerritoryName = strTerritoryName.trim();
+        System.debug('strTerritoryName is'+strTerritoryName);
+        List<User> objUser = [SELECT Id,Name,Territory_JNJ__c FROM User WHERE Territory_JNJ__c =: strTerritoryName OR Name=:strTerritoryName];
+        if(objUser.size()>0){
+            strUserName = objUser[0].Name;
+            Trname=objUser[0].Territory_JNJ__c;
+        }
+        else
+            trname=strTerritoryName;
+        
+        if(selectedObjType =='Zip to Territory') 
+        {
+            system.debug('selectobjetype is '+selectedObjType); 
+            system.debug('selected coverage type is '+selectedCoverage);
+            queryFields = ' Zip_Code__c, JJ_County__c, City_JNJ__c, State_JNJ__c,Territory_Name__c,Primary_Assignment_JNJ__c,Org_Code__c,JJ_Coverage_Type__c '; // Cidec17 county Field Name
+            queryCount = ' count() '; 
+            strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Zip_to_Terr__c WHERE ';
+            
+            if (selectedCoverage == 'MSL' && !string.isEmpty(selectedSpeciality)) {
+                List<JJ_Org_to_Specialty__c> objOrgToSpeciality = [
+                    SELECT Id,Org_Code__c
+                    FROM JJ_Org_to_Specialty__c
+                    WHERE Specialty__c = :selectedSpeciality AND Active__c = :TRUE
+                ];
+                strOrgCode = objOrgToSpeciality[0].Org_Code__c;
+                strQuery = ' Org_Code__c = \'' + strOrgCode + '\'' + ' AND ';
+            }
+            strQuery =  ' Territory_Name__c = \'' +  Trname + '\'' + ' AND JJ_Coverage_Type__c = \'' +  selectedCoverage  + '\'';                
+            strstate = strstate.trim();                    
+            strcity = strcity.trim();
+            strCounty = strCounty.trim(); //Cidec17
+            strPrimaryNameUsr= strPrimaryNameUsr.trim();
+            
+            if(!String.ISBlank(strstate ))       
+                strQuery = strQuery  + ' AND State_JNJ__c= \'' +  strstate+ '\'';
+            
+            if(!String.ISBlank(strcity ))       
+                strQuery = strQuery  + ' AND City_JNJ__c LIKE \'%' +  strcity + '%\'';
+            system.debug('strPrimaryNameUsr--'+strPrimaryNameUsr);
+            
+            /*CIdec17 County query start here */    
+            if(!String.ISBlank(strCounty ))       
+                strQuery = strQuery  + ' AND JJ_County__c LIKE \'%' +  strCounty + '%\'';
+            system.debug('strCounty--'+strCounty);
+            /*CIdec17 County query end here */  
+            
+            Integer count_result = database.countQuery(strQuery_stub + strQuery);
+            
+            strQuery_SortOrder = ' ORDER BY ' + strSortBy + ' '+ sortDir;        
+            strQuery_stub = 'SELECT  '+ queryFields + ' FROM JJ_Zip_to_Terr__c WHERE ';
+            String primary_territory = '';
+            string user_query='';
+            user[] primary_users = new user[]{};
+                
+                try{
+                    if(!String.ISBlank(strPrimaryNameUsr)){
+                        string strPrimaryNameUsr_tmp   = '\'%' + strPrimaryNameUsr +  '%\'' ;
+                        user_query = 'select Id,Name,Territory_JNJ__c From User'
+                            +' where IsActive=true AND Name  LIKE '+ strPrimaryNameUsr_tmp ;
+                        primary_users = database.query(user_query);            
+                        primary_territory = '';
+                        for(user temp : primary_users)
+                        {
+                            if (primary_territory == '')
+                                primary_territory =  '\'' +temp.Territory_JNJ__c +'\'' ;
+                            primary_territory = primary_territory + ',\'' +temp.Territory_JNJ__c +'\'' ;
+                        }
+                        
+                        if (primary_territory != '')
+                            strQuery = strQuery + ' and Primary_Assignment_JNJ__c IN ('+ primary_territory +')';
+                      
+                    }
+                }catch(Exception e){
+                    System.debug('List has no rows'+e);
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please enter a valid primary name' + primary_users + primary_territory));          
+                    lstSetController.clear();
+                    return null;
+                }
+            system.debug('+++'+strQuery_stub + strQuery +strQuery_SortOrder);
+            if(String.ISBlank(strstate) && count_result  > Querylimit )  
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please narrow down search by entering the State Code or City'));               
+            else
+                lstZipToTerr = database.query(strQuery_stub + strQuery +strQuery_SortOrder );
+            
+            //Code Added for Primary Assigments Name
+            
+            Map<String,String> MapPrimaryname = new Map<String, String>(); 
+            for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true]){
+                MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name); 
+            }
+            
+            for(JJ_Zip_to_Terr__c objZipToTerr: lstZipToTerr)
+            {
+                strprimaryname=MapPrimaryname.get(objZipToTerr.Primary_Assignment_JNJ__c);
+                listWrapper.add(new WrapperClass(objZipToTerr, null,false, strUserName,strprimaryname));
+            }
+            
+            
+        } else if(selectedObjType =='Territory to Institution') {
+            system.debug('selectobjetype is '+selectedObjType); 
+            system.debug('selected coverage type is '+selectedCoverage2);
+            
+            queryFields = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c '; 
+            queryCount = ' count() '; 
+            strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Territory_Institution__c WHERE ';
+
+            strQuery ='JJ_Coverage_Type__c = \'' +  selectedCoverage2  + '\'';
+            
+            if(!String.ISBlank(Trname )) 
+            strQuery = strQuery +  ' AND JJ_Territory_Name__c = \'' +  Trname + '\'';
+            
+            string strInstitutionName = strInstitutionName.trim();
+            if(!String.ISBlank(strInstitutionName ))       
+            strQuery = strQuery  + ' AND JJ_Account_Name__c LIKE \'%' +  strInstitutionName + '%\'';
+            
+            strPrimaryNameUsr= strPrimaryNameUsr.trim();
+            Integer count_result = database.countQuery(strQuery_stub + strQuery);
+            strQuery_SortOrder = ' ORDER BY ' + strSortBy2 + ' '+ sortDir;      
+            strQuery_stub = 'SELECT  '+ queryFields + ' FROM JJ_Territory_Institution__c WHERE ';
+            String primary_territory = '';
+            string user_query='';
+            user[] primary_users = new user[]{};
+                
+                try{
+                    if(!String.ISBlank(strPrimaryNameUsr)){
+                        string strPrimaryNameUsr_tmp   = '\'%' + strPrimaryNameUsr +  '%\'' ;
+                        user_query = 'select Id,Name,Territory_JNJ__c From User'
+                            +' where IsActive=true AND Name  LIKE '+ strPrimaryNameUsr_tmp ;
+                        primary_users = database.query(user_query);            
+                        primary_territory = '';
+                        for(user temp : primary_users)
+                        {
+                            if (primary_territory == '')
+                                primary_territory =  '\'' +temp.Territory_JNJ__c +'\'' ;
+                            primary_territory = primary_territory + ',\'' +temp.Territory_JNJ__c +'\'' ;
+                        }
+                        
+                        if (primary_territory != '')
+                            strQuery = strQuery + ' and JJ_Primary_Territory_Assignment__c IN ('+ primary_territory +')';
+                       
+                    }
+                }catch(Exception e){
+                    System.debug('List has no rows'+e);
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please enter a valid primary name' + primary_users + primary_territory));          
+                    lstSetController.clear();
+                    return null;
+                }
+          
+            if(count_result  > Querylimit )  
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please narrow down search by entering the State Code or City'));               
+            else
+            
+                lstTerrtoInst = database.query(strQuery_stub + strQuery  );
+            
+            //Code Added for Primary Assigments Name
+            Map<String,String> MapPrimaryname = new Map<String, String>(); 
+            for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true]){
+                MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name); 
+            }
+            for(JJ_Territory_Institution__c objTerrtoIns: lstTerrtoInst)
+            {
+                strprimaryname=MapPrimaryname.get(objTerrtoIns.JJ_Primary_Territory_Assignment__c);
+                strUserName=MapPrimaryname.get(objTerrtoIns.JJ_Territory_Name__c);
+                listWrapper.add(new WrapperClass(null,objTerrtoIns, false, strUserName,strprimaryname));
+            }
+            
+        }
+        
+        if(listWrapper.size()== 0){
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.INFO,'No records available for this search'));
+        }
+        system.debug('list wrapper of '+listWrapper);
+        obj = new CustomIterable (listWrapper); 
+        obj.setPageSize = 200;
+        next();
+        return null;
+        
+    }
+    
+    public Boolean hasNext {
+            get 
+            {
+                return obj.hasNext();
+            }
+            set;
+        }
+        
+        public Boolean hasPrevious {
+            get 
+            {
+                return obj.hasPrevious();
+            }
+            set;
+        }
+        
+        public void next() 
+        {
+            lstSetController = obj.next();
+            System.debug('lstSetController ' +lstSetController);
+        }
+        
+        public void previous() 
+        {
+            lstSetController = obj.previous();
+            System.debug('lstSetController --previous' +lstSetController);
+        }
+        
+        
+     public class  CustomIterable implements Iterator<list<WrapperClass>>
+    { 
+       list<WrapperClass> InnerList{get; set;}
+       public list<WrapperClass> ListRequested{get; set;}
+    
+       Integer i {get; set;} 
+       public Integer setPageSize {get; set;} 
+    
+       public CustomIterable(List<WrapperClass> lstAccWr)
+       {
+           InnerList = new list<WrapperClass>(); 
+           ListRequested = new list<WrapperClass>();     
+           InnerList = lstAccWr;
+           setPageSize = 200;
+           i = 0; 
+       }   
+    
+       public boolean hasNext(){ 
+           if(i >= InnerList.size()) {
+               return false; 
+           } else {
+               return true; 
+           }
+       } 
+       
+       public boolean hasPrevious(){ 
+           system.debug('I am in hasPrevious' + i);
+           if(i <= setPageSize) {
+               return false; 
+           } else {
+               return true; 
+           }
+       }   
+    
+       public list<WrapperClass> next(){       
+           system.debug('i value is ' + i);
+           ListRequested = new list<WrapperClass>(); 
+           integer startNumber;
+           integer size = InnerList.size();
+           if(hasNext())
+           {  
+               if(size <= (i + setPageSize))
+               {
+                   startNumber = i;
+                   i = size;
+               }
+               else
+               {
+                   i = (i + setPageSize);
+                   startNumber = (i - setPageSize);
+               }
+               
+               Integer tempInt  = startNumber+1;
+               PaginationCount = 'Showing records '+ tempInt +' - ' + i + ' of ' + size;
+               system.debug('i value is =====' + i);
+               system.debug('i value is 2==== ' + (i - setPageSize));
+               
+               for(integer start = startNumber; start < i; start++)
+               {
+                   ListRequested.add(InnerList[start]);
+               }
+           } 
+           return ListRequested;
+       } 
+       
+       public list<WrapperClass> previous(){      
+           ListRequested = new list<WrapperClass>(); 
+           system.debug('i value is previous before =====' + i);
+           integer size = InnerList.size(); 
+           if(i == size)
+           {
+               if(math.mod(size, setPageSize) > 0)
+               {    
+                   i = size - math.mod(size, setPageSize);
+               }
+               else
+               {
+                   i = (size - setPageSize);
+               } 
+           }
+           else
+           {
+               i = (i - setPageSize);
+           }
+           Integer tempInt  = i-setPageSize+1;      
+           INteger tempINt2 = i;        
+           PaginationCount = 'Showing records '+ tempInt +' - ' + tempINt2  + ' of ' + size;
+           
+           system.debug('i value is previous =====' + i);
+           system.debug('i value is 2previous ==== ' + (i - setPageSize));
+           
+           if (i>0)
+           for(integer start = (i - setPageSize); start < i; ++start)
+           {
+               ListRequested.add(InnerList[start]);
+           } 
+           
+           return ListRequested;
+       }   
+    }
+    
+    
+    
+    public class WrapperClass 
+    {
+	   public Boolean flag                      {get;set;}
+	   public String strUserName                {get;set;}
+	   public string strprimaryname             {get;set;}
+       public JJ_Zip_to_Terr__c zip             {get;set;}
+	   public JJ_Territory_Institution__c zip2   {get;set;}
+	  public WrapperClass(JJ_Zip_to_Terr__c wrapZip, JJ_Territory_Institution__c wrapZip2,Boolean flagSelected, String userName,string primaryname) 
+      {
+          zip            = wrapZip;
+          zip2           = wrapZip2;
+          flag           = flagSelected;
+          strUserName    = userName;
+          strprimaryname = primaryname;
+      }
+    }
+   public PageReference dosort()
+    {
+        String strQuery = '';
+        String strUserName = '';
+        String strOrgCode = '';
+        String strprimass='';
+        String strprimaryname='';
+        User objUserprim;
+        JJ_Zip_to_Terr__c ziptoterrs;
+        List<User> objUser;
+        listWrapper = new List<WrapperClass>();
+        List<JJ_Zip_to_Terr__c> lstZipToTerr = new List<JJ_Zip_to_Terr__c>();
+        List<JJ_Territory_Institution__c> lstTerrtoInst = new List<JJ_Territory_Institution__c>();
+		
+        sortDir = (sortDir == 'asc')?'desc':'asc';      
+       
+
+        objUser = [SELECT Id,Name,Territory_JNJ__c FROM User WHERE Territory_JNJ__c =: strTerritoryName OR Name=:strTerritoryName];
+      
+        if(objUser.size()>0){
+            strUserName = objUser[0].Name;
+            Trname=objUser[0].Territory_JNJ__c;
+        }
+        else
+            trname=strTerritoryName;
+ 
+        if(selectedObjType =='Zip to Territory') 
+        {
+                queryFields = ' Zip_Code__c, City_JNJ__c, JJ_County__c,State_JNJ__c, Territory_Name__c,Primary_Assignment_JNJ__c,JJ_Coverage_Type__c,Org_Code__c '; // Cidec17 update query with County APi Name
+                queryCount = ' count() '; 
+                strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Zip_to_Terr__c WHERE ';
+                system.debug('query fields are '+ queryFields);
+                system.debug('queryCount is ' + queryCount);
+                system.debug('strQuery_stub is '+ strQuery_stub);
+                
+                strQuery =  ' Territory_Name__c = \'' +  Trname + '\'' + ' AND JJ_Coverage_Type__c = \'' +  selectedCoverage  + '\'';
+                system.debug('strQuery  '+ strQuery);
+                system.debug('selectedSpeciality  '+ selectedSpeciality);
+                if (selectedCoverage == 'MSL' && !string.isEmpty(selectedSpeciality)) {
+                    List<JJ_Org_to_Specialty__c> objOrgToSpeciality = [
+                        SELECT Id,Org_Code__c
+                        FROM JJ_Org_to_Specialty__c
+                        WHERE Specialty__c = :selectedSpeciality AND Active__c = :TRUE
+                    ];
+                    strOrgCode = objOrgToSpeciality[0].Org_Code__c;
+                    strQuery =strQuery+ 'AND Org_Code__c = \'' + strOrgCode + '\'' ;
+                }
+                strstate = strstate.trim();                    
+                strcity = strcity.trim();
+                strCounty = strCounty.trim(); //Cidec17
+                
+                if(!String.ISBlank(strstate ))       
+                    strQuery = strQuery  + ' AND State_JNJ__c= \'' +  strstate+ '\'';
+                
+                /* Cidec17 county like start here*/
+                if(!String.ISBlank(strCounty ))       
+                    strQuery = strQuery  + ' AND JJ_County__c LIKE \'%' +  strCounty + '%\'';
+                /* Cidec17 Count like ends here */
+                
+                if(!String.ISBlank(strcity ))       
+                    strQuery = strQuery  + ' AND City_JNJ__c LIKE \'%' +  strcity + '%\'';
+                
+                System.debug('query'+strQuery_stub + strQuery);
+                Integer count_result = database.countQuery(strQuery_stub + strQuery);
+                strQuery_SortOrder = ' ORDER BY ' + strSortBy + ' '+ sortDir;        
+                strQuery_stub = 'SELECT  '+ queryFields + ' FROM JJ_Zip_to_Terr__c WHERE ';
+                
+                if(String.ISBlank(strstate) && count_result  > Querylimit )  
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please narrow down search by entering the State Code (Eg: IL)'));               
+                else
+                    lstZipToTerr = database.query(strQuery_stub + strQuery +strQuery_SortOrder );
+                system.debug('list of zip to terr '+lstZipToTerr);
+                
+                
+                
+                Map<String,String> MapPrimaryname = new Map<String, String>();      
+                for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true]){      
+                    MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name);       
+                }
+                
+                for(JJ_Zip_to_Terr__c objZipToTerr: lstZipToTerr)
+                {
+                   
+                    strprimaryname=MapPrimaryname.get(objZipToTerr.Primary_Assignment_JNJ__c);
+                    listWrapper.add(new WrapperClass(objZipToTerr,null,false, strUserName,strprimaryname));
+                }
+                
+                
+                if(filter.size()>0){
+                    strFilter = strFilter.trim();
+                    listWrapper = new List<WrapperClass>();
+                    for(JJ_Zip_to_Terr__c objZipToTerr: lstZipToTerr)
+                    {
+                        strprimaryname=MapPrimaryname.get(objZipToTerr.Primary_Assignment_JNJ__c);
+                        if(filter.size() == 2){
+                            if(objZipToTerr.City_JNJ__c!=null && objZipToTerr.City_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('City')|| filter[1].containsIgnoreCase('City'))){
+                                listWrapper.add(new WrapperClass(objZipToTerr,null, false, strUserName,strprimaryname));
+                            }
+                            if(objZipToTerr.State_JNJ__c!=null && objZipToTerr.State_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('State')||filter[1].containsIgnoreCase('State'))){
+                                listWrapper.add(new WrapperClass(objZipToTerr, null,false, strUserName,strprimaryname));
+                            }
+                        }else{
+                            if(objZipToTerr.City_JNJ__c!=null && objZipToTerr.City_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('City'))){
+                                listWrapper.add(new WrapperClass(objZipToTerr,null, false, strUserName,strprimaryname));
+                            }
+                            if(objZipToTerr.State_JNJ__c!=null && objZipToTerr.State_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('State'))){
+                                listWrapper.add(new WrapperClass(objZipToTerr,null,false, strUserName,strprimaryname));
+                            }
+                         }
+                      }
+                    
+                }else {
+                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.FATAL,'Please select the filter and then apply'));
+                }
+        } else if(selectedObjType =='Territory to Institution') 
+		{
+		
+				queryFields = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c '; 
+				queryCount = ' count() '; 
+				strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Territory_Institution__c WHERE ';
+
+            strQuery ='JJ_Coverage_Type__c = \'' +  selectedCoverage2  + '\'';
+            
+            if(!String.ISBlank(Trname )) 
+            strQuery = strQuery +  ' AND JJ_Territory_Name__c = \'' +  Trname + '\'';
+            
+           
+            if(!String.ISBlank(strInstitutionName ))       
+            strQuery = strQuery  + ' AND JJ_Account_Name__c LIKE \'%' +  strInstitutionName + '%\'';
+            
+        
+            Integer count_result = database.countQuery(strQuery_stub + strQuery);
+            strQuery_SortOrder = ' ORDER BY ' + strSortBy2 + ' '+ sortDir;       
+            strQuery_stub = 'SELECT  '+ queryFields + ' FROM JJ_Territory_Institution__c WHERE ';
+            lstTerrtoInst = database.query(strQuery_stub + strQuery +strQuery_SortOrder);
+            Map<String,String> MapPrimaryname = new Map<String, String>(); 
+            for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true]){
+                MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name); 
+            }
+            for(JJ_Territory_Institution__c objTerrtoIns: lstTerrtoInst)
+            {
+                strprimaryname=MapPrimaryname.get(objTerrtoIns.JJ_Primary_Territory_Assignment__c);
+                strUserName=MapPrimaryname.get(objTerrtoIns.JJ_Territory_Name__c);
+                listWrapper.add(new WrapperClass(null,objTerrtoIns, false, strUserName,strprimaryname));
+            }
+        }
+        obj = new CustomIterable (listWrapper); 
+        obj.setPageSize = 200;
+        next();
+        return null; 
+    }
+   public PageReference doUpdate(){
+        
+        User updUser;
+        String newSearchText ='';
+        String cvgName='';
+        String terid='';
+        
+         if(selectedObjType =='Zip to Territory') 
+        {
+		
+                system.debug('selectedList--'+lstSetController);
+                system.debug('selectedListouter--'+lstSetController.size());
+                List<JJ_Zip_to_Terr__c> zipList=new List<JJ_Zip_to_Terr__c>();
+                List<JJ_Zip_to_Terr__c> updZipList=new List<JJ_Zip_to_Terr__c>();
+                Set<JJ_Zip_to_Terr__c> updZipSet=new Set<JJ_Zip_to_Terr__c>();
+                List<JJ_Zip_to_Terr__c> updFinalZipList=new List<JJ_Zip_to_Terr__c>();
+                List<WrapperClass> updList=new List<WrapperClass>();
+                for(WrapperClass mexist: listWrapper){
+                    if(mexist.flag==true){
+                        system.debug('flagtrue--'+mexist.flag);
+                        updList.add(mexist);
+                        
+                    }
+                }
+                System.debug('strUpdTerritoryName--'+strUpdTerritoryName);
+                if(strUpdTerritoryName!=''){
+                    User[] u=[SELECT Territory_JNJ__c FROM User WHERE Name =:strUpdTerritoryName];
+                    if(u.size()>0){
+                        newSearchText=u[0].Territory_JNJ__c;
+                        system.debug('newSearchText---'+newSearchText);
+                    }
+                    
+                }    
+                if(updList.size()>0){    
+                    for(WrapperClass wrap:updList){
+                        zipList.add(wrap.zip);
+                    }
+                } 
+                if(zipList.size()>0){   
+                    for(JJ_Zip_to_Terr__c zipUpd :zipList){
+                        
+                        if(newSearchText=='' && strUpdTerritoryName!=''){
+                            zipUpd.Territory_Name__c=strUpdTerritoryName;
+                            cvgName=zipUpd.Territory_Name__c;
+                        }  
+                        else{
+                            zipUpd.Territory_Name__c=newSearchText;
+                            cvgName=zipUpd.Territory_Name__c;
+                        }  
+                        updZipList.add(zipUpd);
+                    }
+                } 
+                
+                territory[] ter=[select id,Name from territory where name=:cvgName];
+                if(ter.size()>0)
+                    terid=ter[0].id; 
+                
+                system.debug('terid--'+terid);
+                if(zipList.size()>0 && terid!=''){   
+                    for(JJ_Zip_to_Terr__c zipUpd :zipList){
+                        zipUpd.Territory_SFDC_ID__c=terid;
+                        updZipList.add(zipUpd);
+                    }
+                }  
+                if(updZipList.size()>0){
+                    updZipSet.addAll(updZipList);
+                    updFinalZipList.addAll(updZipSet); 
+                }     
+                if(updFinalZipList.size()>0){
+                    update updFinalZipList; 
+                     ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Coverage updated successfully'));
+                }     
+                system.debug('zipList--'+zipList);
+                
+                system.debug('zipUpd--'+updZipList);
+        }
+        else if(selectedObjType =='Territory to Institution') {
+            
+            system.debug('selectedList--'+lstSetController);
+                system.debug('selectedListouter--'+lstSetController.size());
+                List<JJ_Territory_Institution__c> zipList=new List<JJ_Territory_Institution__c>();
+                List<JJ_Territory_Institution__c> updZipList=new List<JJ_Territory_Institution__c>();
+                Set<JJ_Territory_Institution__c> updZipSet=new Set<JJ_Territory_Institution__c>();
+                List<JJ_Territory_Institution__c> updFinalZipList=new List<JJ_Territory_Institution__c>();
+                List<WrapperClass> updList=new List<WrapperClass>();
+                for(WrapperClass mexist: listWrapper){
+                    if(mexist.flag==true){
+                        system.debug('flagtrue--'+mexist.flag);
+                        updList.add(mexist);
+                        
+                    }
+                }
+                System.debug('strUpdTerritoryName--'+strUpdTerritoryName);
+                if(strUpdTerritoryName!=''){
+                    User[] u=[SELECT Territory_JNJ__c FROM User WHERE Name =:strUpdTerritoryName];
+                    if(u.size()>0){
+                        newSearchText=u[0].Territory_JNJ__c;
+                        system.debug('newSearchText---'+newSearchText);
+                    }
+                    
+                }    
+                if(updList.size()>0){    
+                    for(WrapperClass wrap:updList){
+                        zipList.add(wrap.zip2);
+                    }
+                } 
+                if(zipList.size()>0){   
+                    for(JJ_Territory_Institution__c zipUpd :zipList){
+                        
+                        if(newSearchText=='' && strUpdTerritoryName!=''){
+                            zipUpd.JJ_Territory_Name__c=strUpdTerritoryName;
+                            cvgName=zipUpd.JJ_Territory_Name__c;
+                        }  
+                        else{
+                            zipUpd.JJ_Territory_Name__c=newSearchText;
+                            cvgName=zipUpd.JJ_Territory_Name__c;
+                        }  
+                        updZipList.add(zipUpd);
+                    }
+                } 
+                
+                territory[] ter=[select id,Name from territory where name=:cvgName];
+                if(ter.size()>0)
+                    terid=ter[0].id; 
+                
+                system.debug('terid--'+terid);
+                if(zipList.size()>0 && terid!=''){   
+                    for(JJ_Territory_Institution__c zipUpd :zipList){
+                        zipUpd.JJ_Territory_SFDC_Id__c=terid;
+                        updZipList.add(zipUpd);
+                    }
+                }  
+                if(updZipList.size()>0){
+                    updZipSet.addAll(updZipList);
+                    updFinalZipList.addAll(updZipSet); 
+                }     
+                if(updFinalZipList.size()>0){
+                    update updFinalZipList;
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Coverage updated successfully')); 
+                }     
+                system.debug('zipList--'+zipList);
+                
+                system.debug('zipUpd--'+updZipList);
+            
+            
+		}
+        doSearch();
+        if(selectAll == true){
+            isSelectAll = !isSelectAll;
+        }
+        
+        return null;
+    }
+    
+    public static List<String> getPicklistValues(String ObjectApi_name,String Field_name){ 
+        
+        List<String> lstPickvals=new List<String>();
+        Schema.SObjectType targetType = Schema.getGlobalDescribe().get(ObjectApi_name);
+        Sobject Object_name = targetType.newSObject();
+        Schema.sObjectType sobject_type = Object_name.getSObjectType(); 
+        Schema.DescribeSObjectResult sobject_describe = sobject_type.getDescribe();
+        Map<String, Schema.SObjectField> field_map = sobject_describe.fields.getMap(); //get a map of fields for the passed sobject
+        List<Schema.PicklistEntry> pick_list_values = field_map.get(Field_name).getDescribe().getPickListValues(); 
+        for (Schema.PicklistEntry a : pick_list_values) { 
+            lstPickvals.add(a.getValue());
+        }
+        
+        return lstPickvals;
+    }
+    
+     public List<SelectOption> getobjType() {
+            List<SelectOption> options = new List<SelectOption>();
+            options.add(new SelectOption('Zip to Territory','Zip to Territory'));
+            options.add(new SelectOption('Territory to Institution','Territory to Institution'));
+            return options;
+        }
+    
+}
