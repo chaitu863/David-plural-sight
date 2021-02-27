@@ -1,0 +1,25 @@
+<template>
+    <lightning-card >
+        <lightning-input label="Job name " onchange={jobchangeHandler}></lightning-input>
+        <div>my name is {name} and working as {address.location}</div>
+    </lightning-card>
+    
+</template>
+
+import { LightningElement,track } from 'lwc';
+
+export default class TroopHelloWorld extends LightningElement {
+
+    jobname;
+    name = 'chaitanya motupalli';
+    locationjs;
+    address = {
+      postalcode : 8089,
+      country : 'usa',
+      location : 'location spread'
+    }
+    jobchangeHandler(event){
+         this.address ={...this.address,location:event.target.value};
+    }
+
+}
