@@ -1,0 +1,30 @@
+<template>
+    <lightning-card>
+        <h2>This is h2 element</h2>
+        <template for:each={cityarray} for:item="city">
+           <div key={city} class="nameofcity">{city}</div>
+        </template>
+        <div class="childdom" lwc:dom="manual"></div>
+        <lightning-button label="Submit" onclick={queryHandler}></lightning-button>
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+
+export default class TroopQuerySelector extends LightningElement {
+    cityarray = ['chicago','boston','mumbai'];
+    queryHandler(){
+        const h2head = this.template.querySelector('h2')
+        h2head.style.border='1px solid red'
+        console.log(JSON.stringify(h2head.innerText));
+        const jscity = this.template.querySelectorAll('.nameofcity')
+        Array.from(jscity).forEach(item=>{
+            item.setAttribute('title',item.innerText)
+            console.log(item.innerText)
+        })
+        
+        const jschildele = this.template.querySelector('.childdom')
+        jschildele.innerHTML = '<p>this from lwc dom </p>'
+    }
+}
