@@ -1,0 +1,130 @@
+<template>
+    <lightning-card title="Quiz for Ph.D">
+        <form>
+            <ul class="slds-m-around_medium">
+                <template for:each={questions} for:item="temp">
+                    <li key={temp.id}>
+                       <strong>{temp.id}.{temp.question}</strong>
+                       <div class="slds-grid slds-gutters slds-m-bottom_x-small">
+                        <div class="slds-col">
+                            <input 
+                            class="movebit"
+                            type="radio" 
+                            name={temp.id}
+                            value="a"
+                            onchange={handleradiochange}
+                            />
+                            <span>{temp.options.a}</span>
+                        </div>
+                        <div class="slds-col">
+                            <input 
+                            type="radio" 
+                            onchange={handleradiochange}
+                            name={temp.id}
+                            value="b"
+                            />
+                          <span>{temp.options.b}</span>
+                        </div>
+                        <div class="slds-col">
+                            <input 
+                            type="radio" 
+                            onchange={handleradiochange}
+                            name={temp.id}
+                            value="c"
+                            />
+                          <span>{temp.options.c}</span>
+                        </div>
+                      </div>
+                    </li>
+                </template>
+            </ul>
+            <lightning-button variant="brand" label="Submit" type="submit" 
+                onclick={submitHandler}
+                disabled={notallselected}
+                class="slds-m-right_x-small">
+            </lightning-button>
+            <lightning-button variant="brand" label="Reset" type="reset" onclick={resetHandler} class="slds-m-right_x-small">
+            </lightning-button>
+            <template if:true={isSubmitted}>
+               <div class={sldaclass}>you have scored {totalcorrect} out of {questions.length}</div> 
+            </template>
+        </form>
+        
+    </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+
+export default class TroopQuizone extends LightningElement {
+
+    questions = [
+        {
+            id: 1,
+            question:'where you have born?',
+            options: {
+                a:'addanki',
+                b:'nagulapadu',
+                c:'ongole'
+            },
+            correctanswers : 'a'
+        },
+        {
+            id: 2,
+            question:'who is your fav hero?',
+            options: {
+                a:'chiru',
+                b:'mohan babu',
+                c:'sr.ntr'
+            },
+            correctanswers : 'c'
+        },
+        {
+            id: 3,
+            question:'where did you study your schooling?',
+            options: {
+                a:'CKP',
+                b:'bommanampadu',
+                c:'muppavaram'
+            },
+            correctanswers : 'a'
+        },
+    ]
+    selected = {}
+    isSubmitted = false;
+    totalcorrect = 0;
+
+    handleradiochange(event){
+
+        console.log('name',event.target.name)
+        console.log('value',event.target.value)
+        const {name,value} = event.target;
+        this.selected = {...this.selected,[name]:value}
+        console.log('sleected object is ',this.selected)
+    }
+
+    get notallselected(){
+        return !(Object.keys(this.selected).length === this.questions.length)
+    }
+    submitHandler(event){
+        event.preventDefault();
+        this.isSubmitted=true;
+        console.log('this submit button')
+         
+          let resultis = this.questions.filter(item=>item.correctanswers === this.selected[item.id])
+          this.totalcorrect = resultis.length;
+          console.log('correct ansers are',totalcorrect.length);
+    }
+
+    resetHandler(){
+        this.isSubmitted = false;
+        this.selected = selected;
+        this.totalcorrect = 0;
+    }
+
+    get sldaclass(){
+        return `slds-text-heading_medium ${this.questions.length === this.totalcorrect
+        ?'slds-text-color_success':'slds-text-color_destructive'}`
+    }
+   
+}
