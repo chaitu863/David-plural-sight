@@ -1,0 +1,55 @@
+<template>
+  <lightning-card title="Default component">
+     <lightning-input label="default input"></lightning-input>
+     <lightning-button label="Firstpage" onclick={switchpageHandler}>
+     </lightning-button>
+     <lightning-button label="Secondpage" onclick={switchpageHandler}>
+    </lightning-button>
+  </lightning-card>
+</template>
+
+Now created another two html files which need not to be same name 
+
+// renderone.html
+<template>
+    <lightning-card title="First component">
+        <lightning-input label="First input"></lightning-input>
+        <lightning-button label="Back" onclick={switchpageHandler}>
+        </lightning-button>
+        <lightning-button label="Submit" onclick={submitHandler}>
+       </lightning-button>
+     </lightning-card>
+</template>
+
+//renderTwo.html
+<template>
+    <lightning-card title="First component">
+        <lightning-input label="Srcond input"></lightning-input>
+        <lightning-button label="Back" onclick={switchpageHandler}>
+        </lightning-button>
+        <lightning-button label="Submit" onclick={submitHandler}>
+       </lightning-button>
+     </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+import FIRSTPAGE from './renderone.html'
+import SECONDPAGE from './renderTwo.html'
+import DEFAULTPAGE from './troopRenderComponent.html'
+export default class TroopRenderComponent extends LightningElement {
+
+    buttonlabeljs
+    switchpageHandler(event){
+        this.buttonlabeljs = event.target.label
+    }
+
+    render(){
+        return this.buttonlabeljs === 'Firstpage'?FIRSTPAGE:
+               this.buttonlabeljs === 'Secondpage'?SECONDPAGE:
+               DEFAULTPAGE
+    }
+    submitHandler(){
+        console.log('submitted successfully');
+    }
+}
