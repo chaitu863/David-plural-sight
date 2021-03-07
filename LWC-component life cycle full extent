@@ -1,0 +1,69 @@
+// Parent Component
+
+<template>
+    <lightning-card>
+        <div>Hi I am parent Component</div>
+        <lightning-button label="Show child" onclick={showchildHandler}></lightning-button>
+        <template if:true={jsshowchild}>
+            <c-troop-mounting-phase-child></c-troop-mounting-phase-child>
+        </template>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class TroopMountingPhaseParent extends LightningElement {
+    constructor(){
+        super()
+        console.log('Parent constructor')
+    }
+
+    connectedCallback(){
+        console.log('Parent connectedCallback method')
+    }
+
+    renderedCallback(){
+        console.log('Parent renderedCallback method')
+    }
+    disconnectedCallback(){
+        console.log('Parent DisconnectedCallback method')
+    }
+    jsshowchild = false
+    showchildHandler(event){
+        this.jsshowchild = !(this.jsshowchild)
+    }
+
+    errorCallback(error,stack){
+        console.log('error message is',error.message)
+        console.log('where error is ',stack)
+    }
+}
+
+// Child Component
+
+<template>
+    <lightning-card>
+        <div>Hi I am child Component</div>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class TroopMountingPhaseChild extends LightningElement {
+    constructor(){
+        super()
+        console.log('Child constructor')
+    }
+
+    connectedCallback(){
+        console.log('Child connectedCallback method')
+        throw new Error('this is custom error created by me')
+    }
+
+    renderedCallback(){
+        console.log('Child renderedCallback method')
+    }
+    disconnectedCallback(){
+        console.log('Child DisconnectedCallback method')
+    }
+}
