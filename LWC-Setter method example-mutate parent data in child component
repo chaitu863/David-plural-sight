@@ -1,0 +1,49 @@
+•	@Api can be placed anywhere before get or set. It works same.
+•	Methodname (detail) should be the same name given at parent html.
+•	We should user spread operator to mutate the data always.
+
+
+
+Parent:
+<template>
+    <lightning-card title="Parent Component">
+       <c-troop-setter-child childdetail = {userDetails}></c-troop-setter-child>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class TroopSetterParent extends LightningElement {
+
+    userDetails = {
+        name:'chaitanya',
+        age: 25
+    }
+}
+
+
+Child:
+<template>
+    <lightning-card title="Child Component">
+        <p><sold>Name :</sold>{retriveddata.name}</p>
+        <p><sold>Age :</sold>{retriveddata.age}</p>
+        <p><sold>education :</sold>{retriveddata.education}</p>
+    </lightning-card>
+</template>
+
+import { LightningElement,api } from 'lwc';
+
+export default class TroopSetterChild extends LightningElement {
+
+    retriveddata
+    @api 
+    get childdetail(){
+       return  this.retriveddata;
+    }
+
+    set childdetail(data){
+        const newage = data.age*2
+        this.retriveddata = {...data,age:newage,education:'B.tech'}
+    }
+
+}
