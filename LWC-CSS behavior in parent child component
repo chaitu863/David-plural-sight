@@ -1,0 +1,53 @@
+Parent:
+
+<template>
+    <lightning-card title="CSS composition">
+        <div class="slds-p-around_medium"></div>
+            <h1>Hello i am parent component</h1>
+            <c-troop-childcss>
+                <p>Hello I am slot one</p>
+            </c-troop-childcss>
+            <c-troop-childcss class="blue">
+                <p>Hello I am slot two</p>
+            </c-troop-childcss>
+        </div>
+    </lightning-card>
+</template>
+
+parent css:
+
+h1{
+    font-size: 30px;
+    color:red;
+}
+/* c-css-child-demo{
+    display: block;
+    background-color: green;
+    color:white;
+} */
+p{
+    font-size: 20px;
+    color:yellow;
+}
+
+
+Child:
+
+<template>
+    <h1>Hello i am child component</h1>
+    <slot></slot>
+</template>
+
+
+Child css
+:host{
+    display: block;
+    background-color: red;
+    
+}
+:host(.blue){
+    display: block;
+    background-color: blue;
+    
+
+
