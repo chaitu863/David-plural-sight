@@ -1,3 +1,5 @@
+Example One:
+
 PARENT:
 
 <template>
@@ -56,3 +58,42 @@ export default class AttributeSlotCommuChild extends LightningElement {
     @api roominfochild;
 }
 
+
+Example 2:
+
+<template>
+    <lightning-card title="Parent Component">
+    <c-troop-slot-child >
+        <p slot="nameone">My name is chaitanya</p>
+        <p slot="footer">Footer text</p>
+    </c-troop-slot-child>
+    </lightning-card>
+    <lightning-card title="Parent Component">
+        <c-troop-slot-child >
+            <p slot="nameone">My name is chaitanya</p>
+        </c-troop-slot-child>
+        </lightning-card>
+</template>
+
+
+<template>
+    <lightning-card>
+        <div>Whats your name</div>
+        <p><slot name='nameone'></slot></p>
+        <footer class="slds-card__footer slds-hide">
+            <slot name="footer" onslotchange={handleFooterChange}></slot>
+        </footer>
+      
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class SlotChildDemo extends LightningElement {
+    handleFooterChange(){
+        const footerElem = this.template.querySelector('.slds-card__footer')
+        if(footerElem){
+            footerElem.classList.remove('slds-hide')
+        }
+    }
+}
