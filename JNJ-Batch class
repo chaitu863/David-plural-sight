@@ -1,0 +1,259 @@
+// this batch class delete account priroty with product records based on TSF record
+
+/*
+* Author        : Cognizant
+* Class         : JJ_UpdateAccountPriortyBatch 
+* Created Date  : 16-Oct-2018
+* Description   : Batch class to dealign the terriory for Myrating Set to 'Remove' on TSF only for Canada.
+*   Modified By     ||  Date Modified   ||      Description
+*******************************************************************************************************************************
+* 1. Cognizant      || 10/16/2018       || initial version created.
+* 2. Cognizant      || 03/09/2021       || Dealign account when there are no account priority with prodcut records 
+*/
+global without sharing Class JJ_UpdateAccountPriortyBatch implements Database.Batchable<sObject>{
+    global Database.QueryLocator start(Database.BatchableContext BC){
+        String Query='select id,Account_vod__c, Territory_vod__c,JJ_Priority__c,My_Rating_Crucell_JNJ__c from TSF_vod__c where lastmodifiedDate ='+system.label.JJ_TSFModifiedDate+' AND  My_Rating_Crucell_JNJ__c= \'Remove\'';
+        return Database.getQueryLocator(Query);
+    }
+    //Below execute method take TSF records returned by start method and do account de-alignment from territory
+    global void execute(Database.BatchableContext BC,List<TSF_vod__c > scope){
+        system.debug('scope values are '+scope);
+        Set<id> accountids              = new set<id>();
+        Set<String> Territorys          = new Set<string>();
+        Map<String,TSF_vod__c> TSFMap = new Map<String,TSF_vod__c>();
+        String Priority_Null            = Null;
+        for(TSF_vod__c obj : scope){
+            accountids.add(obj.Account_vod__c);
+            Territorys.add(obj.Territory_vod__c);
+            // map of TSF record with key(Account+territory)
+            TSFMap.put(obj.Account_vod__c+'~'+obj.Territory_vod__c,obj);
+        }
+        // Map of account priority with products records
+        // created below map to know how many account priority with products associated 
+        // for that perticual TSF record based on its account and territory.
+        Map<String,List<JJ_AccountTargetWithProduct__c>> mapofaccwithTarget = new Map<String,List<JJ_AccountTargetWithProduct__c>>();
+        for(JJ_AccountTargetWithProduct__c atwp : [SELECT id,JJ_Nontarget__c ,JJ_Account__c,JJ_Territory__c,
+                                                   JJ_Priority__c,JJ_Product_Catalog__c,JJ_Product_Catalog__r.name 
+                                                   FROM JJ_AccountTargetWithProduct__c 
+                                                   WHERE JJ_Account__c in:accountIds 
+                                                   AND JJ_Territory__c in:Territorys ]){
+                                                       if(mapofaccwithTarget.get(atwp.JJ_Account__c+'~'+atwp.JJ_Territory__c)==null){
+                                                           mapofaccwithTarget.put(atwp.JJ_Account__c+'~'+atwp.JJ_Territory__c, new list<JJ_AccountTargetWithProduct__c>());
+                                                       } 
+                                                       mapofaccwithTarget.get(atwp.JJ_Account__c+'~'+atwp.JJ_Territory__c).add(atwp);
+                                                   }
+       // deleteAccountWithNoPriority(mapofaccwithTarget, accountids, TSFMap);
+        deleteAccountPrority(mapofaccwithTarget);
+    }
+    
+    
+    public static void deleteAccountPrority(Map<String,List<JJ_AccountTargetWithProduct__c>> mapofaccwithTarget){
+        if(!mapofaccwithTarget.isEmpty()){
+            List<JJ_AccountTargetWithProduct__c> accountTrargetList = new list<JJ_AccountTargetWithProduct__c>();
+            List<JJ_AccountTargetWithProduct__c> deleteATP = new list<JJ_AccountTargetWithProduct__c>(); 
+            for(string ter :mapofaccwithTarget.keyset()){
+                Boolean NonTarget=true;
+                for(JJ_AccountTargetWithProduct__c atr : mapofaccwithTarget.get(ter)){
+                    if(atr.JJ_Priority__c !='Non Target'){
+                        NonTarget=false;
+                    }else if(atr.JJ_Priority__c =='Non Target'){
+                        //atr.JJ_Priority__c = Priority_Null;
+                        atr.JJ_Nontarget__c = true;
+                        accountTrargetList.add(atr);
+                    }
+                }
+                if(NonTarget){
+                    try{
+                        system.debug('');
+                        deleteATP.AddAll(mapofaccwithTarget.get(ter));
+                    }catch(Exception e) {
+                        System.debug('The following exception has occurred: ' + e.getMessage());
+                    }
+                }
+            }
+            if(!accountTrargetList.isEmpty()){
+                system.debug('before update batch'+accountTrargetList);
+                //update accountTrargetList;
+            }
+            if(!deleteATP.isEmpty()){
+                try{
+                    updateATL(deleteATP);                
+                    database.delete(deleteATP, false);
+                }catch(DmlException e) {
+                    System.debug('The following exception has occurred: ' + e.getMessage());
+                }
+            }
+        }
+        
+    }
+    
+    
+    public static void updateATL(List<JJ_AccountTargetWithProduct__c> newList){
+        
+        List<JJ_AccountTargetWithProduct__c> listToUpdate= new List<JJ_AccountTargetWithProduct__c>();
+        Set<id> accountIds=new set<id>();
+        Set<String> territorys=new set<String>();
+        if(!newList.isEmpty()){
+            for(JJ_AccountTargetWithProduct__c  obj : newList){
+                accountIds.add(obj.JJ_Account__c);
+                Territorys.add(obj.JJ_Territory__c);            
+                listToUpdate.add(obj); 
+            }    
+        }
+        
+        if(!listToUpdate.isEmpty() ){
+            Map<String,List<JJ_AccountTargetWithProduct__c>> mapOfACTList=new Map<String,List<JJ_AccountTargetWithProduct__c>>();
+            Map<String,Account_Territory_Loader_vod__c> mapOfATL=new Map<String,Account_Territory_Loader_vod__c>();
+            Map<String,Account_Territory_Loader_vod__c> mapOfATLUpdate=new Map<String,Account_Territory_Loader_vod__c>();
+            List<JJ_AccountTargetWithProduct__c> accountTrargetList=[Select id,JJ_Nontarget__c ,JJ_Account__c,JJ_Territory__c,JJ_Priority__c,JJ_Product_Catalog__c,JJ_Product_Catalog__r.name from JJ_AccountTargetWithProduct__c where  JJ_Account__c in:accountIds and JJ_Territory__c in:Territorys ];
+            Map<String,TSF_vod__c> mapOfTSF=new Map<String,TSF_vod__c>();
+            mapOfTSF=JJ_AccountTargetWithProductUpdateHelper.getTSFRecords(accountIds,Territorys);
+            
+            List<Account_Territory_Loader_vod__c>  ATLList=[SELECT id , Account_vod__c,Territory_to_Drop_vod__c,Territory_vod__c FROM  Account_Territory_Loader_vod__c  where Account_vod__c IN :accountIds];
+            List<Account_Territory_Loader_vod__c>  ATLListToUpdate=new List<Account_Territory_Loader_vod__c>();
+            for(JJ_AccountTargetWithProduct__c obj :accountTrargetList){
+                
+                if(mapOfACTList.get(obj.JJ_Account__c+'~'+obj.JJ_Territory__c)==null){
+                    mapOfACTList.put(obj.JJ_Account__c+'~'+obj.JJ_Territory__c,new List<JJ_AccountTargetWithProduct__c>());
+                }
+                mapOfACTList.get(obj.JJ_Account__c+'~'+obj.JJ_Territory__c).add(obj);
+                
+            }
+            for(Account_Territory_Loader_vod__c obj :ATLList){
+                mapOfATL.put(obj.Account_vod__c,obj);
+            }
+            Set<String> ketSet=mapOfACTList.keySet();
+            List<TSF_vod__c> updateOfTSF=new List<TSF_vod__c>();
+            List<JJ_AccountTargetWithProduct__c> deleteATP = new list<JJ_AccountTargetWithProduct__c>();
+            for(String str :ketSet){
+                TSF_vod__c tsf= mapOfTSF.get(str);
+                String accid=str.split('~').get(0);
+                Account_Territory_Loader_vod__c atlobj;
+                if(tsf!=null && tsf.My_Rating_Crucell_JNJ__c!='Remove'){
+                    Continue;
+                }
+                if(mapOfATLUpdate.get(accid)!=null){
+                    atlobj=mapOfATLUpdate.get(accid);
+                }else{
+                    atlobj=mapOfATL.get(accid);
+                }
+                //if ATL Found Drop the territory if all records are NonTarget 
+                if(atlobj!=null){
+                    String terriToDrop='';
+                    List<JJ_AccountTargetWithProduct__c> aTrargetList=mapOfACTList.get(str);
+                    Boolean NonTarget=true;
+                    for(JJ_AccountTargetWithProduct__c obj :aTrargetList){
+                        terriToDrop=';'+obj.JJ_Territory__c+';'; 
+                        if(!obj.JJ_Nontarget__c){
+                            NonTarget=false;
+                            break;
+                        }
+                    }
+                    if(NonTarget){
+                        atlobj.Territory_to_Drop_vod__c=atlobj.Territory_to_Drop_vod__c+terriToDrop;
+                        mapOfATLUpdate.put(accid,atlobj);
+                        tsf.My_Rating_Crucell_JNJ__c=null;
+                        tsf.JJ_Priority__c = null;
+                        try{
+                            updateOfTSF.add(tsf);
+                            // Add all ATP records to new list in the case where account can be de-align from territory
+                            deleteATP.addAll(aTrargetList); 
+                        }Catch(Exception e){
+                            NewList.get(0).addError(system.label.JNJ_GenericError);
+                        }
+                    }
+                }
+                // delete all ATP records where account is going to de-align from territory
+                try{
+                    database.delete(deleteATP, true);
+                }catch(DmlException e) {
+                    System.debug('The following exception has occurred: ' + e.getMessage());
+                }
+            }
+            if(mapOfATLUpdate.isEmpty()==False){
+                List<Account_Territory_Loader_vod__c> updateList=mapOfATLUpdate.values();
+                try{
+                    update updateList;
+                }Catch(Exception e){
+                    NewList.get(0).addError(system.label.JNJ_GenericError);
+                }
+            }
+            if(updateOfTSF.isEmpty()==False){
+                try{
+                    update updateOfTSF;
+                }Catch(Exception e){
+                    NewList.get(0).addError(system.label.JNJ_GenericError);
+                }
+            }
+        }
+    }
+    
+    public static void deleteAccountWithNoPriority(Map<String,List<JJ_AccountTargetWithProduct__c>> mapofaccwithTarget,Set<id> accountids, Map<String,TSF_vod__c> mapOfTSF){
+        // get account territory loader record details related on TSF record Account
+        if(accountIds !=null){
+            Map<String,Account_Territory_Loader_vod__c> mapOfATL         = New Map<String,Account_Territory_Loader_vod__c>();
+            Map<String,Account_Territory_Loader_vod__c> mapOfATLToUpdate = New Map<String,Account_Territory_Loader_vod__c>();
+            List<Account_Territory_Loader_vod__c>  ATLList               = [SELECT id , Account_vod__c,Territory_to_Drop_vod__c,Territory_vod__c
+                                                                            FROM  Account_Territory_Loader_vod__c  
+                                                                            WHERE Account_vod__c IN :accountIds];
+            // map use to update ATL record when territory to drop value got update
+            for(Account_Territory_Loader_vod__c objATL : ATLList){
+                mapOfATL.put(objATL.Account_vod__c,objATL);
+            }
+            Set<String> tsfSet         = mapOfTSF.keySet();
+            List<TSF_vod__c> updateTSF = New List<TSF_vod__c>();
+            //loop through each unique TSF record keyset(account+territory)
+            for( string str: tsfSet) {
+                // Below if condition to allow only TSF record where there are no account prioriry with product records
+                if( mapofaccwithTarget.get(str)==null){
+                    TSF_vod__c tsf   = mapOfTSF.get(str);
+                    String accid     =str.split('~').get(0);
+                    Account_Territory_Loader_vod__c atlobj;
+                    if(mapOfATLToUpdate.get(accid)!= null){
+                        atlobj=mapOfATLToUpdate.get(accid);
+                    }else{
+                        atlobj=mapOfATL.get(accid);
+                    }
+                    if(atlobj!= null){
+                        //Adding TSF record territoy info to ATL record of 'Territory to Drop' field
+                        //so that account is going to de-align from territory
+                        String terriToDrop              = '';
+                        terriToDrop                     = ';'+tsf.Territory_vod__c+';';
+                        atlobj.Territory_to_Drop_vod__c = atlobj.Territory_to_Drop_vod__c+terriToDrop;
+                        mapOfATLToUpdate.put(accid,atlobj);
+                        //clear value of TSF rating field from 'remove' to empty
+                        tsf.My_Rating_Crucell_JNJ__c    = null;
+                        tsf.JJ_Priority__c = null;
+                        if(tsf!= null){
+                            try{
+                                updateTSF.add(tsf);
+                            }catch(DmlException e) {
+                                System.debug('The following exception has occurred: ' + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+            //update ATL record and TSF records
+            if(mapOfATLToUpdate.isEmpty()== False){
+                List<Account_Territory_Loader_vod__c> updateList = mapOfATLToUpdate.values();
+                try{
+                    update updateList;
+                }catch(DmlException e) {
+                    System.debug('The following exception has occurred: ' + e.getMessage());
+                }
+            }
+            if(updateTSF.isEmpty()== False){
+                try{
+                    update updateTSF;
+                }catch(DmlException e) {
+                    System.debug('The following exception has occurred: ' + e.getMessage());
+                }
+            }
+        }
+        
+    }
+    global void finish(Database.BatchableContext BC){
+        
+    }
+}
