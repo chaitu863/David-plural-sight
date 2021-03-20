@@ -1,0 +1,43 @@
+1)Always use css file and then JS file in Promise.all
+2)it is asynchronous process
+
+
+<template>
+    <lightning-card title="Third Party JS Libraty">
+      <p><strong>Date is :</strong>{dategetis}</p>
+    </lightning-card>
+    <lightning-card title="Third Party CSS Libraty">
+        <p class="animate__bounce animate__animated animate__delay-5s">Hello i am enjoying this session</p>
+      </lightning-card>
+</template>
+
+
+import { LightningElement } from 'lwc';
+import MOMENT from '@salesforce/resourceUrl/moment';
+import ANIMATE from '@salesforce/resourceUrl/animate'
+import {loadScript,loadStyle} from 'lightning/platformResourceLoader';
+export default class TroopThirdPartyLib extends LightningElement {
+
+    dategetis
+    d3initialized = false;
+    renderedCallback(){
+       if(this.d3initialized){
+           return
+       }else
+       this.d3initialized=true;
+       Promise.all([
+           loadStyle(this,ANIMATE+'/animate/animate.min.css'),
+           loadScript(this,MOMENT)
+       ]).then(()=>{
+        this.d3initializedmethod()
+
+       }).catch(error=>{
+           console.log(error.message)
+       })
+   }
+
+   d3initializedmethod(){
+       this.dategetis = moment().format('LLLL'); 
+       console.log('date is ',this.dategetis)   
+   }
+}
