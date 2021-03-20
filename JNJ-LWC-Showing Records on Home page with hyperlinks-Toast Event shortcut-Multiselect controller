@@ -36,6 +36,7 @@ public class JJ_HomePageComponentController {
 
 <template>
     <div class="slds-grid slds-wrap">
+    <lightning-button label="Succuess" onclick={successHandler}></lightning-button>
         <template if:true={hideImpLinks}>
             <div class="slds-col slds-size_1-of-2 slds-var-p-right_small">
                 <span>
@@ -102,11 +103,21 @@ export default class HomePageLinks extends LightningElement {
         });
 
     }
+    successHandler(){
+        this.showToast('success', '{0} Account created successfully {1}', 'success');
+    }
     showToast(title, message, variant) {
         const evt = new ShowToastEvent({
             title: title,
             message: message,
             variant: variant,
+            messageData :[
+                'salesforce',{
+                    url:'https://www.amazon.com/',
+                    label:'Click Here'
+                }
+            ],
+            mode:'sticky'
         });
         this.dispatchEvent(evt);
     }
