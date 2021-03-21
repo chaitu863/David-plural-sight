@@ -1,103 +1,181 @@
 <template>
-    <lightning-card title="Navigation Example1">
-        <div class="slds-p-around_medium">
-            <lightning-button label="Open SFDCFacts" onclick={openSFDCFacts}></lightning-button>
-        </div>
-        <div class="slds-p-around_medium">
-            <lightning-button label="Account Home" onclick={openAccountHome}></lightning-button>
-        </div>
-        <div class="slds-p-around_medium">
-            <lightning-button label="Create New Contact" onclick={createNewContact}></lightning-button>
-        </div>
-        <div class="slds-p-around_medium">
-            <lightning-button label="Opportunity List View" onclick={openOppListView}></lightning-button>
-        </div>
-        <div class="slds-p-around_medium">
-            <lightning-button label="Open Case Record" onclick={openCaseRecord}></lightning-button>
-        </div>
-       <!-- <div class="slds-p-around_medium">
-            <lightning-button label="lead tab Tab" onclick={openMeetingRoom}></lightning-button>
-        </div>-->
-       <!-- <div class="slds-p-around_medium">
-            <lightning-button label="Preview A File" onclick={previewFile}></lightning-button>
-        </div>-->
+    <lightning-card title="Navigation Examples">
+     <p>Current Page reference : {pagerefjs}</p>
+     <lightning-button label="Home Page" onclick={homepageHandler}></lightning-button><br/>
+     <lightning-button label="Chatter Page" onclick={chatterpageHandler}></lightning-button><br/>
+     <lightning-button label="Account New Record Page" onclick={accountnewpageHandler}></lightning-button><br/>
+     <lightning-button label="Account New Record Page with Default values" onclick={accountDefaultHandler}></lightning-button><br/>
+     <lightning-button label="Contact List Page" onclick={listviewHandler}></lightning-button><br/>
+     <lightning-button label="Files" onclick={filesHandler}></lightning-button><br/>
+     <lightning-button label="Lead Record View" onclick={leadviewHandler}></lightning-button><br/>
+     <lightning-button label="Lead Record Edit" onclick={leadeditHandler}></lightning-button><br/>
+     <lightning-button label="Tab Navigation" onclick={tabHandler}></lightning-button><br/>
+     <lightning-button label="Related List Navigation" onclick={relatedHandler}></lightning-button><br/>
+     <lightning-button label="External Web page Navigation" onclick={webpageHandler}></lightning-button><br/>
+     <lightning-button label="Navigation to LWC" onclick={lwcHandler}></lightning-button><br/>
+     <lightning-button label="Navigation to VF page" onclick={vfpageHandler}></lightning-button><br/>
     </lightning-card>
 </template>
 
-import { LightningElement } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
-export default class NavigationExample extends NavigationMixin(LightningElement) {
 
-    openSFDCFacts(){
-        this[NavigationMixin.Navigate]({
-            type : 'standard__webPage',
-            attributes: {
-                url : 'https://sfdcfacts.com'
-            }
-        });
+import { LightningElement,wire } from 'lwc';
+import {NavigationMixin} from 'lightning/navigation'
+import {CurrentPageReference} from 'lightning/navigation'
+import {encodeDefaultFieldValues} from 'lightning/pageReferenceUtils'
+export default class TroopNavigation extends NavigationMixin(LightningElement) {
+
+  @wire(CurrentPageReference)
+  pageRef
+
+  get pagerefjs(){
+     return this.pageRef ? JSON.stringify(this.pageRef,null,2) : ''   
+  }
+  
+  homepageHandler(){
+      this[NavigationMixin.Navigate]({
+          type:'standard__namedPage',
+          attributes: {
+              pageName:'home'
+          }
+      })
     }
 
-    openAccountHome(){
+    chatterpageHandler(){
+      
         this[NavigationMixin.Navigate]({
-            type : 'standard__objectPage',
+            type:'standard__namedPage',
             attributes: {
-                objectApiName: 'Account',
-                actionName: 'home'
+                pageName:'chatter'
             }
-        });
-    }
+        })
+      }
 
-    createNewContact(){
+      accountnewpageHandler(){
         this[NavigationMixin.Navigate]({
-            type : 'standard__objectPage',
+            type:'standard__objectPage',
             attributes: {
-                objectApiName: 'Contact',
-                actionName: 'new'
+                objectApiName :'Account',
+                actionName :'new'
             }
-        });
-    }
-
-    openOppListView(){
+        })
+      }
+      accountDefaultHandler(){
+        const fieldvalues = encodeDefaultFieldValues({
+            Name :'Chaitanya Motupalli',
+            Site :'Addanki',
+            Active__c : 'Yes'
+        })
         this[NavigationMixin.Navigate]({
-            type : 'standard__objectPage',
+            type:'standard__objectPage',
             attributes: {
-                objectApiName: 'Opportunity',
-                actionName: 'list'
-            }
-        });
-    }
-
-    openCaseRecord(){
-        this[NavigationMixin.Navigate]({
-            type : 'standard__recordPage',
-            attributes: {
-                recordId: "500B0000005MtkBIAS",
-                objectApiName: 'Case', // objectApiName is optional
-                actionName: 'view'
-            }
-        });
-    }
-
-    /*openMeetingRoom(){
-        this[NavigationMixin.Navigate]({
-            type : 'standard__navItemPage',
-            attributes: {
-                apiName: 'Campaigns'
-            }
-        });
-    }*/
-
-    /*previewFile(){
-        this[NavigationMixin.Navigate]({
-            type: 'standard__namedPage',
-            attributes: {
-                pageName: 'filePreview'
+                objectApiName :'Account',
+                actionName :'new'
             },
             state : {
-                recordIds: '0696D0000004eENQAY,0696D0000004eEIQAY',
-                selectedRecordId:'0696D0000004eENQAY'
+              defaultFieldValues : fieldvalues
             }
-        });
-    }*/
+        })
+      }
 
+      listviewHandler(){
+        this[NavigationMixin.Navigate]({
+            type:'standard__objectPage',
+            attributes: {
+                objectApiName :'Contact',
+                actionName :'list'
+            },
+            state : {
+              filterName : 'Recent'
+            }
+        })
+      }
+
+      filesHandler(){
+        this[NavigationMixin.Navigate]({
+            type:'standard__objectPage',
+            attributes: {
+                objectApiName :'ContentDocument',
+                actionName :'home'
+            }
+            
+        })
+      }
+
+      leadviewHandler(){
+        this[NavigationMixin.Navigate]({
+            type:'standard__recordPage',
+            attributes: {
+                recordId :'00Q4W00001NpqHHUAZ',
+                objectApiName :'Lead',
+                actionName :'view'
+            }
+        })
+      }
+
+      leadeditHandler(){
+        this[NavigationMixin.Navigate]({
+            type:'standard__recordPage',
+            attributes: {
+                recordId :'00Q4W00001NpqHHUAZ',
+                objectApiName :'Lead',
+                actionName :'edit'
+            }
+        })
+      }
+
+      tabHandler(){
+        this[NavigationMixin.Navigate]({
+            type:'standard__navItemPage',
+            attributes: {
+               apiName :'ConWrapper'
+            }
+        })
+      }
+
+      relatedHandler(){
+        this[NavigationMixin.Navigate]({
+            type:'standard__recordRelationshipPage',
+            attributes: {
+               recordId :'0014W0000252hliQAA',
+               objectApiName :'Account',
+               relationshipApiName :'Contacts',
+               actionName :'view'
+             }
+        })
+      }
+
+      webpageHandler(){
+        this[NavigationMixin.Navigate]({
+          type:'standard__webPage',
+          attributes: {
+              url :'https://www.amazon.com/'
+           }
+      })
+      }
+
+      lwcHandler(){
+        let defination = {
+          componentDef :'c:troopHelloWorld',
+          recordId :'123457756'
+        }
+        this[NavigationMixin.Navigate]({
+          type:'standard__webPage',
+          attributes: {
+              url :'/one/one.app#'+btoa(JSON.stringify(defination))
+           }
+      })
+      }
+
+      vfpageHandler(){
+        this[NavigationMixin.Navigate]({
+          type:'standard__webPage',
+          attributes: {
+              url :'/apex/visualforceAction'
+           }
+      }).then(returnedUrl=>{
+        window.open(returnedUrl)
+      })
+      }
+
+    
 }
