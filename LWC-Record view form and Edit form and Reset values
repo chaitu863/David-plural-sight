@@ -1,3 +1,5 @@
+// Here you can place API name directlty in html or can fetch from JS as well by importing
+
 <template>
     <lightning-card title="Create a record using edit form">
         <lightning-layout multiple-rows>
@@ -7,6 +9,7 @@
                         <lightning-input-field field-name='Phone'></lightning-input-field>
                         <lightning-input-field field-name='Name'></lightning-input-field>
                         <div class="slds-m-top_medium">
+                            <lightning-button label="Cancel"></lightning-button>
                             <lightning-button variant="brand" type="submit" name="save" label="Create Account">
                             </lightning-button>
                         </div>
