@@ -1,0 +1,98 @@
+<template>
+    <lightning-card title="Record forms">
+        <lightning-layout multiple-rows>
+        <lightning-layout-item size="6" padding="around-medium">
+            <lightning-card title="Record edit form">
+              <lightning-record-edit-form onsuccess={editHandler} 
+              object-api-name="Lead" onsubmit={submitHandler}
+              onerror={errorHandler} >
+                  <lightning-messages></lightning-messages>
+                <lightning-input-field field-name="Name"></lightning-input-field>
+                <lightning-input-field field-name="Company"></lightning-input-field>
+                <label>Lead source changed label</label>
+                <lightning-input-field variant="label-hidden" field-name="LeadSource"></lightning-input-field>
+                <lightning-input label="First name" onchange={firstnameHandler}></lightning-input>
+                <lightning-button label="Clear" onclick={handleReset}></lightning-button>
+                <lightning-button variant="brand" type="submit" name="save" label="Create Lead"></lightning-button>
+              </lightning-record-edit-form>
+             
+            </lightning-card>
+        </lightning-layout-item>
+        <lightning-layout-item size="6" padding="around-medium">
+            <lightning-card title="Record View form">
+              <lightning-record-view-form object-api-name="Lead" record-id={recordId}>
+                <lightning-output-field field-name={fields.leadname}></lightning-output-field>
+                <lightning-output-field field-name={fields.leadcompany}></lightning-output-field>
+                <lightning-output-field field-name={fields.leadsource}></lightning-output-field>
+                <lightning-formatted-text value={recordId}></lightning-formatted-text>
+              </lightning-record-view-form>
+            </lightning-card>
+        </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+import {
+    LightningElement
+} from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import LEAD_NAME from '@salesforce/schema/Lead.Name';
+import LEAD_COM from '@salesforce/schema/Lead.Company';
+import LEAD_SOURCE from '@salesforce/schema/Lead.LeadSource';
+
+export default class ReocrdViewformEditformMonkey extends LightningElement {
+
+    firstnamejs
+    fields ={
+        leadname :LEAD_NAME,
+        leadcompany : LEAD_COM,
+        leadsource :LEAD_SOURCE
+    }
+    recordId
+    editHandler(event) {
+        this.recordId = event.detail.id;
+        this.showToast('success',`Account created successfully ${this.recordId}`, 'success');
+    }
+
+    handleReset() {
+        // the below code is to reset the values back to null
+        const inputFields = this.template.querySelectorAll(
+            'lightning-input-field'
+        );
+        if (inputFields) {
+           Array.from(inputFields).forEach(field => {
+                field.reset();
+            });
+        }
+    }
+
+    firstnameHandler(event){
+        this.firstnamejs = event.target.value;
+    }
+
+    submitHandler(event){
+        event.preventDefault()
+        const inputfield = this.template.querySelector('lightning-input')
+        if(this.firstnamejs.includes('chaitu')){
+            inputfield.setCustomValidity('we should not have chaitu')
+        }else {
+             inputfield.setCustomValidity('')
+             const fields = event.detail.fields
+             fields.Title = this.firstnamejs
+             this.template.querySelector('lightning-record-edit-form').submit(fields)
+        }
+        inputfield.reportValidity()
+    }
+    errorHandler(){
+        this.showToast('ERROR',`eror is creating record`, 'error');
+    }
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+            mode:'sticky'
+        });
+        this.dispatchEvent(evt);
+    }
+}
