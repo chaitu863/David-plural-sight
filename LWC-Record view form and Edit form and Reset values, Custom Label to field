@@ -11,7 +11,8 @@
                   <lightning-messages></lightning-messages>
                 <lightning-input-field field-name="Name"></lightning-input-field>
                 <lightning-input-field field-name="Company"></lightning-input-field>
-                <lightning-input-field field-name="LeadSource"></lightning-input-field>
+                <label>Lead source changed label</label>
+                <lightning-input-field variant="label-hidden" field-name="LeadSource"></lightning-input-field>
                 <lightning-button label="Clear" onclick={handleReset}></lightning-button>
                 <lightning-button variant="brand" type="submit" name="save" label="Create Lead"></lightning-button>
               </lightning-record-edit-form>
