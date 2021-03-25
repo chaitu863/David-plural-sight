@@ -124,6 +124,7 @@ import { LightningElement ,wire} from 'lwc';
 import { createRecord,getFieldDisplayValue,getRecord, getFieldValue} from 'lightning/uiRecordApi';
 import ACCOUNTOBJ from '@salesforce/schema/Account';
 import ACCOUNTPHONE from '@salesforce/schema/Account.Phone';
+// const fields = [ACCOUNTPHONE,'Account.Name','Account.Email__c']
 export default class GoatLDS extends LightningElement {
 
     accountname;
@@ -134,12 +135,12 @@ export default class GoatLDS extends LightningElement {
     phonetopass;
     emailtopass;
     phonetopasstwo;
-    @wire(getRecord, { recordId: '$recordId', fields: [ACCOUNTPHONE,'Account.Name','Account.Email__c']})
+    @wire(getRecord, { recordId: '$recordId', fields: [ACCOUNTPHONE,'Account.Name','Account.Email__c']})   OR // @wire(getRecord, { recordId: '$recordId', fields})
     wiredRecord({ error, data }) {
         if (data) {
                console.log('inside data'+JSON.stringify(data));
-               this.nametopass = getFieldValue(data,'Account.Name');
-               this.phonetopass = getFieldValue(data,ACCOUNTPHONE);
+               this.nametopass = getFieldValue(data,'Account.Name');  
+               this.phonetopass = getFieldValue(data,ACCOUNTPHONE);  OR // data.fields.Phone.value
                this.emailtopass = data.fields.Email__c.value; 
               
                console.log('name in data is '+this.nametopass );
@@ -177,7 +178,7 @@ export default class GoatLDS extends LightningElement {
         });
     }
 
-    get getaccountemail(){
+    get getaccountemail(){     OR // we can avoid writing get method for wire property by writing 'wiredRecordtwo.data.fields.Email__c.value' in side HTML component so that 
         if(this.wiredRecordtwo.data){
             console.log('inside get method'+this.wiredRecordtwo.data.fields.Email__c);
           return this.wiredRecordtwo.data.fields.Email__c.value;
