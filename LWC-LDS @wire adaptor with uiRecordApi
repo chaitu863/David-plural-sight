@@ -1,0 +1,112 @@
+<template>
+    <lightning-card>
+        <lightning-layout>
+            <lightning-layout-item padding="around-medium" size="6">
+                <lightning-card title="Create Account">
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item size="12">
+                            <lightning-input type="text" label="Name" name="name" onchange={changeHandler}>
+                            </lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12">
+                            <lightning-input type="phone" label="Phone" name="phone" onchange={changeHandler}>
+                            </lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12">
+                            <lightning-input type="text" label="Email" name="email" onchange={changeHandler}>
+                            </lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" padding="around-medium">
+                            <lightning-button label="Create Account" onclick={buttonHandler}></lightning-button>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </lightning-card>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-medium" size="6">
+                <lightning-card title="View Account Details">
+                    <lightning-layout multiple-rows>
+                        <p>Record Id is : {recordId}</p>
+                        <lightning-layout-item size="12">
+                         <lightning-formatted-text value={passaccname}></lightning-formatted-text>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12">
+                            <lightning-formatted-phone value={passaccphone}></lightning-formatted-phone>
+                           </lightning-layout-item>
+                           <lightning-layout-item size="12">
+                            <lightning-formatted-url value={getemailofacc}></lightning-formatted-url>
+                           </lightning-layout-item>
+                    </lightning-layout>
+                </lightning-card>
+            </lightning-layout-item>
+        </lightning-layout>
+    </lightning-card>
+</template>
+
+
+import {
+    LightningElement,wire
+} from 'lwc';
+import ACCOUNT_OBJ from '@salesforce/schema/Account'
+import ACC_NAME from '@salesforce/schema/Account.Name'
+import ACC_PHONE from '@salesforce/schema/Account.Phone'
+
+import {
+    createRecord, getFieldValue, getRecord
+} from 'lightning/uiRecordApi';
+export default class Ldsonlychaitu extends LightningElement {
+
+    jsaccname
+    jsaccphone
+    jsaccemail
+    recordId
+    passaccname
+    passaccphone
+    passaccemail
+    @wire(getRecord, {recordId:'$recordId', fields:[ACC_NAME,ACC_PHONE]})
+    wiredReocrd({data,error}){
+       if(data){
+           this.passaccname = data.fields.Name.value
+           this.passaccphone = getFieldValue(data,ACC_PHONE)
+           
+       }else if(error){
+           console.log('error in wire is'.error.body.message)
+       }
+    }
+
+    @wire(getRecord, {recordId :'$recordId',fields:['Account.Email__c']})
+    wiredtwo
+
+    changeHandler(event) {
+        if (event.target.name === 'name') {
+            this.jsaccname = event.target.value;
+        }
+        if (event.target.name === 'phone') {
+            this.jsaccphone = event.target.value;
+        }
+        if (event.target.name === 'email') {
+            this.jsaccemail = event.target.value;
+        }
+    }
+    buttonHandler() {
+        const fields = {[ACC_NAME.fieldApiName]: this.jsaccname,[ACC_PHONE.fieldApiName]: this.jsaccphone, 'Email__c':this.jsaccemail}
+        const recordInput = {
+            apiName: ACCOUNT_OBJ.objectApiName,
+            fields
+        }
+        createRecord(recordInput).then(response=>{
+            console.log('resonse id after insert big',response.Id)
+            console.log('response id after insert small',response.id)
+            this.recordId = response.id
+            console.log('record id after insert',this.recordId)
+        }).catch(error=>{
+            console.log('erorr is ',error.body.message)
+        })
+    }
+
+    get getemailofacc(){
+        if(this.wiredtwo.data){
+           return  this.wiredtwo.data.fields.Email__c.value;
+        }else
+        return null;
+    }
+}
