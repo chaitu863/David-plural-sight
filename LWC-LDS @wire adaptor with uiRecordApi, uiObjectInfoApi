@@ -110,3 +110,32 @@ export default class Ldsonlychaitu extends LightningElement {
         return null;
     }
 }
+
+
+<template>
+    <lightning-card title="Account">
+       <p>Account data: {objectapinameis}</p>
+       <p>Record type id : {jsrecordtypeid}</p>
+       <p>Name is : {jsname}</p>
+    </lightning-card>
+</template>
+
+
+import { LightningElement, wire } from 'lwc';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi'
+import ACC_OBJECT from '@salesforce/schema/Account'
+export default class LdsGetobjectinfosample extends LightningElement {
+
+    jsrecordtypeid
+    objectapinameis
+    jsname
+    @wire(getObjectInfo,{objectApiName:ACC_OBJECT})
+    wiredacc({data,error}){
+        if(data){
+            console.log('data is ',JSON.stringify(data))
+            this.objectapinameis = data.apiName
+            this.jsrecordtypeid = Object.values(data.recordTypeInfos)[0].recordTypeId
+            this.jsname = Object.values(data.recordTypeInfos)[0].name
+        }
+    }
+}
