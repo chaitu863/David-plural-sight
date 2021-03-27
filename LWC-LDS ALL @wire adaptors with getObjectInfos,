@@ -114,20 +114,34 @@ export default class Ldsonlychaitu extends LightningElement {
 
 <template>
     <lightning-card title="Account">
-       <p>Account data: {objectapinameis}</p>
-       <p>Record type id : {jsrecordtypeid}</p>
-       <p>Name is : {jsname}</p>
+        <p>Account data: {objectapinameis}</p>
+        <p>Record type id : {jsrecordtypeid}</p>
+        <p>Name is : {jsname}</p>
+    </lightning-card>
+    <lightning-card title="Object Array">
+        <template if:true={jsarryobj}>
+            <ul>
+                <template for:each={jsarryobj.results} for:item="obj">
+                    <li key={obj.result.apiName}>
+                        <p>Object API Name : {obj.result.apiName}</p>
+                        <p>Object API Name : {obj.result.defaultRecordTypeId}</p>
+                    </li>
+                </template>
+            </ul>
+        </template>
     </lightning-card>
 </template>
 
-
 import { LightningElement, wire } from 'lwc';
-import { getObjectInfo } from 'lightning/uiObjectInfoApi'
+import { getObjectInfo,getObjectInfos } from 'lightning/uiObjectInfoApi'
+
 import ACC_OBJECT from '@salesforce/schema/Account'
+import OPP_OBJECT from '@salesforce/schema/Opportunity'
 export default class LdsGetobjectinfosample extends LightningElement {
 
     jsrecordtypeid
     objectapinameis
+    jsarryobj
     jsname
     @wire(getObjectInfo,{objectApiName:ACC_OBJECT})
     wiredacc({data,error}){
@@ -138,4 +152,14 @@ export default class LdsGetobjectinfosample extends LightningElement {
             this.jsname = Object.values(data.recordTypeInfos)[0].name
         }
     }
+    
+    objeactArray = [ACC_OBJECT,OPP_OBJECT]
+    @wire(getObjectInfos,{objectApiNames:'$objeactArray'})
+    wiredfun({data,error}){
+        if(data){
+         this.jsarryobj = data
+         console.log('jsarrya is',this.jsarryobj)
+        }
+    }
+
 }
