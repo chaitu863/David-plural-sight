@@ -1,0 +1,62 @@
+<template>
+    <lightning-card>
+        <lightning-combobox
+        name="customer"
+        label="customer priority"
+        value={valueone}
+        placeholder="Select Progress"
+        options={storepickvalues}
+        onchange={handleChange} ></lightning-combobox>
+        <p>Selected value is: {valueone}</p><br/>
+        <lightning-combobox
+        name="industry"
+        label="Industry"
+        value={valuetwo}
+        placeholder="Select Progress"
+        options={storepickvaluestwo}
+        onchange={handleChange} ></lightning-combobox>
+       <p>Selected value is: {valuetwo}</p><br/>
+    </lightning-card>
+</template>
+
+
+import { LightningElement,wire } from 'lwc';
+import { getPicklistValuesByRecordType,getObjectInfo } from 'lightning/uiObjectInfoApi';
+import ACCOUNT_OBJECT from '@salesforce/schema/Account';
+export default class TroopPicklistvalues extends LightningElement {
+
+    storepickvalues = []
+    storepickvaluestwo=[]
+    valueone = '';
+    valuetwo ='';
+    @wire(getObjectInfo , { objectApiName: ACCOUNT_OBJECT })
+    accRecordtype;
+    @wire(getPicklistValuesByRecordType, { objectApiName: ACCOUNT_OBJECT, recordTypeId: '$accRecordtype.data.defaultRecordTypeId'})
+    accPicklist({data,error}){
+        if(data){
+            console.log('picklist data is',data)
+            this.storepickvalues = this.getpicklistvaluesfun(data.picklistFieldValues.CustomerPriority__c)
+            this.storepickvaluestwo = this.getpicklistvaluesfun(data.picklistFieldValues.Industry)
+        }else
+        if(error){
+            console.log('i am inside error')
+            console.error('error message is',error)
+        }
+    }
+
+    getpicklistvaluesfun(data){
+        return data.values.map(item=>({
+            "label": item.label, "value": item.value
+        }))
+    }
+    handleChange(event) {
+        const {name,value} =event.target
+        if(name ==='customer'){
+            this.valueone = value
+        }
+        if(name ==='industry'){
+            this.valuetwo = value
+        }
+        
+    }
+}
