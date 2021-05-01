@@ -1,0 +1,45 @@
+public class checkRecursive {
+ Public static Boolean firstcall=false;
+}
+
+trigger Opp_Trigger on Opportunity (after insert, after update) {
+
+    if(!checkRecursive.firstcall) {
+        checkRecursive.firstcall = true;
+    list<id> oppaccid = new list<id>();
+    for(opportunity opp : trigger.new) {
+        oppaccid.add(opp.AccountId);
+    }
+    
+    list<account> accwithopp = [SELECT ID,Site
+                                FROM Account
+                                WHERE ID IN :oppaccid];
+    
+    system.debug('this is acc with opp '+accwithopp);
+    set<string>accsiteset= new set<string>();
+    for(account acc : accwithopp) {
+        accsiteset.add(acc.Site);
+    }
+    system.debug('acc site '+accsiteset);
+    list<Product2> productlist = [SELECT ID,Name,ProductCode
+                                  FROM Product2
+                                  WHERE ProductCode IN : accsiteset];
+    system.debug('product lst is'+productlist);
+    map<string,Product2> produtmap = new map<string,Product2>();
+    for (Product2 pro : productlist){
+         produtmap.put(pro.ProductCode,pro);
+    }
+    list<opportunity> opplist = new list<opportunity>();
+    for(opportunity opp : [SELECT ID,Account.site from opportunity where id IN: trigger.new]) {
+        system.debug('inside for loop');
+        system.debug('account site '+opp.Account.site +'product name'+produtmap.get(opp.Account.Site).ProductCode);
+        if(opp.Account.Site == produtmap.get(opp.Account.Site).ProductCode)
+        system.debug('prodcut name is '+produtmap.get(opp.Account.Site).Name);
+        opp.Description = produtmap.get(opp.Account.Site).Name;
+        system.debug('opp description '+opp.Description);
+        opplist.add(opp);
+     }
+    upsert opplist;
+}
+}
+
