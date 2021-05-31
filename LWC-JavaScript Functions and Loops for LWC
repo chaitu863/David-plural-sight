@@ -76,3 +76,54 @@ export default class Brookjs extends LightningElement {
        this.studentarr.push(singstudent)
     }  
 }
+
+Loops :
+Example 3: 
+
+<template>
+    <lightning-card>
+        <lightning-button label="Execute" onclick={onclickhandler}></lightning-button>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class Brookjs extends LightningElement {
+    
+    sumisjs
+    sumisjstwo
+    studentarr = []
+    onclickhandler(){
+      
+        let obj1 = {
+            name :'karthik',
+            age : 24,
+            hight : 6.0
+        }
+        // normal for loop for array
+        const citynames = ['chicago', 'naperville', 'mexico','cali']
+        for(let i=0; i<citynames.length;i++){
+            console.log(citynames[i])
+        }
+       
+        // for of loop for arrays
+        const studentnames = ['poornima','meghana','sai','ajitha','meghana']
+        for(let stundet of studentnames){
+            console.log('for of loop',stundet)
+        }
+        
+        // for in loop use for objects mainly
+        for(let prop in obj1){
+            console.log(`key is ${prop} and value is ${obj1[prop]}`)
+        }
+
+        
+        // for each method used for array
+        studentnames.forEach(item=>{
+            console.log('for each method',item)
+        })
+
+
+    }
+    
+}
