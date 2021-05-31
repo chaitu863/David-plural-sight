@@ -1,3 +1,5 @@
+Example 1: 
+
 <template>
     <lightning-card>
         <lightning-button label="Execute" onclick={onclickhandler}></lightning-button>
@@ -40,4 +42,37 @@ export default class Brookjs extends LightningElement {
     arrowfunjs = (a,b)=>{
         return   `here is  all combined : ${a+b}`
     }
+}
+
+Example 2: 
+
+<template>
+    <lightning-card>
+        <lightning-button label="Execute" onclick={onclickhandler}></lightning-button>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+
+export default class Brookjs extends LightningElement {
+    
+    sumisjs
+    sumisjstwo
+    studentarr = []
+    onclickhandler(){
+     
+     this.studentfun('john',28,[1,3,5],{city:'chicago',zipcode:12345})
+     this.studentfun('harry',22,[11,13,15],{city:'newyork',zipcode:12345})
+     console.log('student array is',`array length is ${this.studentarr.length} and array details are ${JSON.stringify(this.studentarr)}`)
+    } 
+   
+ 
+    studentfun = (stname,stuage,studate,stuadd)=>{
+       const singstudent = {name: stname,
+       age: stuage,
+       datesabsent : studate,
+       address: stuadd
+       }
+       this.studentarr.push(singstudent)
+    }  
 }
