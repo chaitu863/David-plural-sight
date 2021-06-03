@@ -1,0 +1,36 @@
+create one lwc compnent in which js add the logic which you want to share across
+
+// I created lwc called 'manishsecondsharejs'
+
+const bmical = (hight,weight)=>{
+    try{
+        console.log('inside share js')
+        return (weight/(hight*hight))
+    }catch{
+        return 'error came'
+    }
+}
+
+export {bmical}
+
+
+Now import the function name in another lwc make sure function name is same in second lwc
+
+<template>
+    <lightning-card>
+        <lightning-button label="Simple one" onclick={buttonhandler}></lightning-button>
+    </lightning-card>
+</template>
+
+import { LightningElement } from 'lwc';
+import {bmical} from 'c/manishsecondsharejs'
+export default class Manishsecondsharejstest extends LightningElement {
+    reusltis
+    hightjs
+    weightjs
+    buttonhandler(event){
+        console.log('inside button click')
+      this.reusltis = bmical(7.6,76)
+      console.log('result is ::',this.reusltis)
+    }
+}
