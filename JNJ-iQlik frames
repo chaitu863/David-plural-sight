@@ -1,0 +1,107 @@
+<!--/************************************************************
+* File Name     :  JNJ_Qlik_PreCall_Switch_Tab_Button
+* Description   :  Page is to append qlik reports on to account page layout using formula field.
+* @author       :  Dileep Kumar Katipelli | dkatipel@its.jnj.com 
+
+
+* Modification Log : 
+=============================================================
+* Ver.    Date          Author     Modification
+-------------------------------------------------------------
+* 1.0   01/12/2016    Cognizant    Initial Draft
+* 1.1   09/28/2018    Cognizant    Added new tab Market Performace
+* 1.2   06/28/2021    Cognizant    AEBQ-17245 replced iframes with output link
+************************************************************-->
+
+<apex:page standardController="Account" extensions="JNJ_Qlik_Controller" tabstyle="Account" showHeader="true">
+
+    <apex:form >
+         <div style="padding: 35px 35px">
+             <apex:outputPanel rendered="{!If(usr.Qlik_Pre_Call_JNJ__c != NULL,True,False)}" style="font-size:150%">
+                 <a target='_blank' href="{!DashboardURL_1}"> Sales Performance</a> 
+             </apex:outputPanel><br/><br/>
+              <apex:outputPanel rendered="{!If(usr.Qlik_Switch_iFrame_JNJ__c != NULL, true, false)}" style="font-size:150%">
+                 <a target='_blank' href="{!DashboardURL_2}"> Switch Behavior</a> 
+             </apex:outputPanel><br/><br/>
+              <apex:outputPanel rendered="{!If(usr.JNJ_Qlik_Market_Performance__c != NULL, true, false)}" style="font-size:150%">
+                 <a target='_blank' href="{!DashboardURL_3}">Market Performance</a> 
+             </apex:outputPanel>
+            </div>           
+     </apex:form>      
+</apex:page>
+
+
+/*
+*
+* File Name   : JNJ_Qlik_Controlle
+* Description : To control qlik vf tabs.
+* @author     : Dileep Kumar Katipelli | dkatipel@its.jnj.com 
+* @added new tab(Market Performance) methode in CI DEC18
+
+*/
+public with sharing class JNJ_Qlik_Controller {
+    
+    public String DashboardURL_1{get;set;}    
+    public String DashboardURL_2{get;set;}
+    public String DashboardURL_3{get;set;}
+    public Account accountObj{get;set;}
+    public Account accountObj1{get;set;}
+    public User usr{get;set;}
+    public boolean enablePoll{get;set;}
+    public boolean enablePoll2{get;set;}
+    public String selectedStr{get;set;}
+    
+    public JNJ_Qlik_Controller (ApexPages.StandardController controller) {
+    
+        DashboardURL_2='';
+        DashboardURL_3='';
+        accountObj = (account)controller.getRecord();
+        if(accountObj != null){
+            accountObj1 = [Select ID, Name , Type_JNJ__c, External_ID_vod__c,CreatedBy.Name From Account Where ID =:accountObj.Id Limit 1];
+        }
+        usr = [select Id,Name,Qlik_Pre_Call_JNJ__c,Qlik_Switch_iFrame_JNJ__c,JNJ_Qlik_Market_Performance__c from User where Id =: UserInfo.getUserId()];
+        enablePoll = true;
+        enablePoll2 = false;
+        
+       if(Usr.JNJ_Qlik_Market_Performance__c != null && Usr.JNJ_Qlik_Market_Performance__c != '') {
+            DashboardURL_3 = (usr.JNJ_Qlik_Market_Performance__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c +'&identity=' +accountObj1.Id).replaceAll('%2C','');
+            enablePoll = true;
+        }
+        else { 
+            DashboardURL_3 = '';
+            enablePoll = false;
+        }
+        if(Usr.Qlik_Pre_Call_JNJ__c!= null && Usr.Qlik_Pre_Call_JNJ__c!= '') {
+               DashboardURL_1 = (Usr.Qlik_Pre_Call_JNJ__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c+'&identity=' +accountObj1.Id).replaceAll('%2C','');
+               
+        }
+        if(Usr.Qlik_Switch_iFrame_JNJ__c!= null && Usr.Qlik_Switch_iFrame_JNJ__c!= '') {
+               DashboardURL_2 = (usr.Qlik_Switch_iFrame_JNJ__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c +'&identity=' +accountObj1.Id).replaceAll('%2C','');
+        }
+     }
+    
+    public void loadDashboardURL() {
+        enablePoll = true;
+        DashboardURL_1 = Usr.Qlik_Pre_Call_JNJ__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c +'&identity=' +accountObj1.Id;
+    }
+    
+    public void loadDashboardURL1(){
+        enablePoll = false;
+        enablePoll = true;
+        DashboardURL_1 = Usr.Qlik_Pre_Call_JNJ__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c +'&identity=' +accountObj1.Id;
+    }
+    
+    public void loadDashboardURL2(){
+        enablePoll = false;
+        enablePoll = true;
+        DashboardURL_1 ='';
+        DashboardURL_2 = usr.Qlik_Switch_iFrame_JNJ__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c +'&identity=' +accountObj1.Id;
+    }
+    public void loadDashboardURL3(){  
+        enablePoll = false;
+        enablePoll = true;      
+        DashboardURL_1 ='';
+        DashboardURL_2 ='';
+        DashboardURL_3 = usr.JNJ_Qlik_Market_Performance__c+Label.JJ_QlikCustomerURL+accountObj1.External_ID_vod__c +'&identity=' +accountObj1.Id;
+    }
+}
