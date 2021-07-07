@@ -1,0 +1,312 @@
+<!--
+*
+* File Name   : JNJ_CoachingReportTeamView
+* Description : This is page to view Survey Target Objects based on User Team.
+* @author     : Dileep Kumar Katipelli | dkatipel@its.jnj.com 
+*
+-->
+
+<apex:page controller="JNJ_CoachingReportTeamView_Controller" sidebar="false"> 
+    <apex:form >
+        <apex:actionStatus id="mystatus">
+            <apex:facet name="start">
+                <div style="position: fixed;
+                            top: 0; left: 0;
+                            right: 0;
+                            bottom: 0;
+                            opacity: 0.15;
+                            z-index: 1000;
+                            background-color: black;">&nbsp;
+                </div>
+                <div style="position: fixed;
+                            left: 0;
+                            top: 0;
+                            bottom: 0;
+                            right: 0;
+                            z-index: 1001;
+                            margin: 30% 50%">
+                    <img src="{!URLFOR($Resource.ProgressWheel)}"
+                         alt="progressWheel"/>
+                    
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:pageBlock >
+            <center>
+                <apex:commandButton value="New Coaching Report" action="{!createNewCR}"/>
+                <apex:commandButton value="Coaching Report - Historical" action="{!createNewHCR}"/>
+            </center>
+        </apex:pageBlock>
+        <apex:pageBlock id="pb1">
+            <div style="float:left">
+                <apex:pageBlockSection >
+                    <apex:selectList label="View:" multiselect="false" value="{!selectedOptionFromPage}" size="1">
+                        <apex:actionSupport action="{!filterListData}" status="mystatus" event="onchange" reRender="tableSection, pbsec"/>
+                        <div style="float:right">
+                            <apex:selectOption itemValue="Team View" itemLabel="Team View"/>
+                            <apex:selectOption itemValue="My View" itemLabel="My View"/>
+                        </div>
+                    </apex:selectList>
+                </apex:pageBlockSection> 
+            </div>
+            
+            <apex:pageBlockSection columns="1" collapsible="false" id="tableSection">
+                <apex:pageBlockTable value="{!coaReport}" var="cr"  id="accsTable" styleclass="tablesorter">
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Survey Target" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Name" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <a href="/{!cr.Id}">{!cr.Name}</a>
+                    </apex:column>
+                    
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Coachee" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Employee_vod__r.Name" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <apex:outputField value="{!cr.Employee_vod__r.Name}"/>
+                    </apex:column> 
+                    
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Coach" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Coach_vod__r.Name" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <apex:outputField value="{!cr.Coach_vod__r.Name}"/>
+                    </apex:column> 
+                    
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Coaching End Date" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Coaching_End_Date_JNJ__c" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <apex:outputField value="{!cr.Coaching_End_Date_JNJ__c}"/>
+                    </apex:column> 
+                    
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Submitted Date" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Sent_To_Employee_Datetime_vod__c" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <apex:outputField value="{!cr.Sent_To_Employee_Datetime_vod__c}"/>
+                    </apex:column>
+                    
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Acknowledged Date" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Completed_Datetime_vod__c" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <apex:outputField value="{!cr.Completed_Datetime_vod__c}"/>
+                    </apex:column>
+                    
+                    <apex:column >
+                        <apex:facet name="header">
+                            <apex:commandLink value="Report Status" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                <apex:param name="sortBy" value="Report_Status_vod__c" assignTo="{!sortBy}"/>
+                            </apex:commandLink>
+                        </apex:facet>
+                        <apex:outputField value="{!cr.Report_Status_vod__c}"/>
+                    </apex:column> 
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+            <apex:pageblock id="pbsec">
+                <center>     
+                    <apex:commandButton disabled="{!if(con.pageNumber == 1,true,false)}" value="First" action="{!con_First}" status="mystatus" reRender="tableSection, pbsec" />
+                    <apex:commandButton disabled="{!if(con.pageNumber == 1,true,false)}" value="Previous" action="{!con_Previous}" status="mystatus" reRender="tableSection, pbsec" />
+                    <apex:commandButton disabled="{!if(con.pageNumber == CEILING(ResultSize /con.pageSize),true,false)}" value="Next" action="{!con_Next}" status="mystatus" reRender="tableSection, pbsec" />
+                    <apex:commandButton disabled="{!if(con.pageNumber == CEILING(ResultSize /con.pageSize),true,false)}" value="Last" action="{!con_Last}" status="mystatus" reRender="tableSection, pbsec" /> 
+                    
+                    <div style="float:right;">
+                        <apex:outputText >
+                            Page {!con.pageNumber} of {!CEILING(ResultSize /con.pageSize)}
+                        </apex:outputText>
+                    </div>
+                </center>
+            </apex:pageblock> 
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
+
+
+/*
+*
+* File Name   : JNJ_CoachingReportTeamView_Controller.
+* Description : Controller/Class for JNJ_CoachingReportTeamView visualforce Page.
+* @author     : Dileep Kumar Katipelli | dkatipel@its.jnj.com 
+* *   Modified By       ||  Date Modified   || Description
+*******************************************************************************************************************************
+* 1. Cognizant        || 07-June-2018     || Initial Version.
+* 2. Cognizant        || 23-June-2021     || AEBQ-25483 - SOQL 10k records governor limits handling      
+*
+*/
+
+public with sharing class JNJ_CoachingReportTeamView_Controller{ 
+    
+    public String UsrNm = UserInfo.getName();           // String to store Looged in User Name.
+    public List<Survey_Target_vod__c> coaReport;        // List Variable to store all Survey Target Records.
+    public Coaching_Report_vod__c core{get;set;}        // Object variable to store the Coaching Report records.
+    public String selectedOptionFromPage{get;set;}      // String to show the view dropdown on Page.
+    public String sortBy{get;set;}
+    public String ASC_DESC;
+    public Integer soqlrecords;
+    
+    /*
+* Constructor Method for Class. 
+*/
+    
+    public JNJ_CoachingReportTeamView_Controller(){
+        core = new Coaching_Report_vod__c();
+    }
+    
+/*
+ * Count records to avoid SOQL governor limits of 10000 records
+ * */
+    
+    public static Integer getRemainingQueryRows()
+    {
+        return Limits.getLimitQueryLocatorRows() - Limits.getQueryLocatorRows();
+    }
+    
+    
+    
+    /* 
+* Method for Showing the data table on Default page.
+*/     
+    public ApexPages.StandardSetController Con {
+        get {
+            if(Con == null) {
+                system.debug('data base limits '+getRemainingQueryRows());
+                con = new ApexPages.StandardSetController(Database.getQueryLocator(
+                    [select id,Name,Employee_vod__r.Name,
+                     Account_vod__r.Name,User_vod__r.name,Coaching_End_Date_JNJ__c,Sent_To_Employee_Datetime_vod__c, 
+                     Coach_vod__r.Name,RecordType.Name,Report_Status_vod__c, Completed_Datetime_vod__c  
+                     from Survey_Target_vod__c 
+                     Where RecordType.Name =: 'Coaching_Report_vod'
+                     And Employee_vod__r.Id !=: userInfo.getUserId()
+                     order by Coaching_End_Date_JNJ__c DESC 
+                     LIMIT :getRemainingQueryRows()]));
+                con.setPageSize(15);
+            }
+            return Con;
+        }
+        set;
+    }
+    
+    public List<Survey_Target_vod__c> getcoaReport() {
+        return (List<Survey_Target_vod__c>) Con.getRecords();
+    }
+    /*
+* Method for view the table based on selected view options on Visualforce page. 
+*/
+    
+    public void filterListData() {        
+        if(selectedOptionFromPage == 'My View') {
+            con = new ApexPages.StandardSetController(Database.getQueryLocator([select id,Name,Employee_vod__r.Name,
+                                                       Account_vod__r.Name,User_vod__r.name, Coaching_End_Date_JNJ__c,Sent_To_Employee_Datetime_vod__c, 
+                                                       Coach_vod__r.Name,RecordType.Name,Report_Status_vod__c, Completed_Datetime_vod__c  
+                                                       from Survey_Target_vod__c Where RecordType.Name =: 'Coaching_Report_vod'
+                                                       AND Coach_vod__r.Id = : userInfo.getUserId()
+                                                       LIMIT :getRemainingQueryRows()]));
+            con.setPageSize(15);
+        }
+        else if(selectedOptionFromPage == 'Team View') {
+            con = new ApexPages.StandardSetController(Database.getQueryLocator([select id,Name,Employee_vod__r.Name,
+                                                       Account_vod__r.Name,User_vod__r.name, Coaching_End_Date_JNJ__c,Sent_To_Employee_Datetime_vod__c, 
+                                                       Coach_vod__r.Name,RecordType.Name,Report_Status_vod__c, Completed_Datetime_vod__c  
+                                                       from Survey_Target_vod__c Where RecordType.Name =: 'Coaching_Report_vod'
+                                                       And Employee_vod__r.Id !=: userInfo.getUserId() order by Coaching_End_Date_JNJ__c DESC
+                                                     LIMIT :getRemainingQueryRows()]));
+            con.setPageSize(15);
+        }
+    }
+    
+    public Boolean hasNext {
+        get {
+            return con.getHasNext();
+        }
+        set;
+    }
+    
+    public Boolean hasPrevious {
+        get {
+            return con.getHasPrevious();
+        }
+        set;
+    }
+    
+    public Integer pageNumber {
+        get {
+            return con.getPageNumber();
+        }
+        set;
+    }
+    
+    public void con_Next() {
+        con.next();    
+    }
+    
+    public void con_Previous() {
+        con.previous();    
+    } 
+    
+    public void con_First() {
+        con.first();    
+    }
+    
+    public void con_Last() {
+        con.last();    
+    } 
+    public Integer resultSize {
+        get {
+            return con.getResultSize();
+        }
+        set;
+    }
+    
+    /*
+* Method for redirecting another visualforce page on Button Click.
+*/ 
+    public PageReference createNewCR() {
+        PageReference pr = new PageReference('/apex/New_Coaching_Report_vod');
+        return pr;
+    }
+     public PageReference createNewHCR() {
+        PageReference pr = new PageReference('/' + SObjectType.Coaching_Report_Historical_JNJ__c.KeyPrefix); 
+        return pr;
+    }
+    
+    public void sortColumns() {
+        if(ASC_DESC == 'ASC') {
+            ASC_DESC = 'DESC';
+        }
+        else {
+            ASC_DESC = 'ASC';
+        }
+        String mySoql = '';
+        Set<String> setOfUserId = new Set<String>();
+        setOfUserId.add(userInfo.getUserId());
+        soqlrecords = getRemainingQueryRows();
+        if(selectedOptionFromPage == 'My View') {
+            mySoql = 'select id, Name, Employee_vod__r.Name, Account_vod__r.Name, User_vod__r.name, Coaching_End_Date_JNJ__c,Sent_To_Employee_Datetime_vod__c, Coach_vod__r.Name,RecordType.Name,Report_Status_vod__c, Completed_Datetime_vod__c from Survey_Target_vod__c Where (RecordType.Name = \'' + String.escapeSingleQuotes('Coaching_Report_vod') + '\') AND Coach_vod__r.Id IN : setOfUserId order by ';
+            mySoql += sortBy;
+            mySoql += ' ' + ASC_DESC + ' NULLS last';
+            mySoql += ' ' +'LIMIT'+''+': soqlrecords';
+        }
+        else if(selectedOptionFromPage == 'Team View') {
+            mySoql = 'select id, Name, Employee_vod__r.Name, Account_vod__r.Name, User_vod__r.name, Coaching_End_Date_JNJ__c,Sent_To_Employee_Datetime_vod__c, Coach_vod__r.Name,RecordType.Name,Report_Status_vod__c, Completed_Datetime_vod__c from Survey_Target_vod__c Where( RecordType.Name = \'' + String.escapeSingleQuotes('Coaching_Report_vod') + '\') AND Employee_vod__r.Id NOT IN : setOfUserId order by ';
+            mySoql += sortBy;
+            mySoql += ' ' + ASC_DESC + ' NULLS last';
+            mySoql += ' ' +'LIMIT'+''+': soqlrecords';
+        }
+        System.debug(mySoql);
+        con = new ApexPages.StandardSetController(Database.getQueryLocator(mySoql));
+        con.setPageSize(15);
+    }
+}
