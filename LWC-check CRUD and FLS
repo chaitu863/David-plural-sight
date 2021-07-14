@@ -1,0 +1,58 @@
+LWC Html:
+
+<template>
+    <lightning-card title="Create Account">
+        <lightning-input label="Account Name" onchange={handleOnChange}>
+        </lightning-input>
+        <lightning-button variant="brand" label="create account" title="create account" onclick={handleCreateAccount}
+            class="slds-m-left_x-small"></lightning-button>
+        <p slot="footer">This Component checks the CRUD in LWC. The Created Record Id is : {createdAccountId}</p>
+        <p slot="footer">errors:- {error}</p>
+    </lightning-card>
+</template>
+
+JS: 
+import { LightningElement, track } from 'lwc';
+import createAccountRecord from '@salesforce/apex/checkCRUDForLWC.createAccountRecord';
+export default class CreateAccounts extends LightningElement {
+    @track accountName;
+    @track createdAccountId;
+    @track error;
+
+    handleOnChange(event) {
+        this.accountName = event.target.value;
+    }
+    handleCreateAccount() {
+        createAccountRecord({ accName: this.accountName })
+            .then(result => {
+                if (result) {
+                    this.createdAccountId = result.Id;
+                    this.error = undefined;
+                } else {
+                    this.error = 'You dont have permission to create record';
+                }
+            })
+            .catch(error => {
+                this.error = error;
+                this.createdAccountId = undefined;
+            });
+    }
+}
+
+APEX:
+public class checkCRUDForLWC {
+    @AuraEnabled
+    public static Account createAccountRecord(string accName){
+        Account acc = new Account();
+        acc.name=accName;
+        if(isCreateable('Account')==true){
+            insert acc;
+            return acc;
+        }
+        return null;
+    }
+    public static Boolean isCreateable(String sObjectType){
+        SObjectType schemaType = Schema.getGlobalDescribe().get(sObjectType);
+        return schemaType.getDescribe().isCreateable();
+    }
+}
