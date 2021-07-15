@@ -1,0 +1,121 @@
+<!--
+*
+* File Name   : jjQlikPrecallLWC
+* Description : This component provide links on account record page to navigate to Qliks URLs
+* Modification Log : 
+=============================================================
+* Ver.    Date          Author     Modification
+-------------------------------------------------------------
+* 1.1   06/25/2021    Cognizant    AEBQ-17245 Change iQlik frames to Link on Account
+-->
+
+<template>
+  <template if:true={boolshowcard}>
+    <lightning-card title="Pre Call">
+      <lightning-layout multiple-rows>
+          <lightning-layout-item size="12" padding="around-medium">
+              <template if:true={boolPrecalljs}>
+             <a target='_blank' href={precallmethod}> Sales Performance</a> 
+           </template><br/>
+           <template if:true={boolSwitchfrmejs}>
+             <a target='_blank' href={switchFramemethod}> Switch Behavior</a> 
+           </template><br/>
+           <template if:true={boolMarketper}>
+             <a target='_blank' href={marketPermethod}> Market Performance</a> 
+           </template>
+         </lightning-layout-item>
+     </lightning-layout>
+     </lightning-card>
+  </template>
+</template>
+
+
+import { LightningElement,api,wire } from 'lwc';
+import { getRecord, getFieldValue,getFieldDisplayValue} from 'lightning/uiRecordApi';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import ACC_EXTERNALID from '@salesforce/schema/Account.External_ID_vod__c';
+import USER_ID from '@salesforce/user/Id';
+import USER_NAME from '@salesforce/schema/user.Name';
+import USER_QLIKPRECALL from '@salesforce/schema/user.Qlik_Pre_Call_JNJ__c';
+import USER_QLIKSWITCHIFRAME from '@salesforce/schema/user.Qlik_Switch_iFrame_JNJ__c'; 
+import USER_QLIKMARKETPER from '@salesforce/schema/user.JNJ_Qlik_Market_Performance__c'; 
+import QLIK_CUSTOMER_URL_LABEL from '@salesforce/label/c.JJ_QlikCustomerURL';
+import QLIK_ERROR_LABEL from '@salesforce/label/c.Qlik_Error_JNJ';
+export default class JjQlikPrecallLWC extends LightningElement {
+
+  
+    userId = USER_ID
+    labeljs = QLIK_CUSTOMER_URL_LABEL
+    errorLabeljs = QLIK_ERROR_LABEL
+    userNamejs
+    accExternalIdjs
+    userQlikPrecalljs
+    userQlikSwitchiframejs
+    userQlikMarketPerjs
+    boolPrecalljs
+    boolSwitchfrmejs
+    boolMarketper
+    boolshowcard
+
+
+    @api recordId;   // this is the standard way of fetching the record Id
+
+    @wire(getRecord, { recordId: '$recordId', optionalFields: [ACC_EXTERNALID] })
+        wiredRecord({ error, data }) {
+            if (data) {
+                   this.accExternalIdjs = getFieldValue(data, ACC_EXTERNALID)
+            } else if (error) {
+                this.showToast('ERROR', error.body.message, 'error');
+            }
+        }
+    
+    @wire(getRecord, {recordId: '$userId',optionalFields: [USER_NAME,USER_QLIKPRECALL,USER_QLIKSWITCHIFRAME,USER_QLIKMARKETPER]}) 
+    userdetails({ error, data }) {
+        if (data) {
+            console.log('hi i am inside user data',JSON.stringify(data))
+            this.userNamejs = getFieldValue(data, USER_NAME)
+            this.userQlikPrecalljs = getFieldValue(data, USER_QLIKPRECALL)
+            if(this.userQlikPrecalljs){
+                this.boolPrecalljs = true
+                this.boolshowcard = true
+            }
+            this.userQlikSwitchiframejs = getFieldValue(data, USER_QLIKSWITCHIFRAME)
+            if(this.userQlikSwitchiframejs){
+                this.boolSwitchfrmejs = true
+                this.boolshowcard = true
+            }
+            this.userQlikMarketPerjs = getFieldValue(data, USER_QLIKMARKETPER)
+            if(this.userQlikMarketPerjs){
+                this.boolMarketper = true
+                this.boolshowcard = true
+            }
+           
+        } else if (error) {
+            this.showToast('ERROR', error.body.message, 'error');
+        }
+    }
+
+ 
+
+    get precallmethod(){
+        return  `${this.userQlikPrecalljs}${this.labeljs}${this.accExternalIdjs}&identity=${this.recordId}`
+    }
+
+    get switchFramemethod(){
+       return  `${this.userQlikSwitchiframejs}${this.labeljs}${this.accExternalIdjs}&identity=${this.recordId}`
+    }
+
+    get marketPermethod(){
+       return  `${this.userQlikMarketPerjs}${this.labeljs}${this.accExternalIdjs}&identity=${this.recordId}`
+    }
+
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+            mode:'sticky'
+        });
+        this.dispatchEvent(evt);
+    }
+}
