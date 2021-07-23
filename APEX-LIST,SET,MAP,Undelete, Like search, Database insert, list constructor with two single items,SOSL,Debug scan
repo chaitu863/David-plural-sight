@@ -23,7 +23,45 @@ insert s;
 
 
 Multiple Records on List:
-list<Home_Page_Component_Child__c> hmpchildlst = new list<Home_Page_Component_Child__c>{
+Ex1: 
+// creating one single account(sObject)
+account acc = new account();
+acc.name = 'demo1';
+acc.AccountNumber = '100x1';
+insert acc;
+
+// creating one single account(sObject) in another way
+account acc2 = new account(name='demo2',AccountNumber='100x2');
+insert acc2;
+
+// creating list of accounts at a time by constructor into list variable
+list<account>mulacc = new list<account>{new account(name='demo3',AccountNumber='x003'),new account(name='demo4',AccountNumber='x004')};
+insert mulacc;
+
+// creating list of accounts at a time by using for loop
+list<account>foracc = new list<account>();
+for(account acc:[select id,name,phone from account limit 2]){
+    system.debug('acc is'+acc);
+    foracc.add(acc);
+}
+system.debug('foracc list is '+foracc);
+
+list<string> strphone = new list<string>();
+for(account acc : [select id,name,phone from account limit 2]){
+    system.debug('account is'+acc);
+    strphone.add(acc.phone);
+}
+system.debug('strphone is'+strphone);
+// adding account one by one to update to list of account variable
+list<account> updatelist = new list<account>();
+for(account acc: [select id,name from account limit 3]){
+    system.debug('single acc is'+acc);
+    acc.phone='(816)908-6506';
+    updatelist.add(acc);
+}
+update updatelist;
+
+Ex2 : list<Home_Page_Component_Child__c> hmpchildlst = new list<Home_Page_Component_Child__c>{
     new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one three'),
     new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one four')};
 Home_Page_Component_Child__c hione = new Home_Page_Component_Child__c();
