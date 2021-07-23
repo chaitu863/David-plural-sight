@@ -61,6 +61,32 @@ for(account acc: [select id,name from account limit 3]){
 }
 update updatelist;
 
+
+//Dynamic soql for one single sObject with database.Query
+string one = 'select id,name from account limit 1';
+sObject sobj = database.query(one);
+system.debug(sobj);
+
+//Dynamic soql for list variable with database.Query
+string listsobj = 'select id,name,phone from account limit 3';
+list<account> acclist = database.query(listsobj);
+system.debug('acclist is'+acclist);
+
+//Dynamic soql for list variable with database.Query
+string listsobj = 'select id,name,phone from account ';
+string month = 'july';
+integer soqlrecords = 3;
+listsobj +='where name like \'%' + month + '%\' AND';
+listsobj += ' Industry IN (\'Banking\',\'Chemicals\')';
+listsobj += ' ORDER BY name DESC';
+listsobj += ' LIMIT'+''+': soqlrecords';
+list<account> acclist = database.query(listsobj);
+system.debug('acclist is'+acclist);
+
+//Databse.countquery for dynamic count of records
+integer total = database.countQuery('select count() from account');
+system.debug('total is '+total);
+
 Ex2 : list<Home_Page_Component_Child__c> hmpchildlst = new list<Home_Page_Component_Child__c>{
     new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one three'),
     new Home_Page_Component_Child__c(Home_Page_Component__c= hpc.id,Description__c = 'descption of one four')};
