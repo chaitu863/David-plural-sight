@@ -46,6 +46,12 @@ for(account acc:[select id,name,phone from account limit 2]){
 }
 system.debug('foracc list is '+foracc);
 
+// read a specific field data from single sObject
+
+string recordtypname = [select id,name from recordtype where id ='0120B0000001tTlQAI' limit 1].Name;
+system.debug('chaitu name'+recordtypname);
+
+// Read a specific field data from list 
 list<string> strphone = new list<string>();
 for(account acc : [select id,name,phone from account limit 2]){
     system.debug('account is'+acc);
