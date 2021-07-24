@@ -198,3 +198,11 @@ for(ID acc : accMap.keyset()){
     setofIds.add(acc);
 }
 system.debug('set of ids are '+setofIds);
+
+// using current user login id
+user userdetails = [select id,name from user where id = :userinfo.getUserId()];
+system.debug('user details are'+userdetails);
+
+// using lookup field in where clause
+Account_Team_Member_vod__c actm = [select ID,Team_Member_vod__c, Account_Plan_vod__r.ID, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__r.id =:userdetails.id limit 1];
+system.debug('actm is'+actm);
