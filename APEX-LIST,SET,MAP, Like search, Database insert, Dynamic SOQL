@@ -209,3 +209,11 @@ system.debug('actm is'+actm);
 // using lookup field ID in where clause second approach
 Account_Team_Member_vod__c actm = [select ID,Team_Member_vod__c, Account_Plan_vod__r.ID, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__r.id =:userdetails.id limit 1];
 system.debug('actm is'+actm);
+
+// list of users
+list<user> userdetails = [select id,name from user where profile.name='system administrator' LIMIT 200];
+system.debug('user details are'+userdetails.size());
+
+// using lookup field in where clause for list of users
+list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_Plan_vod__c, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__c IN :userdetails limit 1];
+system.debug('actm is'+actm.size());
