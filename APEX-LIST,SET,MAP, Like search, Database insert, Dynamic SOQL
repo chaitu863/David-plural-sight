@@ -83,6 +83,15 @@ listsobj += ' LIMIT'+''+': soqlrecords';
 list<account> acclist = database.query(listsobj);
 system.debug('acclist is'+acclist);
 
+//Dynamic soql with string varible 
+string orgocode = '105-34';
+string speci = 'Oncology – Multiple Myeloma';
+string objOrgToSpeciality = 
+                    'SELECT Id,Org_Code__c '+
+                    'FROM JJ_Org_to_Specialty__c '+
+                    'WHERE Specialty__c =  \'' +  speci+ '\' AND Active__c = TRUE AND Org_Code__c = \'' +  orgocode+ '\'';
+system.debug('org chitu'+database.query(objOrgToSpeciality));
+
 //Databse.countquery for dynamic count of records
 integer total = database.countQuery('select count() from account');
 system.debug('total is '+total);
