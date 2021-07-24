@@ -1,0 +1,84 @@
+EX 1) from parent to child
+map<id,account> accmap = new map<id,account>([select id,name from account]);
+set<id>accidset = new set<id>();
+for(account acc: accmap.values()) {
+    accidset.add(acc.id);
+    accmap.put(acc.id,acc);
+}
+
+map<id,list<contact>> conmap = new map<id,list<contact>>();
+for(contact con: [select id,AccountId,Name,Picture__c from contact where accountid in : accidset]){
+    if(conmap.containskey(con.accountid)){
+        conmap.get(con.accountid).add(con);
+    }else
+    {
+        conmap.put(con.accountid,new list<contact>{con});
+    }
+  }
+ system.debug('conmap is '+conmap);
+
+EX 2) ON same object
+
+public Map<String,List<Demographic__c>> getmapDemographic()
+    {
+        Map<String,List<Demographic__c>> mapRecordTypeDevNameToDemographic = new Map<String,List<Demographic__c>>();
+        
+        for(String strRecordTypeDevName : getlstRecordTypeDevName())
+        {
+            mapRecordTypeDevNameToDemographic.put(strRecordTypeDevName, new List<Demographic__c>());
+        }
+        
+        for(Demographic__c objDemographic:[SELECT Id, Account__c, Demographic_Field__c, Name,
+                                           Description__c, Value__c, RecordType.DeveloperName
+                                           FROM Demographic__c Where Account__r.ID =: account.ID Order By Name desc])
+        {
+            system.debug('objDemoGraphic-->'+objDemographic);
+            if(objDemographic.RecordType.DeveloperName != null)
+            {
+                if(mapRecordTypeDevNameToDemographic.containsKey(objDemographic.RecordType.DeveloperName))
+                {
+                    List<Demographic__c> demoGraphisList = mapRecordTypeDevNameToDemographic.get(objDemographic.RecordType.DeveloperName);
+                    demoGraphisList.add(objDemographic);
+                    mapRecordTypeDevNameToDemographic.put(objDemographic.RecordType.DeveloperName,demoGraphisList);
+                }
+                else
+                {
+                    mapRecordTypeDevNameToDemographic.put(objDemographic.RecordType.DeveloperName, new List<Demographic__c>{objDemographic});
+                }
+                
+                system.debug('$$$mapRecordTypeDevNameToDemographic==>'+mapRecordTypeDevNameToDemographic);
+            }
+        }
+        
+        return mapRecordTypeDevNameToDemographic;
+    }
+    
+    EX 3) Getting recordtype names based on object
+    
+    
+  
+    public List<String> getlstRecordTypeDevName()
+    {
+        Map<String, SObjectType> globalDesc = Schema.getGlobalDescribe();
+        DescribeSObjectResult demographicResult = globalDesc.get('Demographic__c').getDescribe();
+        List<Schema.RecordTypeInfo> lstRecordTypeInfos = demographicResult.getRecordTypeInfos();
+        
+        List<String> lstRecordTypeDevNames = new List<String>();
+        List<String> lstRecTypeDevNamesDescOrder = new List<String>();
+        
+        for(Schema.RecordTypeInfo recordTypeInfo:lstRecordTypeInfos)
+        {
+            if(!recordTypeInfo.isMaster())
+            {
+                lstRecTypeDevNamesDescOrder.add(recordTypeInfo.getName());
+                lstRecTypeDevNamesDescOrder.sort();
+            }
+        }       
+        for(Integer i = lstRecTypeDevNamesDescOrder.size()-1; i>=0;i--)
+        {
+            lstRecordTypeDevNames.add(lstRecTypeDevNamesDescOrder.get(i));
+        }
+        
+        return lstRecordTypeDevNames;
+    }
+    
