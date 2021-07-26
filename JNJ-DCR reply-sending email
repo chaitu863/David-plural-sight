@@ -1,0 +1,387 @@
+<apex:page standardController="DCR_Response_JNJ__c" extensions="ReplyDCRController">
+   <apex:sectionHeader title="DCR Response" subtitle="DCR Record"/>
+   <apex:form id="frm">
+       <apex:pageBlock title="DCR Responses">
+           <apex:pageblockTable value="{!lstDCRResponseList}" var="DCRRes">
+               <apex:column headerValue="Name">
+                   <apex:outputLabel value="{!DCRRes.Name}"></apex:outputLabel>
+               </apex:column>
+               <apex:column headerValue="Response">
+                   <apex:outputLabel value="{!DCRRes.Response__c}"></apex:outputLabel>
+               </apex:column>
+              
+               <apex:column headerValue="Created Date">
+                   <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+                       <apex:param value="{!DCRRes.Create_Date__c}" /> 
+                   </apex:outputText>                    
+               </apex:column>
+               
+               
+           </apex:pageblockTable>
+       </apex:pageBlock>
+       <apex:pageBlock title="New DCR Response" rendered="{!!isAskJCP}">
+           <apex:pageBlockButtons >
+                <apex:commandLink value="Reply" action="{!replytoDCR}" target="_parent" styleClass="btn" style="padding: 4px 4px;"/>
+                <apex:commandLink value="Cancel" action="{!cancelDCR}" styleClass="btn" style="padding: 4px 4px;"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Information" showHeader="false" columns="1" id="block1">
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Data Change Request"></apex:outputLabel>
+                    <apex:inputField value="{!objDCRResponseList.Data_Change_Request__c}"/>
+                </apex:pageblockSectionItem>   
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel Value="Question Title"></apex:outputLabel>
+                    <apex:OutputText value="{!Question}"/>
+                </apex:pageblockSectionItem>
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Question Description"></apex:outputLabel>
+                    <apex:outputText value="{!Description}"/>
+                </apex:pageblockSectionItem>                        
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Response"></apex:outputLabel>
+                    <apex:inputField value="{!objDCRResponseList.Response__c}" style="width:400px" />
+                </apex:pageblockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:pageBlock title="New DCR Response" rendered="{!isAskJCP}">
+            <apex:pageMessages ></apex:pageMessages>
+            <apex:pageBlockButtons >
+                <apex:commandLink value="Reply" action="{!replyDCRASKJCP}" target="_parent" styleClass="btn" style="padding: 4px 4px;"/>
+                <apex:commandLink value="Cancel" action="{!cancelDCR}" styleClass="btn" style="padding: 4px 4px;"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Information" showHeader="false" columns="1" id="block1">
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Data Change Request"></apex:outputLabel>
+                    <apex:inputField value="{!objDCRResponseList.Data_Change_Request__c}"/>
+                </apex:pageblockSectionItem>   
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Question Description"></apex:outputLabel>
+                    <apex:outputText value="{!DescriptionASkJCP}"/>
+                </apex:pageblockSectionItem>                        
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Response"></apex:outputLabel>
+                    <apex:inputField value="{!objDCRResponseList.Response__c}" style="width:400px"  />
+                </apex:pageblockSectionItem>
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="{!$Label.JJ_JCP_Immunology_PII}"></apex:outputLabel>
+                    <apex:inputField value="{!objDCRResponseList.JJ_PII__c}" required="true"/>
+                </apex:pageblockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
+
+
+/************************************************************
+* File Name     :  ReplyDCRController
+* Description   :  Controller for replying DCR.
+* Modification Log
+=============================================================
+* Ver.    Date          Author              Modification
+-------------------------------------------------------------
+1.0     8/21/2014    Cognizant            Initial Draft
+1.1     5/02/2018    sshank10@its.jnj.com CIFEB18 changes : FirstName and Last Name is added in subject and Html body for following record type only 
+                                          PA_Create_New_Non_Prescriber,Create_New_Prescriber,Update_Person_Account. 
+1.1    1/06/2019     Cognizant           SendMaill for DCR secondary Owner
+1.2    09/25/2019    Cognizant           Updated sendMail logic for cc, when DCR secondary Owner is exists , it applicable to rep and analyst
+1.3    05/14/2020    mbandla1            Included Modifications for @Ask JCP Immunology request. 
+1.4    06/09/2021    Cognizant           Bug fix AEBQ-25963
+************************************************************/
+public class ReplyDCRController{   
+    public DCR_Response_JNJ__c objDCRResponseList{get;set;}
+    public List< DCR_Response_JNJ__c > lstDCRResponseList{get;set;}
+    public string strDCResid;
+    public string strDCRid;
+    public String Question {get; set;}
+    public String Description {get; set;}
+    public String DescriptionASkJCP {get; set;}
+    public String strFirstName = '';
+    public String strLastName = '';
+    public Boolean htmlBodyBoolean = false;
+    public string strDCRownerid;
+    public string strOwnerid;
+    public List<User> objUserDM1;
+    public List<UserRole> lstUserRole;
+    public boolean isNotifyDM = false;
+    public map<id,string> mapIdSubject {get; set;}
+    string strDCRName = '';
+    //public boolean isDCR {get; set;}
+    public boolean isAskJCP {get; set;}
+    private static String DCRRES_GENRECTYPE = 'DCR Request';
+    private static String DCRRES_ASKRECTYPE ='@Ask JCP Immunology';
+    public ReplyDCRController(ApexPages.StandardController controller) {
+        
+        objDCRResponseList =new DCR_Response_JNJ__c();
+        lstDCRResponseList = new List<DCR_Response_JNJ__c>();
+        
+        mapIdSubject = new map<id,string>();
+        
+        strDCResid = ApexPages.currentPage().getParameters().get('id');
+        
+        Boolean isRepLogin = false;
+        Boolean isAnalystLogin = false;
+        User objUser = [select id, Profile.Name from User where id =: system.userinfo.getUserid()];
+        
+        if(objUser.Profile.Name == 'JNJ Data Stewards'){
+            isAnalystLogin = true;
+        }else{
+            isRepLogin = true;
+        }
+        isAskJCP= false;
+        if(strDCResid != null){
+            lstDCRResponseList = [select id,CreatedById, Name, Response__c, Create_Date__c from DCR_Response_JNJ__c where Data_Change_Request__c =: strDCResid];
+            
+            List<DCR_Response_JNJ__c> lstDCRResponse = [select Data_Change_Request__r.Name, Data_Change_Request__r.Question_title__c,Data_Change_Request__r.Question_description__c,Data_Change_Request__c,Data_Change_Request__r.OwnerId,CreatedById, 
+                                                        Data_Change_Request__r.Notify_DM_of_Any_Changes__c, Data_Change_Request__r.DCR_Owner__c,Data_Change_Request__r.recordtype.developername,Data_Change_Request__r.JJ_QuestionDescription__c from DCR_Response_JNJ__c where id =: strDCResid];
+            
+            if(lstDCRResponse.size() > 0){
+                objDCRResponseList.Data_Change_Request__c = lstDCRResponse[0].Data_Change_Request__c;
+                strDCRid = lstDCRResponse[0].Data_Change_Request__c;
+                
+                Question = lstDCRResponse[0].Data_Change_Request__r.Question_title__c;
+                Description = lstDCRResponse[0].Data_Change_Request__r.Question_description__c;
+                objDCRResponseList.recordtypeid=Schema.SObjectType.DCR_Response_JNJ__c.getRecordTypeInfosByName().get(DCRRES_GENRECTYPE).getRecordTypeId();
+                if(lstDCRResponse[0].Data_Change_Request__r.recordtype.developername=='JJ_AskJCPImmunology' ){
+                    isAskJCP= true;
+                    DescriptionASkJCP=lstDCRResponse[0].Data_Change_Request__r.JJ_QuestionDescription__c ;
+                    objDCRResponseList.JJ_QuestionDescription__c=lstDCRResponse[0].Data_Change_Request__r.JJ_QuestionDescription__c;
+                    objDCRResponseList.recordtypeid=Schema.SObjectType.DCR_Response_JNJ__c.getRecordTypeInfosByName().get(DCRRES_ASKRECTYPE).getRecordTypeId();
+                }
+                
+                if(isRepLogin == true){
+                    strDCRownerid = lstDCRResponse[0].Data_Change_Request__r.DCR_Owner__c;
+                }
+                if(isAnalystLogin == true){
+                    strOwnerid = lstDCRResponse[0].Data_Change_Request__r.OwnerId;
+                }
+                
+                isNotifyDM = lstDCRResponse[0].Data_Change_Request__r.Notify_DM_of_Any_Changes__c;
+            }
+        }
+        if(ApexPages.currentPage().getParameters().get('DCRid') != null){
+            strDCRid = ApexPages.currentPage().getParameters().get('DCRid');
+        }
+        if(strDCRid != null){
+            lstDCRResponseList = [select id,CreatedById, Name, Response__c, Create_Date__c from DCR_Response_JNJ__c where Data_Change_Request__c =: strDCRid];
+            
+            List<Data_Change_Request__c> lstDCR = [select id,Name,Last_Name__c,First_Name__c,Question_title__c,recordType.Name,RecordType.DeveloperName,Question_description__c, ownerId,CreatedById, Notify_DM_of_Any_Changes__c, DCR_Owner__c,JJ_QuestionDescription__c  from Data_Change_Request__c where id =: strDCRid];
+            
+            if(lstDCR.size() > 0){
+                objDCRResponseList.Data_Change_Request__c = lstDCR[0].id;    
+                strDCRName = lstDCR[0].Name;  
+                Question = lstDCR[0].Question_title__c;
+                Description = lstDCR[0].Question_description__c;    
+                objDCRResponseList.recordtypeid=Schema.SObjectType.DCR_Response_JNJ__c.getRecordTypeInfosByName().get(DCRRES_GENRECTYPE).getRecordTypeId();
+                if(lstDCR[0].recordtype.developername=='JJ_AskJCPImmunology' ){
+                    isAskJCP= true;
+                    DescriptionASkJCP=lstDCR[0].JJ_QuestionDescription__c ;
+                    objDCRResponseList.JJ_QuestionDescription__c=lstDCR[0].JJ_QuestionDescription__c ;
+                    objDCRResponseList.recordtypeid=Schema.SObjectType.DCR_Response_JNJ__c.getRecordTypeInfosByName().get(DCRRES_ASKRECTYPE).getRecordTypeId();
+                }  
+                if(isRepLogin == true){
+                    strDCRownerid = lstDCR[0].DCR_Owner__c;
+                }
+                if(isAnalystLogin == true){
+                    strOwnerid = lstDCR[0].OwnerId;
+                }
+                
+                isNotifyDM = lstDCR[0].Notify_DM_of_Any_Changes__c;
+                if(lstDCR[0].recordType.DeveloperName=='PA_Create_New_Non_Prescriber' || lstDCR[0].recordType.DeveloperName=='Create_New_Prescriber' || lstDCR[0].recordType.DeveloperName=='Update_Person_Account')
+                {
+                    strFirstName = lstDCR[0].First_Name__c;
+                    strLastName = lstDCR[0].Last_Name__c;
+                    htmlBodyBoolean = True;
+                }
+            }
+        }
+        
+        if(isAnalystLogin == true){
+            lstUserRole = [select ParentRoleId from UserRole where id IN (select UserRoleId from user where id =: strOwnerid)];
+        }
+        else
+        {
+            lstUserRole = [select ParentRoleId from UserRole where id IN (select UserRoleId from user where id =: UserInfo.getUserId())];
+        }
+        if(!lstUserRole.isEmpty() && lstUserRole[0].ParentRoleId !=Null){
+            List<User> objUserDM1 = [select id from user where UserRoleId =: lstUserRole[0].ParentRoleId  AND isActive = true limit 1];
+                if(objUserDM1 !=null && objUserDM1.size()>0 && objUserDM1[0].id !=null){
+                  if(htmlBodyBoolean==True)
+                    {
+                     mapIdSubject.Put(objUserDM1[0].id, strDCRName + ' has been updated for '+strLastName+', '+strFirstName);
+                    }Else{
+                      mapIdSubject.Put(objUserDM1[0].id, strDCRName + ' has been updated');
+                    }
+                }
+          }  
+        
+        if(strDCRownerid != null && strDCRownerid != ''){
+            if(htmlBodyBoolean==True)
+            {
+                mapIdSubject.Put(strDCRownerid, strDCRName + ' has been updated for '+strLastName+', '+strFirstName);
+            }Else{
+                mapIdSubject.Put(strDCRownerid, strDCRName + ' has been updated');
+            }
+        }
+        if(strOwnerid != null && strOwnerid != ''){
+            
+            if(htmlBodyBoolean==True)
+            {
+                mapIdSubject.Put(strOwnerid, strDCRName + ' has been updated for '+strLastName+', '+strFirstName);
+            }Else{
+                mapIdSubject.Put(strOwnerid, strDCRName + ' has been updated');
+            }
+        }
+    }    
+    public pagereference replytoDCR(){
+        insert objDCRResponseList;
+        string strHtmlBody='';
+        for(Id notifyId : mapIdSubject.keyset()){
+            
+            if(htmlBodyBoolean == True)
+            {
+                strHtmlBody = '<html><head></hea><body>A new @YS message has been posted in iCONNECT for '+strLastName+', '+strFirstName+'.';
+            } else
+            {
+                strHtmlBody = '<html><head></hea><body>A new @YS message has been posted in iCONNECT.';
+            }   
+            
+            strHtmlBody += '<br/><br/>';
+            strHtmlBody += 'Please follow the link below to reply to the most current message.';
+            strHtmlBody += '<br/><br/>';
+            
+            string endpointURL = URL.getSalesforceBaseUrl().toExternalForm();
+            
+            strHtmlBody += '<a href="' + endpointURL + '/' + objDCRResponseList.Data_Change_Request__c + '">' + endpointURL + '/' + objDCRResponseList.Data_Change_Request__c + '</a>';
+            
+            strHtmlBody += '<br/><br/><br/>';
+            strHtmlBody += 'Please do not reply to this email, as this is a system generated email.';
+            strHtmlBody += '<br/><br/>';
+            
+            strHtmlBody += '<table border="1"><tr>';
+            
+            strHtmlBody += '<th>Message</th><th>Last Modified  By</th>';
+            
+            strHtmlBody += '</tr>';
+            //mnaidu - 10/2/2014 - Updated to display DCR LastModifiedBy.Name instead of Owner.Name; retreiving additional fields to support this
+            List<Data_Change_Request__c> lstDCR = [select (select id,Create_Date__c,Data_Change_Request__r.owner.name, Data_Change_Request__r.DCR_owner__r.name,Data_Change_Request__r.owner.Email,Data_Change_Request__r.owner.phone, Response__c, LastModifiedById, LastModifiedBy.Name from DCR_Responses__r),  Name, ownerid, owner.Name, LastModifiedById, LastModifiedBy.Name, owner.Email, owner.phone, JJ_DCRSecondaryOwner__c,JJ_DCRSecondaryOwner__r.email,DCR_Owner__r.email  from Data_Change_Request__c where id =: objDCRResponseList.Data_Change_Request__c];
+            
+            Data_Change_Request__c objDCR = new Data_Change_Request__c();
+            if(lstDCR.size() > 0){
+                objDCR = lstDCR[0];
+            }
+            String strSubject='';  
+            
+            strSubject = 'DCR - ' + objDCR.Name + ' has been assigned to (Enter Analyst taking ownership here of request here)';
+            
+            Integer i = 0;
+            for(DCR_Response_JNJ__c dcrres: objDCR.DCR_Responses__r){
+                
+                strHtmlBody += '<tr>';
+                string strResponse = '';
+                string strPhone = '';
+                if(dcrres.Response__c != null){
+                    strResponse = dcrres.Response__c;
+                    
+                }
+                if(dcrres.Data_Change_Request__r.owner.phone != null){
+                    strPhone = dcrres.Data_Change_Request__r.owner.phone;
+                }
+                Integer intMonth = dcrres.Create_Date__c.month();
+                
+                Integer intDay = dcrres.Create_Date__c.day();
+                Integer intYear = dcrres.Create_Date__c.year();
+                string strDate = string.valueOf(intMonth) + '/' + string.valueOf(intDay) + '/' + string.valueOf(intYear);
+                strHtmlBody += '<td>' + strResponse;
+                strHtmlBody += '</td>';
+                strHtmlBody += '<td>System Generated By ' + dcrres.LastModifiedBy.Name + ' ' + strDate + '</td>';
+                strHtmlBody += '</tr>';
+                i++;
+            } 
+            strHtmlBody += '</table>';
+            strHtmlBody += '<br/><br/><br/>';
+            strHtmlBody += 'Janssen Pharmaceuticals, Inc.';
+            
+            strHtmlBody += '<br/><br/>';
+            strHtmlBody += 'This email is being provided for informational purposes only and is NOT FOR PROMOTIONAL USE.';
+            strHtmlBody += '</body></html>';
+            
+            if(isNotifyDM == true){
+                Messaging.SingleEmailMessage objMEMail = new Messaging.SingleEmailMessage();
+                if((notifyId == strOwnerid || notifyId == strDCRownerid) && (objDCR.JJ_DCRSecondaryOwner__r.email!=null)){
+                          if(UserInfo.getUserId()== objDCR.JJ_DCRSecondaryOwner__c){
+                                String[] sendingcc = new String[]{objDCR.DCR_Owner__r.email};
+                                objMEMail.setCcAddresses(sendingcc );
+                          }else{
+                                String[] sendingcc = new String[]{objDCR.JJ_DCRSecondaryOwner__r.email};
+                                objMEMail.setCcAddresses(sendingcc );
+                          }
+                }   
+                strSubject = mapIdSubject.get(notifyId);
+                objMEMail.setSubject(strSubject);
+                objMEMail.setHtmlBody(strHtmlBody);
+                objMEMail.setSaveAsActivity(false);             
+                objMEMail.setTargetObjectId(notifyId);
+                Messaging.sendEmail(new Messaging.SingleEmailMessage[] { objMEMail } ); 
+                
+            } 
+            if(objUserDM1!=null) {
+                if(isNotifyDM == false && notifyId != objUserDM1[0].id){
+                    Messaging.SingleEmailMessage objMEMail = new Messaging.SingleEmailMessage();
+                    if(notifyId == strOwnerid && objDCR.JJ_DCRSecondaryOwner__r.email!=null){
+                        String[] sendingcc = new String[]{objDCR.JJ_DCRSecondaryOwner__r.email};
+                            objMEMail.setCcAddresses(sendingcc );
+                    }                   
+                    strSubject = mapIdSubject.get(notifyId);
+                    objMEMail.setSubject(strSubject);
+                    objMEMail.setHtmlBody(strHtmlBody);
+                    objMEMail.setSaveAsActivity(false);             
+                    objMEMail.setTargetObjectId(notifyId);
+                    Messaging.sendEmail(new Messaging.SingleEmailMessage[] { objMEMail } );
+                } 
+            }
+            else {
+                if(isNotifyDM == false){
+                    Messaging.SingleEmailMessage objMEMail = new Messaging.SingleEmailMessage();
+                      if((notifyId == strOwnerid || notifyId == strDCRownerid) && (objDCR.JJ_DCRSecondaryOwner__r.email!=null)){
+                          if(UserInfo.getUserId()== objDCR.JJ_DCRSecondaryOwner__c){
+                                String[] sendingcc = new String[]{objDCR.DCR_Owner__r.email};
+                                objMEMail.setCcAddresses(sendingcc );
+                          }else{
+                                String[] sendingcc = new String[]{objDCR.JJ_DCRSecondaryOwner__r.email};
+                                objMEMail.setCcAddresses(sendingcc );
+                          }
+                    }                    
+                    strSubject = mapIdSubject.get(notifyId);
+                    objMEMail.setSubject(strSubject);
+                    objMEMail.setHtmlBody(strHtmlBody);
+                    objMEMail.setSaveAsActivity(false);             
+                    objMEMail.setTargetObjectId(notifyId);
+                    Messaging.sendEmail(new Messaging.SingleEmailMessage[] { objMEMail } );
+                }
+            } 
+        }
+        pagereference pr =new pagereference ('/'+strDCRid);
+        return pr;
+    }
+    public pagereference cancelDCR(){
+        pagereference pr =new pagereference ('/'+strDCRid);
+        return pr;
+    }
+    public pagereference replyDCRASKJCP(){
+        try{
+            if(objDCRResponseList.Response__c==null){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.Error,System.label.JJ_JCP_Immunology_ResponseError));
+                return null;
+            }
+            if(!objDCRResponseList.JJ_PII__c){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.Error,System.label.JJ_JCP_Immunology_PIIError));
+                return null;
+            }
+            insert objDCRResponseList;
+        }Catch(exception e){
+        
+        }
+        pagereference pr =new pagereference ('/'+strDCRid);
+        return pr;
+    }
+}
