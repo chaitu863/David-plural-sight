@@ -38,6 +38,18 @@ insert acc2;
 list<account>mulacc = new list<account>{new account(name='demo3',AccountNumber='x003'),new account(name='demo4',AccountNumber='x004')};
 insert mulacc;
 
+// creating a sObject single record to a list variable by using add method
+list<JJ_Zip_to_Terr__c> ziptoter = new list<JJ_Zip_to_Terr__c>();
+ziptoter.add(new JJ_Zip_to_Terr__c(Zip_Code__c='54535',Territory_Name__c='115-32-6200205'));
+insert ziptoter;
+
+
+//creating list of records to list variable by using list.Add all method
+list<sObject>acc = new list<sObject>();
+acc.addAll([select id from account limit 10]);
+acc.addAll([select id from JJ_Zip_to_Terr__c limit 11]);
+system.debug('total records are'+acc.size());
+
 // creating list of accounts at a time by using for loop
 list<account>foracc = new list<account>();
 for(account acc:[select id,name,phone from account limit 2]){
@@ -58,6 +70,7 @@ for(account acc : [select id,name,phone from account limit 2]){
     strphone.add(acc.phone);
 }
 system.debug('strphone is'+strphone);
+
 // adding account one by one to update to list of account variable
 list<account> updatelist = new list<account>();
 for(account acc: [select id,name from account limit 3]){
@@ -67,11 +80,7 @@ for(account acc: [select id,name from account limit 3]){
 }
 update updatelist;
 
-//Adding list of records by using list.Add all method
-list<sObject>acc = new list<sObject>();
-acc.addAll([select id from account limit 10]);
-acc.addAll([select id from JJ_Zip_to_Terr__c limit 11]);
-system.debug('total records are'+acc.size());
+
 
 
 
