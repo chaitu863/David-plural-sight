@@ -67,6 +67,13 @@ for(account acc: [select id,name from account limit 3]){
 }
 update updatelist;
 
+//Adding list of records by using list.Add all method
+list<sObject>acc = new list<sObject>();
+acc.addAll([select id from account limit 10]);
+acc.addAll([select id from JJ_Zip_to_Terr__c limit 11]);
+system.debug('total records are'+acc.size());
+
+
 
 //Dynamic soql for one single sObject with database.Query
 string one = 'select id,name from account limit 1';
