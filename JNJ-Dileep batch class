@@ -1,0 +1,111 @@
+/*
+* Author        : Cognizant
+* Created Date  : 27-July-2021
+* Description   : Batch class for auto updating the coverage records based on coverage start and end dates.
+* Modified By     ||  Date Modified   || Description
+************************************************************************************************************************
+* 1. Dileep  		  || 21-July-2020     ||AEBQ-28757 - Initial version created.
+*
+*/
+global class JJ_MSLCoverageUpdateBatch implements Database.Batchable<sObject>
+{
+    global List<sObject> start(Database.BatchableContext c)
+    {
+        List<sObject> scope = new List<sObject>();
+        scope.addAll([SELECT Id,Effective_Date_JNJ__c,Suspension_Date_JNJ__c,Primary_Assignment_JNJ__c,
+                      Primary_Assignment_Terr_Id__c,Territory_Name__c,Territory_SFDC_ID__c ,
+                      JJ_Future_Coverage_Territory_ID__c,JJ_Future_Coverage_Territory_Name__c
+                      FROM JJ_Zip_to_Terr__c WHERE Suspension_Date_JNJ__c =: System.today().addDays(-1) OR Effective_Date_JNJ__c =: System.today()]);
+        scope.addAll([SELECT Id,JJ_End_Date__c,JJ_Start_Date__c,JJ_Primary_Territory_Assignment__c,
+                      JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c ,
+                      JJ_Future_Coverage_Territory_ID__c,JJ_Future_Coverage_Territory_Name__c 
+                      FROM JJ_Territory_Institution__c WHERE JJ_End_Date__c =: System.today().addDays(-1) OR JJ_Start_Date__c =: System.today()]);
+        return scope;
+    }
+    
+    global void execute(Database.BatchableContext c, List<sObject> scope)
+    {
+        List<JJ_Zip_to_Terr__c> zipToTerrListToUpdate = new List<JJ_Zip_to_Terr__c>();
+        List<JJ_Territory_Institution__c> terrToInstToUpdate = new List<JJ_Territory_Institution__c>();
+        for(sObject obj : scope)
+        {
+            switch on obj
+            {
+                when JJ_Zip_to_Terr__c zipTerr
+                {
+                   zipToTerrListToUpdate.add(updateZipToTerr(zipTerr));
+                }
+                when JJ_Territory_Institution__c terrInst
+                {
+                  terrToInstToUpdate.add(updateTerrToInst(terrInst));
+                }
+            }
+        }
+       updateRecords(zipToTerrListToUpdate,terrToInstToUpdate);
+    }
+    
+    global void finish(Database.BatchableContext c)
+    {
+    }
+    /*
+* Method Name : updateZipToTerr
+* Parameters 		: JJ_Zip_to_Terr__c object record
+* Return Type		: JJ_Zip_to_Terr__c Object record
+* Description		 : Method is used to update the Zip to Terr records based coverage start date and End Date.
+*/ 
+    static  JJ_Zip_to_Terr__c updateZipToTerr(JJ_Zip_to_Terr__c zipTerr){
+        if(zipTerr <> null && zipTerr.Effective_Date_JNJ__c == System.today() &&
+           !String.isEmpty(zipTerr.JJ_Future_Coverage_Territory_ID__c) && 
+           !String.isEmpty(zipTerr.JJ_Future_Coverage_Territory_Name__c)){
+               zipTerr.Territory_Name__c = zipTerr.JJ_Future_Coverage_Territory_Name__c;
+               zipTerr.Territory_SFDC_ID__c = zipTerr.JJ_Future_Coverage_Territory_ID__c;
+           } else if(zipTerr <> null && zipTerr.Suspension_Date_JNJ__c == System.today().addDays(-1) &&
+                     !String.isEmpty(zipTerr.Primary_Assignment_JNJ__c) && 
+                     !String.isEmpty(zipTerr.Primary_Assignment_Terr_Id__c)){
+                         zipTerr.Effective_Date_JNJ__c = System.today();
+                         zipTerr.Suspension_Date_JNJ__c = null;
+                         zipTerr.Territory_Name__c = zipTerr.Primary_Assignment_JNJ__c;
+                         zipTerr.Territory_SFDC_ID__c = zipTerr.Primary_Assignment_Terr_Id__c;
+                     }
+        return zipTerr;
+    }
+    
+    /*
+* Method Name : updateTerrToInst
+* Parameters 		: JJ_Territory_Institution__c object record
+* Return Type		: JJ_Territory_Institution__c Object record
+* Description		 : Method is used to update the JJ_Territory_Institution__c records based coverage start date and End Date.
+*/ 
+    static JJ_Territory_Institution__c updateTerrToInst(JJ_Territory_Institution__c terrInst){
+        if(terrInst <> null && terrInst.JJ_Start_Date__c == System.today() &&
+           !String.isEmpty(terrInst.JJ_Future_Coverage_Territory_ID__c) && 
+           !String.isEmpty(terrInst.JJ_Future_Coverage_Territory_Name__c)){
+               terrInst.JJ_Territory_Name__c = terrInst.JJ_Future_Coverage_Territory_Name__c;
+               terrInst.JJ_Territory_SFDC_Id__c = terrInst.JJ_Future_Coverage_Territory_ID__c;
+           } else if(terrInst <> null && terrInst.JJ_End_Date__c == System.today().addDays(-1) &&
+                     !String.isEmpty(terrInst.JJ_Primary_Territory_Assignment__c) && 
+                     !String.isEmpty(terrInst.JJ_Primary_Assignment_SFDC_Id__c)){
+                         terrInst.JJ_Start_Date__c = System.today();
+                         terrInst.JJ_End_Date__c = null;
+                         terrInst.JJ_Territory_Name__c = terrInst.JJ_Primary_Territory_Assignment__c;
+                         terrInst.JJ_Territory_SFDC_Id__c = terrInst.JJ_Primary_Assignment_SFDC_Id__c;
+                     }
+        return terrInst;
+    }
+     /*
+* Method Name : updateTerrToInst
+* Description		 : Method is used to update the records.
+*/ 
+    static void updateRecords(List<JJ_Zip_to_Terr__c> zipToTerrListToUpdate, List<JJ_Territory_Institution__c> terrToInstToUpdate){
+         try{
+            if(zipToTerrListToUpdate.size() > 0){
+                Update zipToTerrListToUpdate;
+            }
+            if(terrToInstToUpdate.size() > 0){
+                Update terrToInstToUpdate;
+            }
+        } catch(Exception ex){
+            System.debug(ex);
+        }
+    }
+}
