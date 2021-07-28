@@ -1,0 +1,830 @@
+/************************************************************
+* File Name     :  JJMSLCoverageController
+* Description   :  Which support MSL_coverage VF page
+* @author       :  Cognizant
+
+* Modification Log : 
+=============================================================
+* Ver.    Date          Author     Modification
+-------------------------------------------------------------
+* 1.0   10/31/2016     Cognizant    File Created
+* 1.1   08/19/2020     Cognizant    Fetching the Terr to Institution records
+* 1.2   01/21/2021     Cognizant    remediation as per TM2.0 
+* 1.3   07/27/2021     Cognizant    AEBQ-28757 -Introduced start date and end date fields on UI and update along with coverage update
+************************************************************/
+
+public class JJMSLCoverageController
+{
+    
+    public string selectedSpeciality            {get;set;}
+    public string selectedCoverage              {get;set;}
+    public string selectedCoverage2             {get;set;}
+    public string strTerritoryName              {get;set;}
+    public String strInstitutionName            {get;set;}
+    public string strUpdTerritoryName           {get;set;}
+    public string strSortBy                     {get;set;}
+    public string strSortBy2                    {get;set;}
+    public List<SelectOption> lstSpeciality     {get;set;}
+    public List<SelectOption> coverageType      {get;set;}
+    public List<SelectOption> coverageType2     {get;set;}
+    public List<WrapperClass> listWrapper       {get;set;}
+    public String selectedObjType               {get;set;}
+    public string strFilter                     {get;set;}
+    public String sortDir                       {get;set;}
+    public Boolean selectAll                    {get;set;}
+    public boolean isSelectAll                  {get;set;}
+    public List<WrapperClass> lstSetController  {get;set;}
+    CustomIterable obj                          {get;set;}
+    public string territoryName                 {get;set;}
+    public string institutionName               {get;set;}
+    Public String Trname                        {get;set;}
+    public string fieldVariable                 {get;set;}
+    public String[] filter                      {get;set;}
+    public static string PaginationCount        {get;set;}
+    public boolean isError                      {get;set;}
+    public string strstate                      {get;set;}      
+    public string strcity                       {get;set;}
+    public string strPrimaryNameUsr             {get;set;}   
+    public String strCounty                     {get;set;} 
+    public Date mslStartDate                    {get;set;}
+    public Date mslEndDate                      {get;set;}
+    public Date terStartDate                    {get;set;}
+    public Date terEndDate                      {get;set;}
+    public string queryFields         = '';     
+    public string queryCount          = '';      
+    public string strQuery_stub       = '';       
+    public string strQuery_SortOrder  = '';      
+    public integer Querylimit         = 7000;
+    public string zipToterr           = 'Zip to Territory';
+    public string terrToInst          = 'Territory to Institution';
+    
+    public class applicationException extends Exception {}
+    
+    public JJMSLCoverageController()
+    {
+        selectedSpeciality   = '';
+        selectedCoverage     = 'MSL';
+        selectedCoverage2    = 'CVM';
+        selectedObjType      = 'Zip to Territory';
+        selectAll            = False; 
+        isSelectAll          = False;
+        strTerritoryName     = '';
+        strInstitutionName   = '';
+        strstate             = '';        
+        strcity              = '';
+        strCounty            = '';  
+        strPrimaryNameUsr    = '';
+        strUpdTerritoryName  = '';
+        strSortBy            = 'Zip_Code__c';
+        strSortBy2           = 'JJ_Account_Name__c';
+        sortDir              = 'desc';
+        filter               = new String[]{};
+            Trname               = '';
+        fieldVariable        = '';
+        isError              = false;
+        mslStartDate         = date.today();
+        terStartDate         = date.today();
+        lstSpeciality        = new List<SelectOption>();
+        coverageType         = new List<SelectOption>();
+        coverageType2        = new List<SelectOption>();
+        listWrapper          = new List<WrapperClass>();
+        lstSetController     = new List<WrapperClass>();
+        
+        for(JJ_Org_to_Specialty__c objSpeacilty : [SELECT id,Org_Code__c,Specialty__c 
+                                                   FROM JJ_Org_to_Specialty__c 
+                                                   WHERE Active__c = true WITH SECURITY_ENFORCED limit 200 ]){
+                                                       lstSpeciality.add (new SelectOption(objSpeacilty.Specialty__c, objSpeacilty.Specialty__c));
+                                                   }
+        for(String str : getPicklistValues('JJ_Zip_to_Terr__c','JJ_Coverage_Type__c')){
+            coverageType.add(new SelectOption(str, str));
+        }
+        for(String str : getPicklistValues('JJ_Territory_Institution__c','JJ_Coverage_Type__c')){
+            coverageType2.add(new SelectOption(str, str));
+        }
+        obj             = new CustomIterable (listWrapper); 
+        obj.setPageSize = 200;
+        next();
+    }
+    public List<SelectOption> getFilterItems() {
+        List<SelectOption> options = new List<SelectOption>(); 
+        options.add(new SelectOption('City','City')); 
+        options.add(new SelectOption('State','State'));
+        options.add(new SelectOption('Primary Name','Primary Name'));        
+        return options; 
+    }
+    public void setTerrName(){
+        if(fieldVariable=='search'){
+            strTerritoryName=territoryName;
+        }
+        else if(fieldVariable=='update')
+            strUpdTerritoryName=territoryName;
+    }
+    
+    public void clear()
+    {
+        filter.clear();
+        listWrapper.clear();
+        lstSetController.clear();
+        strTerritoryName         = '';
+        strInstitutionName       = '';
+        strUpdTerritoryName      = '';
+        strFilter                = '';
+        strstate                 = '';
+        strCounty                = ''; 
+        strcity                  = '';
+        strPrimaryNameUsr        = '';
+        mslStartDate             = date.today();
+        terstartDate             = date.today();
+        mslEndDate               = null;
+        terEndDate               = null;
+        isSelectAll              = false;
+    }
+    
+    public PageReference doCancel(){
+        pageReference page = new pageReference('/apex/MSL_Coverage');
+        page.setRedirect(true);
+        return page;
+    }
+    
+    public pagereference lookupPage()
+    {
+        return null;
+    }
+    
+    Public pagereference doSelectAll() {
+        If(isSelectAll == true){
+            selectAll = isSelectAll;
+        }else{
+            selectAll =false;
+        }
+        for(WrapperClass temp : listWrapper){
+            temp.flag = selectAll;        
+        }
+        return Null;
+    }
+    
+    Public List<selectOption> getOrgCode()
+    {
+        return new List<selectOption>();
+    }
+    
+    Public pageReference doSearchandclear()     
+    {       
+        strUpdTerritoryName = '';  
+        strFilter           = '';     
+        filter.clear();    
+        return doSearch();      
+    }
+    
+    Public PageReference doSearch()
+    { 
+        if(String.ISBlank(strTerritoryName) && selectedObjType ==zipToterr  && selectedCoverage=='MSL') {   
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please Select MSL'));          
+            return null;      
+        } else if(String.ISBlank(strTerritoryName) && selectedObjType ==zipToterr  && selectedCoverage=='V&E') {      
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please Select V&E'));          
+            return null;      
+        }else if((String.ISBlank(strTerritoryName) && String.isBlank(strInstitutionName))&& selectedObjType ==terrToInst){
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please Select Either MSL or Institution'));          
+            return null;      
+        }
+        String strQuery       = '';
+        String strUserName    = '';
+        String strOrgCode     = '';
+        String strprimass     = '';
+        String strprimaryname = '';
+        User objUserprim;
+        listWrapper                                     = new List<WrapperClass>();
+        List<JJ_Zip_to_Terr__c> lstZipToTerr            = new List<JJ_Zip_to_Terr__c>();
+        List<JJ_Territory_Institution__c> lstTerrtoInst = new List<JJ_Territory_Institution__c>();
+        strTerritoryName      = strTerritoryName.trim();
+        JJ_Zip_to_Terr__c ziptoterrs;
+        
+        List<User> objUserone = objUsermetod(strTerritoryName);
+        if(objUserone.size()>0){
+            strUserName = objUserone[0].Name;
+            Trname=objUserone[0].Territory_JNJ__c;
+        }else
+            trname=strTerritoryName;
+        
+        if(selectedObjType ==zipToterr) {
+            zipToterrSearch(strQuery,strUserName,strOrgCode,strprimass,strprimaryname, lstZipToTerr);
+        } else if(selectedObjType ==terrToInst) {
+            terrToInstitutionsearch(strQuery,strUserName,strOrgCode,strprimass,strprimaryname,lstTerrtoInst);
+        }
+        
+        if(listWrapper.size()== 0){
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.INFO,'No records available for this search'));
+        }
+        obj = new CustomIterable (listWrapper); 
+        obj.setPageSize = 200;
+        next();
+        return null;
+    }
+    
+    public void terrToInstitutionsearch(String strQuery,String strUserName,String strOrgCode,String strprimass,String strprimaryname, List<JJ_Territory_Institution__c> lstTerrtoInst){
+        
+        queryFields   = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c,JJ_Start_Date__c,JJ_End_Date__c '; 
+        queryCount    = ' count() '; 
+        strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Territory_Institution__c WHERE ';
+        strQuery      ='JJ_Coverage_Type__c = \'' +  selectedCoverage2  + '\'';
+        if(!String.ISBlank(Trname )) {
+            strQuery = strQuery +  ' AND JJ_Territory_Name__c = \'' +  Trname + '\'';
+        }
+        string strInstitutionName = strInstitutionName.trim();
+        if(!String.ISBlank(strInstitutionName )){
+            strQuery = strQuery  + ' AND JJ_Account_Name__c LIKE \'%' +  strInstitutionName + '%\'';
+        } 
+        strPrimaryNameUsr        = strPrimaryNameUsr.trim();
+        Integer count_result     = database.countQuery(strQuery_stub + strQuery);
+        strQuery_SortOrder       = ' ORDER BY ' + strSortBy2 + ' '+ sortDir;      
+        strQuery_stub            = 'SELECT  '+ queryFields + ' FROM JJ_Territory_Institution__c WHERE ';
+        String primary_territory = '';
+        string user_query        = '';
+        user[] primary_users = new user[]{};
+            
+            try{
+                if(!String.ISBlank(strPrimaryNameUsr)){
+                    string strPrimaryNameUsr_tmp   = '\'%' + strPrimaryNameUsr +  '%\'' ;
+                    user_query = 'select Id,Name,Territory_JNJ__c From User'
+                        +' where IsActive=true AND Name  LIKE '+ strPrimaryNameUsr_tmp ;
+                    primary_users = database.query(user_query);            
+                    primary_territory = '';
+                    for(user temp : primary_users){
+                        if (primary_territory == '')
+                            primary_territory =  '\'' +temp.Territory_JNJ__c +'\'' ;
+                        primary_territory = primary_territory + ',\'' +temp.Territory_JNJ__c +'\'' ;
+                    }
+                    
+                    if (primary_territory != '')
+                        strQuery = strQuery + ' and JJ_Primary_Territory_Assignment__c IN ('+ primary_territory +')';
+                    
+                }
+            }catch(Exception e){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please enter a valid primary name' + primary_users + primary_territory));          
+                lstSetController.clear();
+                // return null;
+            }
+        
+        if(count_result  > Querylimit ) {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please narrow down search by entering the State Code or City')); 
+        } else{
+            lstTerrtoInst = database.query(strQuery_stub + strQuery  );
+        }
+        Map<String,String> MapPrimaryname = new Map<String, String>(); 
+        for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true]){
+            MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name); 
+        }
+        for(JJ_Territory_Institution__c objTerrtoIns: lstTerrtoInst){
+            strprimaryname=MapPrimaryname.get(objTerrtoIns.JJ_Primary_Territory_Assignment__c);
+            strUserName=MapPrimaryname.get(objTerrtoIns.JJ_Territory_Name__c);
+            listWrapper.add(new WrapperClass(null,objTerrtoIns, false, strUserName,strprimaryname));
+        }
+    }
+    
+    public void zipToterrSearch(String strQuery,String strUserName,String strOrgCode,String strprimass,String strprimaryname, List<JJ_Zip_to_Terr__c> lstZipToTerr){
+        
+        
+        queryFields   = ' Zip_Code__c, JJ_County__c, City_JNJ__c, State_JNJ__c,Territory_Name__c,Primary_Assignment_JNJ__c,Org_Code__c,JJ_Coverage_Type__c,Effective_Date_JNJ__c,Suspension_Date_JNJ__c '; // Cidec17 county Field Name
+        queryCount    = ' count() '; 
+        strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Zip_to_Terr__c WHERE ';
+        
+        if (selectedCoverage == 'MSL' && !string.isEmpty(selectedSpeciality)) {
+            List<JJ_Org_to_Specialty__c> objOrgToSpeciality = [SELECT Id,Org_Code__c
+                                                               FROM JJ_Org_to_Specialty__c
+                                                               WHERE Specialty__c = :selectedSpeciality 
+                                                               AND Active__c = :TRUE WITH SECURITY_ENFORCED];
+            strOrgCode = objOrgToSpeciality[0].Org_Code__c;
+            strQuery   = ' Org_Code__c = \'' + strOrgCode + '\'' + ' AND ';
+        }
+        strQuery       =  ' Territory_Name__c = \'' +  Trname + '\'' + ' AND JJ_Coverage_Type__c = \'' +  selectedCoverage  + '\'';                
+        strstate       = strstate.trim();                    
+        strcity        = strcity.trim();
+        strCounty      = strCounty.trim(); //Cidec17
+        strPrimaryNameUsr = strPrimaryNameUsr.trim();
+        
+        if(!String.ISBlank(strstate ))       
+            strQuery = strQuery  + ' AND State_JNJ__c= \'' +  strstate+ '\'';
+        
+        if(!String.ISBlank(strcity ))       
+            strQuery = strQuery  + ' AND City_JNJ__c LIKE \'%' +  strcity + '%\'';
+        
+        if(!String.ISBlank(strCounty ))       
+            strQuery = strQuery  + ' AND JJ_County__c LIKE \'%' +  strCounty + '%\'';
+        
+        Integer count_result     = database.countQuery(strQuery_stub + strQuery);
+        strQuery_SortOrder       = ' ORDER BY ' + strSortBy + ' '+ sortDir;        
+        strQuery_stub            = 'SELECT  '+ queryFields + ' FROM JJ_Zip_to_Terr__c WHERE ';
+        String primary_territory = '';
+        string user_query        = '';
+        user[] primary_users     = new user[]{};
+            
+            try{
+                if(!String.ISBlank(strPrimaryNameUsr)) {
+                    string strPrimaryNameUsr_tmp   = '\'%' + strPrimaryNameUsr +  '%\'' ;
+                    user_query = 'select Id,Name,Territory_JNJ__c From User'
+                        +' where IsActive=true AND Name  LIKE '+ strPrimaryNameUsr_tmp ;
+                    primary_users = database.query(user_query);            
+                    primary_territory = '';
+                    for(user temp : primary_users) {
+                        if (primary_territory == '')
+                            primary_territory =  '\'' +temp.Territory_JNJ__c +'\'' ;
+                        primary_territory = primary_territory + ',\'' +temp.Territory_JNJ__c +'\'' ;
+                    }
+                    
+                    if (primary_territory != '')
+                        strQuery = strQuery + ' and Primary_Assignment_JNJ__c IN ('+ primary_territory +')';
+                }
+            }catch(Exception e){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Please enter a valid primary name' + primary_users + primary_territory));          
+                lstSetController.clear();
+                //return null;
+            }
+        if(String.ISBlank(strstate) && count_result  > Querylimit ){
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please narrow down search by entering the State Code or City')); 
+        }
+        else{
+            lstZipToTerr = database.query(strQuery_stub + strQuery +strQuery_SortOrder ); 
+        }
+        
+        Map<String,String> MapPrimaryname = new Map<String, String>(); 
+        for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true WITH SECURITY_ENFORCED]){
+            MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name); 
+        }
+        
+        for(JJ_Zip_to_Terr__c objZipToTerr: lstZipToTerr) {
+            strprimaryname=MapPrimaryname.get(objZipToTerr.Primary_Assignment_JNJ__c);
+            listWrapper.add(new WrapperClass(objZipToTerr, null,false, strUserName,strprimaryname));
+        }
+    }
+    
+    public Boolean hasNext {
+        get {
+            return obj.hasNext();
+        }
+        set;
+    }
+    
+    public Boolean hasPrevious {
+        get {
+            return obj.hasPrevious();
+        }
+        set;
+    }
+    
+    public void next() 
+    {
+        lstSetController = obj.next();    }
+    
+    public void previous() 
+    {
+        lstSetController = obj.previous();
+    }
+    
+    public class  CustomIterable implements Iterator<list<WrapperClass>>
+    { 
+        list<WrapperClass> InnerList{get; set;}
+        public list<WrapperClass> ListRequested{get; set;}
+        Integer i {get; set;} 
+        public Integer setPageSize {get; set;} 
+        
+        public CustomIterable(List<WrapperClass> lstAccWr)
+        {
+            InnerList     = new list<WrapperClass>(); 
+            ListRequested = new list<WrapperClass>();     
+            InnerList     = lstAccWr;
+            setPageSize   = 200;
+            i             = 0; 
+        }   
+        
+        public boolean hasNext(){ 
+            if(i >= InnerList.size()) {
+                return false; 
+            } else {
+                return true; 
+            }
+        } 
+        
+        public boolean hasPrevious(){ 
+            if(i <= setPageSize) {
+                return false; 
+            } else {
+                return true; 
+            }
+        }   
+        
+        public list<WrapperClass> next(){ 
+            integer startNumber;
+            ListRequested = new list<WrapperClass>(); 
+            integer size  = InnerList.size();
+            if(hasNext()){  
+                if(size <= (i + setPageSize)){
+                    startNumber = i;
+                    i = size;
+                }else{
+                    i = (i + setPageSize);
+                    startNumber = (i - setPageSize);
+                }
+                Integer tempInt   = startNumber+1;
+                PaginationCount   = 'Showing records '+ tempInt +' - ' + i + ' of ' + size;
+                for(integer start = startNumber; start < i; start++){
+                    ListRequested.add(InnerList[start]);
+                }
+            } 
+            return ListRequested;
+        } 
+        
+        public list<WrapperClass> previous(){      
+            ListRequested = new list<WrapperClass>(); 
+            integer size  = InnerList.size(); 
+            if(i == size){
+                if(math.mod(size, setPageSize) > 0){    
+                    i = size - math.mod(size, setPageSize);
+                }else{
+                    i = (size - setPageSize);
+                } 
+            }
+            else{
+                i = (i - setPageSize);
+            }
+            Integer tempInt  = i-setPageSize+1;      
+            INteger tempINt2 = i;        
+            PaginationCount = 'Showing records '+ tempInt +' - ' + tempINt2  + ' of ' + size;
+            if (i>0)
+                for(integer start = (i - setPageSize); start < i; ++start){
+                    ListRequested.add(InnerList[start]);
+                }
+            return ListRequested;
+        }   
+    }
+    
+    public class WrapperClass 
+    {
+        public Boolean flag                      {get;set;}
+        public String strUserName                {get;set;}
+        public string strprimaryname             {get;set;}
+        public JJ_Zip_to_Terr__c zip             {get;set;}
+        public JJ_Territory_Institution__c zip2  {get;set;}
+        public WrapperClass(JJ_Zip_to_Terr__c wrapZip, JJ_Territory_Institution__c wrapZip2,Boolean flagSelected, String userName,string primaryname) 
+        {
+            zip            = wrapZip;
+            zip2           = wrapZip2;
+            flag           = flagSelected;
+            strUserName    = userName;
+            strprimaryname = primaryname;
+        }
+    }
+    public PageReference dosort()
+    {
+        
+        JJ_Zip_to_Terr__c ziptoterrs;
+        List<User> objUser;
+        String strQuery       = '';
+        String strUserName    = '';
+        String strOrgCode     = '';
+        String strprimass     = '';
+        String strprimaryname = '';
+        listWrapper                                     = new List<WrapperClass>();
+        List<JJ_Zip_to_Terr__c> lstZipToTerr            = new List<JJ_Zip_to_Terr__c>();
+        List<JJ_Territory_Institution__c> lstTerrtoInst = new List<JJ_Territory_Institution__c>();
+        sortDir = (sortDir == 'asc')?'desc':'asc'; 
+        objUser = objUsermetod(strTerritoryName);
+        if(objUser.size()>0){
+            strUserName = objUser[0].Name;
+            Trname      = objUser[0].Territory_JNJ__c;
+        }
+        else{
+            trname=strTerritoryName;
+        }
+        if(selectedObjType ==zipToterr) 
+        {
+            zipToTerrSort(strQuery,strOrgCode,lstZipToTerr,strprimaryname,strUserName);
+            
+        } else if(selectedObjType ==terrToInst) { 
+            terToinstitutionSort(strQuery,lstTerrtoInst,strprimaryname,strUserName);
+        }
+        obj = new CustomIterable (listWrapper); 
+        obj.setPageSize = 200;
+        next();
+        return null; 
+    }
+    
+    public List<User> objUsermetod(string strTerritoryName){
+        return [SELECT Id,Name,Territory_JNJ__c 
+                FROM User WHERE Territory_JNJ__c =: strTerritoryName OR Name=:strTerritoryName WITH SECURITY_ENFORCED];
+    }
+
+    public void zipToTerrSort(string strQuery,string strOrgCode,List<JJ_Zip_to_Terr__c> lstZipToTerr,String strprimaryname,String strUserName){
+        queryFields    = ' Zip_Code__c, City_JNJ__c, JJ_County__c,State_JNJ__c, Territory_Name__c,Primary_Assignment_JNJ__c,JJ_Coverage_Type__c,Org_Code__c,Effective_Date_JNJ__c,Suspension_Date_JNJ__c '; // Cidec17 update query with County APi Name
+        queryCount     = ' count() '; 
+        strQuery_stub  = 'SELECT  '+ queryCount + ' FROM JJ_Zip_to_Terr__c WHERE ';
+        strQuery       = ' Territory_Name__c = \'' +  Trname + '\'' + ' AND JJ_Coverage_Type__c = \'' +  selectedCoverage  + '\'';
+        
+        if (selectedCoverage == 'MSL' && !string.isEmpty(selectedSpeciality)) {
+            List<JJ_Org_to_Specialty__c> objOrgToSpeciality = [SELECT Id,Org_Code__c
+                                                               FROM JJ_Org_to_Specialty__c
+                                                               WHERE Specialty__c = :selectedSpeciality AND Active__c = :TRUE];
+            strOrgCode = objOrgToSpeciality[0].Org_Code__c;
+            strQuery   = strQuery+ 'AND Org_Code__c = \'' + strOrgCode + '\'' ;
+        }
+        strstate  = strstate.trim();                    
+        strcity   = strcity.trim();
+        strCounty = strCounty.trim(); 
+        
+        if(!String.ISBlank(strstate ))       
+            strQuery = strQuery  + ' AND State_JNJ__c= \'' +  strstate+ '\'';
+        if(!String.ISBlank(strCounty ))       
+            strQuery = strQuery  + ' AND JJ_County__c LIKE \'%' +  strCounty + '%\'';
+        if(!String.ISBlank(strcity ))       
+            strQuery = strQuery  + ' AND City_JNJ__c LIKE \'%' +  strcity + '%\'';
+        
+        Integer count_result = database.countQuery(strQuery_stub + strQuery);
+        strQuery_SortOrder   = ' ORDER BY ' + strSortBy + ' '+ sortDir;        
+        strQuery_stub        = 'SELECT  '+ queryFields + ' FROM JJ_Zip_to_Terr__c WHERE ';
+        
+        if(String.ISBlank(strstate) && count_result  > Querylimit )  
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,'Please narrow down search by entering the State Code (Eg: IL)'));               
+        else
+            lstZipToTerr = database.query(strQuery_stub + strQuery +strQuery_SortOrder );
+        
+        Map<String,String> MapPrimaryname = new Map<String, String>();      
+        for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true WITH SECURITY_ENFORCED]){      
+            MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name);       
+        }
+        for(JJ_Zip_to_Terr__c objZipToTerr: lstZipToTerr){
+            strprimaryname=MapPrimaryname.get(objZipToTerr.Primary_Assignment_JNJ__c);
+            listWrapper.add(new WrapperClass(objZipToTerr,null,false, strUserName,strprimaryname));
+        }
+        if(filter.size()>0){
+            strFilter   = strFilter.trim();
+            listWrapper = new List<WrapperClass>();
+            for(JJ_Zip_to_Terr__c objZipToTerr: lstZipToTerr)
+            {
+                strprimaryname   =  MapPrimaryname.get(objZipToTerr.Primary_Assignment_JNJ__c);
+                if(filter.size() == 2){
+                    if(objZipToTerr.City_JNJ__c!=null && objZipToTerr.City_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('City')|| filter[1].containsIgnoreCase('City'))){
+                        listWrapper.add(new WrapperClass(objZipToTerr,null, false, strUserName,strprimaryname));
+                    }
+                    if(objZipToTerr.State_JNJ__c!=null && objZipToTerr.State_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('State')||filter[1].containsIgnoreCase('State'))){
+                        listWrapper.add(new WrapperClass(objZipToTerr, null,false, strUserName,strprimaryname));
+                    }
+                }else{
+                    if(objZipToTerr.City_JNJ__c!=null && objZipToTerr.City_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('City'))){
+                        listWrapper.add(new WrapperClass(objZipToTerr,null, false, strUserName,strprimaryname));
+                    }
+                    if(objZipToTerr.State_JNJ__c!=null && objZipToTerr.State_JNJ__c.containsIgnoreCase(strFilter) && (filter[0].containsIgnoreCase('State'))){
+                        listWrapper.add(new WrapperClass(objZipToTerr,null,false, strUserName,strprimaryname));
+                    }
+                }
+            }
+            
+        }else {
+            ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.FATAL,'Please select the filter and then apply'));
+        }
+    }
+    
+    public void terToinstitutionSort(string strQuery,List<JJ_Territory_Institution__c> lstTerrtoInst,string strprimaryname,string strUserName){
+        queryFields = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c,JJ_Start_Date__c,JJ_End_Date__c '; 
+        queryCount = ' count() '; 
+        strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Territory_Institution__c WHERE ';
+        strQuery ='JJ_Coverage_Type__c = \'' +  selectedCoverage2  + '\'';
+        
+        if(!String.ISBlank(Trname )) 
+            strQuery = strQuery +  ' AND JJ_Territory_Name__c = \'' +  Trname + '\'';
+        if(!String.ISBlank(strInstitutionName ))       
+            strQuery = strQuery  + ' AND JJ_Account_Name__c LIKE \'%' +  strInstitutionName + '%\'';
+        
+        Integer count_result = database.countQuery(strQuery_stub + strQuery);
+        strQuery_SortOrder   = ' ORDER BY ' + strSortBy2 + ' '+ sortDir;       
+        strQuery_stub        = 'SELECT  '+ queryFields + ' FROM JJ_Territory_Institution__c WHERE ';
+        lstTerrtoInst        = database.query(strQuery_stub + strQuery +strQuery_SortOrder);
+        Map<String,String> MapPrimaryname = new Map<String, String>(); 
+        for(User objCS : [Select Id,Name,Territory_JNJ__c From User where IsActive=true WITH SECURITY_ENFORCED]){
+            MapPrimaryname.put(objCS.Territory_JNJ__c, objCS.Name); 
+        }
+        for(JJ_Territory_Institution__c objTerrtoIns: lstTerrtoInst)
+        {
+            strprimaryname=MapPrimaryname.get(objTerrtoIns.JJ_Primary_Territory_Assignment__c);
+            strUserName=MapPrimaryname.get(objTerrtoIns.JJ_Territory_Name__c);
+            listWrapper.add(new WrapperClass(null,objTerrtoIns, false, strUserName,strprimaryname));
+        }
+        
+    }
+    
+    public PageReference doUpdate(){
+        
+        User updUser;
+        String newSearchText = '';
+        String cvgName       = '';
+        String terid         ='';
+        if((mslStartDate !=null && mslStartDate<date.today()) ||(mslEndDate!=null && mslEndDate<date.today()) ||
+           (terStartDate !=null && terStartDate<date.today()) || (terEndDate!=null && terEndDate<date.today())){   
+               ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Date should not be past date'));
+           }else if((mslStartDate !=null  && mslEndDate !=null && (mslEndDate < mslStartDate)) ||
+                    (terStartDate !=null  && terEndDate !=null && (terEndDate < terStartDate)))     {   
+                        ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'End date should always greater than start date'));
+                    }else{
+                        if(selectedObjType ==zipToterr) {
+                            List<JJ_Zip_to_Terr__c> zipList         = new List<JJ_Zip_to_Terr__c>();
+                            List<JJ_Zip_to_Terr__c> updZipList      = new List<JJ_Zip_to_Terr__c>();
+                            Set<JJ_Zip_to_Terr__c> updZipSet        = new Set<JJ_Zip_to_Terr__c>();
+                            List<JJ_Zip_to_Terr__c> updFinalZipList = new List<JJ_Zip_to_Terr__c>();
+                            List<WrapperClass> updList              =new List<WrapperClass>();
+                            zipToterrUpdate(zipList,updZipList,updZipSet,updFinalZipList,updList,newSearchText,cvgName,terid);
+                        }
+                        else if(selectedObjType ==terrToInst) {
+                            List<JJ_Territory_Institution__c> terList         = new List<JJ_Territory_Institution__c>();
+                            List<JJ_Territory_Institution__c> updTerList      = new List<JJ_Territory_Institution__c>();
+                            Set<JJ_Territory_Institution__c> updTerSet        = new Set<JJ_Territory_Institution__c>();
+                            List<JJ_Territory_Institution__c> updFinalTerList = new List<JJ_Territory_Institution__c>();
+                            List<WrapperClass> updList=new List<WrapperClass>();
+                            terToInstUpdate(terList,updTerList,updTerSet,updFinalTerList,updList,newSearchText,cvgName,terid);
+                            
+                        }
+                        
+                    }
+        doSearch();
+        if(selectAll == true){
+            isSelectAll = !isSelectAll;
+        }
+        
+        mslEndDate               = null;
+        terEndDate               = null;
+        return null;
+    }
+    
+    public void zipToterrUpdate(List<JJ_Zip_to_Terr__c> zipList,List<JJ_Zip_to_Terr__c> updZipList,
+                                Set<JJ_Zip_to_Terr__c> updZipSet,List<JJ_Zip_to_Terr__c> updFinalZipList,
+                                List<WrapperClass> updList,string newSearchText,string cvgName,string terid)
+    {
+        
+        for(WrapperClass mexist: listWrapper){
+            if(mexist.flag == true){
+                updList.add(mexist);
+            }
+        }
+        if(strUpdTerritoryName != ''){
+            User[] u=[SELECT Territory_JNJ__c FROM User WHERE Name =:strUpdTerritoryName WITH SECURITY_ENFORCED];
+            if(u.size()>0){
+                newSearchText=u[0].Territory_JNJ__c;
+            }
+        }    
+        if(updList.size() > 0){    
+            for(WrapperClass wrap:updList){
+                zipList.add(wrap.zip);
+            }
+        } 
+        if(zipList.size() > 0){   
+            for(JJ_Zip_to_Terr__c zipUpd :zipList){
+                zipUpd.Effective_Date_JNJ__c  = mslStartDate;
+                zipUpd.Suspension_Date_JNJ__c = mslEndDate;
+                if(mslStartDate == date.today()){
+                    if(newSearchText=='' && strUpdTerritoryName!=''){
+                        zipUpd.Territory_Name__c=strUpdTerritoryName;
+                        cvgName=zipUpd.Territory_Name__c;
+                    }  
+                    else{
+                        zipUpd.Territory_Name__c=newSearchText;
+                        cvgName=zipUpd.Territory_Name__c;
+                    }
+                }else if(mslStartDate > date.today()){
+                    if(newSearchText=='' && strUpdTerritoryName!=''){
+                        zipUpd.JJ_Future_Coverage_Territory_Name__c =strUpdTerritoryName;
+                        cvgName=zipUpd.JJ_Future_Coverage_Territory_Name__c;
+                    }  
+                    else{
+                        zipUpd.JJ_Future_Coverage_Territory_Name__c =newSearchText;
+                        cvgName=zipUpd.JJ_Future_Coverage_Territory_Name__c;
+                    }
+                }
+                updZipList.add(zipUpd);
+            }
+        } 
+        
+        Territory2[] ter=[select id,Name from Territory2 where name=:cvgName WITH SECURITY_ENFORCED];
+        if(ter.size()>0){
+            terid=ter[0].id;
+        }
+        if(zipList.size() > 0 && terid!=''){   
+            for(JJ_Zip_to_Terr__c zipUpd :zipList){
+                if(mslStartDate == date.today()){
+                    zipUpd.Territory_SFDC_ID__c=terid;
+                }else if(mslStartDate > date.today()){
+                    zipUpd.JJ_Future_Coverage_Territory_ID__c = terid; 
+                }
+                updZipList.add(zipUpd);
+            }
+        }  
+        if(updZipList.size()>0){
+            updZipSet.addAll(updZipList);
+            updFinalZipList.addAll(updZipSet); 
+        }     
+        if(updFinalZipList.size()>0){
+            update updFinalZipList; 
+            if(mslStartDate == date.today()){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Coverage updated successfully'));
+            }else if(mslStartDate > date.today()){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Coverage will get update on start date'));
+            }
+        } 
+        
+    }
+    
+    public void terToInstUpdate(List<JJ_Territory_Institution__c> terList,List<JJ_Territory_Institution__c> updTerList,
+                                Set<JJ_Territory_Institution__c> updTerSet,List<JJ_Territory_Institution__c> updFinalTerList,
+                                List<WrapperClass> updList,string newSearchText,string cvgName,string terid)
+    {
+        
+        for(WrapperClass mexist: listWrapper){
+            if(mexist.flag==true){
+                updList.add(mexist);
+            }
+        }
+        if(strUpdTerritoryName!=''){
+            User[] u=[SELECT Territory_JNJ__c FROM User WHERE Name =:strUpdTerritoryName WITH SECURITY_ENFORCED];
+            if(u.size()>0){
+                newSearchText=u[0].Territory_JNJ__c;
+            }
+        }    
+        if(updList.size()>0){    
+            for(WrapperClass wrap:updList){
+                terList.add(wrap.zip2);
+            }
+        } 
+        if(terList.size()>0){   
+            for(JJ_Territory_Institution__c zipUpd :terList){
+                zipUpd.JJ_Start_Date__c     = terStartDate;
+                zipUpd.JJ_End_Date__c       = terEndDate;
+                if(terStartDate == date.today()){
+                    if(newSearchText=='' && strUpdTerritoryName!=''){
+                        zipUpd.JJ_Territory_Name__c = strUpdTerritoryName;
+                        cvgName                     = zipUpd.JJ_Territory_Name__c;
+                    }  
+                    else{
+                        zipUpd.JJ_Territory_Name__c = newSearchText;
+                        cvgName                     = zipUpd.JJ_Territory_Name__c;
+                    }
+                }else if(terStartDate > date.today()){
+                    if(newSearchText=='' && strUpdTerritoryName!=''){
+                        zipUpd.JJ_Future_Coverage_Territory_Name__c =strUpdTerritoryName;
+                        cvgName=zipUpd.JJ_Future_Coverage_Territory_Name__c;
+                    }  
+                    else{
+                        zipUpd.JJ_Future_Coverage_Territory_Name__c =newSearchText;
+                        cvgName=zipUpd.JJ_Future_Coverage_Territory_Name__c;
+                    }
+                }
+                updTerList.add(zipUpd);
+            }
+        } 
+        
+        Territory2[] ter=[select id,Name from Territory2 where name=:cvgName WITH SECURITY_ENFORCED];
+        if(ter.size()>0){
+            terid=ter[0].id; 
+        }
+        if(terList.size()>0 && terid!=''){   
+            for(JJ_Territory_Institution__c zipUpd :terList){
+                if(terStartDate == date.today()){
+                    zipUpd.JJ_Territory_SFDC_Id__c=terid;
+                }else if (terStartDate > date.today()){
+                    zipUpd.JJ_Future_Coverage_Territory_ID__c =terid;
+                }
+                updTerList.add(zipUpd);
+            }
+        }  
+        if(updTerList.size()>0){
+            updTerSet.addAll(updTerList);
+            updFinalTerList.addAll(updTerSet); 
+        }     
+        if(updFinalTerList.size()>0){
+            update updFinalTerList;
+            if(terStartDate == date.today()){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Coverage updated successfully'));
+            }else if(terStartDate > date.today()){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.CONFIRM,'Coverage will get update on start date'));
+            }
+        }
+    }                   
+    public static List<String> getPicklistValues(String ObjectApi_name,String Field_name){ 
+        
+        List<String> lstPickvals                      = new List<String>();
+        Schema.SObjectType targetType                 = Schema.getGlobalDescribe().get(ObjectApi_name);
+        Sobject Object_name                           = targetType.newSObject();
+        Schema.sObjectType sobject_type               = Object_name.getSObjectType(); 
+        Schema.DescribeSObjectResult sobject_describe = sobject_type.getDescribe();
+        Map<String, Schema.SObjectField> field_map    = sobject_describe.fields.getMap(); //get a map of fields for the passed sobject
+        List<Schema.PicklistEntry> pick_list_values   = field_map.get(Field_name).getDescribe().getPickListValues(); 
+        for (Schema.PicklistEntry a : pick_list_values) { 
+            lstPickvals.add(a.getValue());
+        }
+        return lstPickvals;
+    }
+    
+    public List<SelectOption> getobjType() {
+        List<SelectOption> options = new List<SelectOption>();
+        options.add(new SelectOption('Zip to Territory','Zip to Territory'));
+        options.add(new SelectOption('Territory to Institution','Territory to Institution'));
+        return options;
+    }
+    
+}
