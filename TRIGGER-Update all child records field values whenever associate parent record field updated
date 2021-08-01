@@ -1,4 +1,27 @@
-EX1:
+EX 1:trigger accDesupdate on Account (after insert, after update) {
+
+    if(trigger.isupdate || trigger.isafter) {
+        system.debug('inside after trigger chaitu');
+        set<id> accupdateId = new set<id>();
+        for(account acc : trigger.new){
+            if(trigger.oldmap.get(acc.id).description != trigger.newmap.get(acc.id).description){
+                accupdateId.add(acc.Id);
+                system.debug('account id is'+accupdateId);
+            }
+    }
+        list<contact> conupdate = new list<contact>();
+        for(contact con : [SELECT id,Account.description from contact where AccountId IN :accupdateId]) {
+            system.debug('acc desc is '+con.Account.Description);
+            con.Description = con.Account.Description;
+            system.debug('con desc is '+con.Description);
+            conupdate.add(con);
+        }
+        update conupdate;
+        system.debug('after con update is '+conupdate);
+   }
+}
+
+EX 2: but not as effective as EX 1
 trigger Account_Trigger on Account (after insert,after update) {
    public static boolean recursive = false;
     if(!recursive){
@@ -23,7 +46,7 @@ trigger Account_Trigger on Account (after insert,after update) {
 
 
 
-EX2: but not effective as EX1
+EX : but not effective as EX2
 public static void method2(list<account> acclist){
        
          list<contact> conList = [SELECT Id, AccountId
