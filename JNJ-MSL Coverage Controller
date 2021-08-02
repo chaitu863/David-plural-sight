@@ -92,7 +92,7 @@ public class JJMSLCoverageController
         
         for(JJ_Org_to_Specialty__c objSpeacilty : [SELECT id,Org_Code__c,Specialty__c 
                                                    FROM JJ_Org_to_Specialty__c 
-                                                   WHERE Active__c = true WITH SECURITY_ENFORCED limit 200 ]){
+                                                   WHERE Active__c = true  limit 200 ]){
                                                        lstSpeciality.add (new SelectOption(objSpeacilty.Specialty__c, objSpeacilty.Specialty__c));
                                                    }
         for(String str : getPicklistValues('JJ_Zip_to_Terr__c','JJ_Coverage_Type__c')){
@@ -224,7 +224,7 @@ public class JJMSLCoverageController
     
     public void terrToInstitutionsearch(String strQuery,String strUserName,String strOrgCode,String strprimass,String strprimaryname, List<JJ_Territory_Institution__c> lstTerrtoInst){
         
-        queryFields   = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c,JJ_Start_Date__c,JJ_End_Date__c '; 
+        queryFields   = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c,JJ_Start_Date__c,JJ_End_Date__c,JJ_Future_Coverage__c '; 
         queryCount    = ' count() '; 
         strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Territory_Institution__c WHERE ';
         strQuery      ='JJ_Coverage_Type__c = \'' +  selectedCoverage2  + '\'';
@@ -285,7 +285,7 @@ public class JJMSLCoverageController
     public void zipToterrSearch(String strQuery,String strUserName,String strOrgCode,String strprimass,String strprimaryname, List<JJ_Zip_to_Terr__c> lstZipToTerr){
         
         
-        queryFields   = ' Zip_Code__c, JJ_County__c, City_JNJ__c, State_JNJ__c,Territory_Name__c,Primary_Assignment_JNJ__c,Org_Code__c,JJ_Coverage_Type__c,Effective_Date_JNJ__c,Suspension_Date_JNJ__c '; // Cidec17 county Field Name
+        queryFields   = ' Zip_Code__c, JJ_County__c, City_JNJ__c, State_JNJ__c,Territory_Name__c,Primary_Assignment_JNJ__c,Org_Code__c,JJ_Coverage_Type__c,Effective_Date_JNJ__c,Suspension_Date_JNJ__c,JJ_Future_Coverage_Territory_Name__c,JJ_Future_Coverage__c '; // Cidec17 county Field Name
         queryCount    = ' count() '; 
         strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Zip_to_Terr__c WHERE ';
         
@@ -293,7 +293,7 @@ public class JJMSLCoverageController
             List<JJ_Org_to_Specialty__c> objOrgToSpeciality = [SELECT Id,Org_Code__c
                                                                FROM JJ_Org_to_Specialty__c
                                                                WHERE Specialty__c = :selectedSpeciality 
-                                                               AND Active__c = :TRUE WITH SECURITY_ENFORCED];
+                                                               AND Active__c = :TRUE];
             strOrgCode = objOrgToSpeciality[0].Org_Code__c;
             strQuery   = ' Org_Code__c = \'' + strOrgCode + '\'' + ' AND ';
         }
@@ -515,7 +515,7 @@ public class JJMSLCoverageController
     }
 
     public void zipToTerrSort(string strQuery,string strOrgCode,List<JJ_Zip_to_Terr__c> lstZipToTerr,String strprimaryname,String strUserName){
-        queryFields    = ' Zip_Code__c, City_JNJ__c, JJ_County__c,State_JNJ__c, Territory_Name__c,Primary_Assignment_JNJ__c,JJ_Coverage_Type__c,Org_Code__c,Effective_Date_JNJ__c,Suspension_Date_JNJ__c '; // Cidec17 update query with County APi Name
+        queryFields    = ' Zip_Code__c, City_JNJ__c, JJ_County__c,State_JNJ__c, Territory_Name__c,Primary_Assignment_JNJ__c,JJ_Coverage_Type__c,Org_Code__c,Effective_Date_JNJ__c,Suspension_Date_JNJ__c,JJ_Future_Coverage_Territory_Name__c,JJ_Future_Coverage__c '; // Cidec17 update query with County APi Name
         queryCount     = ' count() '; 
         strQuery_stub  = 'SELECT  '+ queryCount + ' FROM JJ_Zip_to_Terr__c WHERE ';
         strQuery       = ' Territory_Name__c = \'' +  Trname + '\'' + ' AND JJ_Coverage_Type__c = \'' +  selectedCoverage  + '\'';
@@ -584,7 +584,7 @@ public class JJMSLCoverageController
     }
     
     public void terToinstitutionSort(string strQuery,List<JJ_Territory_Institution__c> lstTerrtoInst,string strprimaryname,string strUserName){
-        queryFields = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c,JJ_Start_Date__c,JJ_End_Date__c '; 
+        queryFields = ' JJ_Account__c,JJ_Account_Name__c,JJ_Coverage_Type__c,JJ_Primary_Territory_Assignment__c,JJ_Primary_Assignment_SFDC_Id__c,JJ_Territory_Name__c,JJ_Territory_SFDC_Id__c,JJ_Start_Date__c,JJ_End_Date__c,JJ_Future_Coverage__c '; 
         queryCount = ' count() '; 
         strQuery_stub = 'SELECT  '+ queryCount + ' FROM JJ_Territory_Institution__c WHERE ';
         strQuery ='JJ_Coverage_Type__c = \'' +  selectedCoverage2  + '\'';
@@ -616,7 +616,7 @@ public class JJMSLCoverageController
         User updUser;
         String newSearchText = '';
         String cvgName       = '';
-        String terid         ='';
+        String terid         = '';
         if((mslStartDate !=null && mslStartDate<date.today()) ||(mslEndDate!=null && mslEndDate<date.today()) ||
            (terStartDate !=null && terStartDate<date.today()) || (terEndDate!=null && terEndDate<date.today())){   
                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.FATAL,'Date should not be past date'));
@@ -657,7 +657,8 @@ public class JJMSLCoverageController
                                 Set<JJ_Zip_to_Terr__c> updZipSet,List<JJ_Zip_to_Terr__c> updFinalZipList,
                                 List<WrapperClass> updList,string newSearchText,string cvgName,string terid)
     {
-        
+        String terName         = '';
+        String futureCoverage  = '';
         for(WrapperClass mexist: listWrapper){
             if(mexist.flag == true){
                 updList.add(mexist);
@@ -703,7 +704,12 @@ public class JJMSLCoverageController
         
         Territory2[] ter=[select id,Name from Territory2 where name=:cvgName WITH SECURITY_ENFORCED];
         if(ter.size()>0){
-            terid=ter[0].id;
+            terid   = ter[0].id;
+            terName = ter[0]?.Name;
+        }
+        if(ter.size()>0){
+            user futureUser = [Select Id,Name,Territory_JNJ__c From User where IsActive  = True AND  Territory_JNJ__c =:terName Limit 1];
+            futureCoverage  = futureUser?.Name;
         }
         if(zipList.size() > 0 && terid!=''){   
             for(JJ_Zip_to_Terr__c zipUpd :zipList){
@@ -711,6 +717,7 @@ public class JJMSLCoverageController
                     zipUpd.Territory_SFDC_ID__c=terid;
                 }else if(mslStartDate > date.today()){
                     zipUpd.JJ_Future_Coverage_Territory_ID__c = terid; 
+                    zipUpd.JJ_Future_Coverage__c              = futureCoverage;
                 }
                 updZipList.add(zipUpd);
             }
@@ -734,7 +741,8 @@ public class JJMSLCoverageController
                                 Set<JJ_Territory_Institution__c> updTerSet,List<JJ_Territory_Institution__c> updFinalTerList,
                                 List<WrapperClass> updList,string newSearchText,string cvgName,string terid)
     {
-        
+         String terName         = '';
+         String futureCoverage  = '';
         for(WrapperClass mexist: listWrapper){
             if(mexist.flag==true){
                 updList.add(mexist);
@@ -780,7 +788,12 @@ public class JJMSLCoverageController
         
         Territory2[] ter=[select id,Name from Territory2 where name=:cvgName WITH SECURITY_ENFORCED];
         if(ter.size()>0){
-            terid=ter[0].id; 
+            terid=ter[0].id;
+            terName = ter[0]?.Name;
+        }
+        if(ter.size()>0){
+            user futureUser = [Select Id,Name,Territory_JNJ__c From User where IsActive  = True AND Territory_JNJ__c =:terName Limit 1];
+            futureCoverage  = futureUser?.Name;
         }
         if(terList.size()>0 && terid!=''){   
             for(JJ_Territory_Institution__c zipUpd :terList){
@@ -788,6 +801,7 @@ public class JJMSLCoverageController
                     zipUpd.JJ_Territory_SFDC_Id__c=terid;
                 }else if (terStartDate > date.today()){
                     zipUpd.JJ_Future_Coverage_Territory_ID__c =terid;
+                    zipUpd.JJ_Future_Coverage__c              = futureCoverage;
                 }
                 updTerList.add(zipUpd);
             }
