@@ -1,3 +1,26 @@
+EX1: trigger leadTofindContacts on Lead (before update) {
+
+    set<string> emailset = new set<string>();
+    for(lead sObjectLead : trigger.new ) {
+        emailset.add(sObjectLead.Email);
+    }
+    system.debug('email set is '+emailset);
+    map<string,contact> mapcontat = new map<string,contact>();
+    for(contact sObjectcon : [SELECT id,Email from contact where Email in :emailset]) {
+        mapcontat.put(sObjectcon.Email, sObjectcon);
+    }
+    system.debug('map of contact is '+mapcontat);
+    string predesc = 'this is contact id'+'.\n';
+    for(lead sobjlead : trigger.new) {
+        if(!mapcontat.isEmpty()){
+            sobjlead.Description = predesc + mapcontat.get(sobjlead.Email).Id;
+            system.debug('lead description after update is '+sobjlead.Description);
+        }
+    }
+}
+
+EX 2: not better than EX1
+
 trigger Lead_Trigger on Lead (before insert, before update) {
     
     list<contact> contactList = new list<contact> ();
