@@ -38,6 +38,10 @@ insert acc2;
 list<account>mulacc = new list<account>{new account(name='demo3',AccountNumber='x003'),new account(name='demo4',AccountNumber='x004')};
 insert mulacc;
 
+//if you want to add list of variable to another list then we pass variable inside ()
+list<account> newlist= new list<account>(mulacc);
+system.debug('new list is '+newlist)
+
 // creating a sObject single record to a list variable by using add method
 list<JJ_Zip_to_Terr__c> ziptoter = new list<JJ_Zip_to_Terr__c>();
 ziptoter.add(new JJ_Zip_to_Terr__c(Zip_Code__c='54535',Territory_Name__c='115-32-6200205'));
