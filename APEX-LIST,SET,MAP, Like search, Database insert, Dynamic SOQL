@@ -219,11 +219,8 @@ system.debug('accMap is '+accMap);
 list<account> idLsttoSort = new list<account>(accMap.values());
 system.debug('idLsttoSort is '+idLsttoSort);
 
-set<id> setofIds = new set<id>();
-for(ID acc : accMap.keyset()){
-    setofIds.add(acc);
-}
-system.debug('set of ids are '+setofIds);
+set<id> setofIds = new set<id>(accMap.keyset());
+
 
 EX 1)// using current user login id
 user userdetails = [select id,name from user where id = :userinfo.getUserId()];
