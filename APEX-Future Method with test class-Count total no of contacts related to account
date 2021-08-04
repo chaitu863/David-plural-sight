@@ -1,3 +1,71 @@
+
+
+EX1 :
+
+Execute Anonymous window
+list<id> Accountids = AccountProcessor.returnacc();
+AccountProcessor.countContacts(Accountids);
+
+Apex class:
+
+public without sharing class AccountProcessor {
+
+    public static list<id> returnacc(){
+        list<id> setids = new list<id>();
+        for(account acc : [select id from account]){
+            setids.add(acc.Id);    
+        }
+        return setids;
+    }
+    
+    @future
+    Public static void countContacts(List<Id> Accountids) {
+        
+        List<Account> updateacc = new List<Account>();
+        for (Account acc : [SELECT Id, Number_Of_Contacts__c, 
+                            (SELECT Id from contacts) 
+                            from Account Where ID IN :Accountids]) {
+            acc.Number_Of_Contacts__c = acc.Contacts.size();
+            updateacc.add(acc);
+        }
+        update updateacc;
+    }
+}
+
+Test class :
+
+@isTest
+public class AccountProcessorTest {
+    
+    public static testMethod void testmethodone(){
+        
+        list<account>accounts = new list<account>();
+        for (integer i = 0; i<300; i++) {
+            accounts.add(new account(name = 'test account name'+i));
+        }
+        insert accounts;
+
+        list<id> accids = new list<id>();
+        list<contact> conlist = new list<contact>();
+        for(account sObjectacc : accounts){
+            conlist.add(new contact(accountid = sObjectacc.id,lastname=sObjectacc.Name,firstname = 'test fist'));
+            accids.add(sObjectacc.id);
+        }
+        insert conlist;
+        
+        test.startTest();
+        AccountProcessor.countContacts(accids);
+        test.stopTest();
+        
+        // Check result
+        list<account> acclist = [select id,Number_Of_Contacts__c from account];
+        for(account acc : acclist){
+            system.assertEquals(1, acc.Number_Of_Contacts__c,'ERROR: atleast 1 cotnact not presented');
+        }
+    }
+}
+
+EX2 :
 public class AccountProcessor {
     
     map<id,account>accmap = new map<id,account>([SELECT ID from account]);
