@@ -54,6 +54,7 @@ public class AccountProcessorTest {
         insert conlist;
         
         test.startTest();
+        AccountProcessor.returnacc();
         AccountProcessor.countContacts(accids);
         test.stopTest();
         
