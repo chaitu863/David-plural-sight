@@ -1,52 +1,55 @@
-public class LeadProcessor implements
-    Database.Batchable<sObject>, Database.Stateful {
+Excute Ananomoymus window:
+LeadProcessor lp = new LeadProcessor();
+database.executeBatch(lp);
 
-        public Integer recordsProcessed = 0;
-    public Database.QueryLocator start(Database.BatchableContext bc) {
-        return Database.getQueryLocator(
-            'SELECT ID,Name,Company,NumberofLocations__c, '+
-            'LeadSource FROM Lead'          
-        );
-     }
-        
-        public void execute(Database.BatchableContext bc, List<Lead> scope){
-            list<lead>leadtoUpdate= new list<lead>();
-            system.debug('size of scope '+scope.size());
-            for(lead lsobj : scope){
-                lsobj.NumberofLocations__c=120;
-                leadtoUpdate.add(lsobj);
-            }
-            update leadtoUpdate;
+Batch class: 
+
+public class LeadProcessor implements Database.Batchable<sObject>, Database.stateful {
+
+    public integer recordcount = 0;
+    public database.QueryLocator start(database.BatchableContext bc) {
+        return Database.getQueryLocator([select id,name from lead]);
+    }
+    
+    public void execute(database.BatchableContext bc, list<lead> leadlist){
+        for(lead sobjectlead : leadlist) {
+            sobjectlead.LeadSource = 'Other';
         }
-        
-        public void finish(Database.BatchableContext bc){
-        }
+        update leadlist;
+        recordcount +=  leadlist.size();       
+    }
+    
+    public void finish(database.BatchableContext bc){
+        system.debug('Done chaitu');
+        system.debug('total records count is '+recordcount);
+    }
+    
 }
 
+Test class:
 
 @isTest
 public class LeadProcessorTest {
-
-    @testSetup static void methodName() {
-
-        list<lead> leadtestlst = new list<lead>();
-        for(integer i=0;i<200;i++){
-            leadtestlst.add(new lead(lastname='motupalli'+i,company='company'+i,Status='Open - Not Contacted',
-                                     NumberofLocations__c=130));
+    
+    public static testmethod void metohdone(){
+        list<lead> leadlist = new list<lead>();
+        for(integer i = 0;i<200;i++){
+            leadlist.add(new lead(lastname='lastlead'+i,Company='com'+i,leadsource='Web'));
         }
-        insert leadtestlst;
-    }
-    static testmethod void testleadmethod() {
-        list<lead>selectedlst = [select id,lastname,company,status,NumberofLocations__c from lead limit 10];
-        list<lead>updatedleadlst = new list<lead>();
-        for(lead l:selectedlst){
-            l.NumberofLocations__c =130;
-            updatedleadlst.add(l);
-        }
-        update updatedleadlst;
+        insert leadlist;
+        system.debug('leadlist in test is '+leadlist);
         test.startTest();
         LeadProcessor lp = new LeadProcessor();
-        id batchjob = database.executeBatch(lp);
+        database.executeBatch(lp,200);
         test.stopTest();
+        
+        //check assertions
+        list<lead>countleads = new list<lead>();
+        for(lead slead: [select id,leadsource from lead]){
+            system.assertEquals('Other', slead.leadsource,'ERROR:error came');
+            countleads.add(slead);
+        }
+        system.assertEquals(200, countleads.size(),'Count error');
     }
+
 }
