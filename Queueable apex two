@@ -1,0 +1,54 @@
+Execute Anaonymous window
+
+
+ contact con = new contact(lastname = 'contact test',firstname='test first name');
+  Id jobid = system.enqueueJob(new AddPrimaryContact(con,'IL'));
+
+Queueable apex :
+public class AddPrimaryContact implements Queueable {
+
+    private contact contactre;
+    private string statein;
+    public AddPrimaryContact(contact newcon, String state) {
+        this.contactre = newcon;
+        this.statein = state;
+    }
+    
+    public void execute(QueueableContext context){
+       
+        list<contact> conlist = new list<contact>();
+        for (account acc : [SELECT Id from account where Billingstate = :statein LIMIT 200]) {
+            
+            contact contactclone = contactre.clone();
+            contactclone.accountid = acc.id;
+            conlist.add(contactclone);
+        }
+        insert conlist;
+    }
+}
+
+TEST class:
+
+@isTest
+public class AddPrimaryContactTest {
+
+    public static testmethod void methodone(){
+        
+        list<account> acclist = new list<account>();
+        for(integer i =0; i < 550 ; i++ ){
+           Account acc = new account(name='test account'+i);
+            if(i<250){
+                acc.BillingState = 'NY';
+            }else {
+                 acc.BillingState = 'CA';
+            }
+            acclist.add(acc); 
+          }
+        insert acclist;
+        contact con = new contact(lastname = 'contact test',firstname='test first name');
+        insert con;
+        test.startTest();
+        Id jobid = system.enqueueJob(new AddPrimaryContact(con,'NY'));
+        test.stopTest();
+    } 
+}
