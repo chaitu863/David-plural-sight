@@ -42,6 +42,17 @@ insert mulacc;
 list<account> newlist= new list<account>(mulacc);
 system.debug('new list is '+newlist)
 
+//if you want to add list of variable to another list by AddAll method first approach
+list<account> newlisttwo = new list<account>();
+newlisttwo.addAll(mulacc);
+system.debug('new list two '+newlisttwo);
+
+
+//if you want to add list of sObjects directly to another list by AddAll method first approach
+list<account> newlisthree = new list<account>();
+newlisthree.addAll(new list<account>{new account(name='demo1',AccountNumber='x003'),new account(name='demo2',AccountNumber='x004')});
+system.debug('new list three '+newlisthree);
+
 // creating a sObject single record to a list variable by using add method
 list<JJ_Zip_to_Terr__c> ziptoter = new list<JJ_Zip_to_Terr__c>();
 ziptoter.add(new JJ_Zip_to_Terr__c(Zip_Code__c='54535',Territory_Name__c='115-32-6200205'));
