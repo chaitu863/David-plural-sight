@@ -1,6 +1,6 @@
 Excute Ananomoymus window:
 LeadProcessor lp = new LeadProcessor();
-database.executeBatch(lp);
+database.executeBatch(lp); OR database.executeBatch(new LeadProcessor());
 
 Batch class: 
 
