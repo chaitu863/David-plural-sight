@@ -1,0 +1,67 @@
+/*
+* Author        : Cognizant
+* Created Date  : 04/13/2021
+* Description   : This class is a Schedulable class for the JJ_User_PreferenceBatch.
+* Modified By     ||  Date Modified   || Description
+************************************************************************************************************************
+* 1. Steven Zhao  || 04/13/21         || AEBQ-23665, add to allow the JJ_User_PreferenceBatch to run every hour.
+*/
+
+global class JJ_User_PreferenceSchedulable implements Schedulable
+{
+    global void execute(SchedulableContext SC)
+    {
+        JJ_User_PreferenceBatch prefBatch = new JJ_User_PreferenceBatch();
+        database.executeBatch(prefBatch);
+    }
+    
+}
+
+
+/*
+* Author        : Cognizant
+* Created Date  : 04/14/2021
+* Description   : This class is used to run JJ_User_PreferenceSchedulable for every hour.
+* Modified By     ||  Date Modified   || Description
+************************************************************************************************************************
+* 1. Steven Zhao  || 04/13/21         || AEBQ-23665, added to run JJ_User_PreferenceSchedulable
+*/
+public class JJ_User_Preference_CRONScheduler{
+    public static void schUserPref(){        
+        String cronName = 'JJ_User_PreferenceSchedulable_STARTED ON_' + System.Today();
+        String cronSch = '0 0 * * * ?'; //this cron expression is for every hour
+        JJ_User_PreferenceSchedulable userPref = new JJ_User_PreferenceSchedulable();
+        ID cronid = System.schedule(cronName, cronSch, userPref);
+        System.debug('CRON ID = ' + cronid);
+    }
+}
+
+
+/*
+* @author - B N Shiva Shankar, 25/10/2017
+* @description - Scheduler class for Batch API JJ_BatchMIR_AE_PQC_Reminder
+*/
+global class JJ_scheduleToMIRAEPQCReminder implements Schedulable{ 
+       
+   global void execute(SchedulableContext sc) {
+   
+       JJ_BatchMIR_AE_PQC_Reminder b = new JJ_BatchMIR_AE_PQC_Reminder(); 
+       Integer batchSize = 10;
+       Database.executeBatch(b,batchSize );//default batch size
+       //schedule next execution after a minute
+        DateTime currentDateTime=System.now().addMinutes(60);                            
+        String nextScheduleTime=String.valueof(currentDateTime.second()) +' '+String.valueof(currentDateTime.minute())+' '
+                                +String.valueof(currentDateTime.hour())+' '+String.valueof(currentDateTime.day())+' '
+                                +String.valueof(currentDateTime.month())+' ? '+String.valueof(currentDateTime.Year());
+        
+        JJ_scheduleToMIRAEPQCReminder sctObj = new JJ_scheduleToMIRAEPQCReminder();
+        
+        system.schedule('MIRAEPQCReminder Execution Scheduled at '+System.now().format(), nextScheduleTime, sctObj );
+        for( CronTrigger cronTriggerItem:[Select Id From CronTrigger where  
+                                    NextFireTime= null  AND State='DELETED' Limit 100])
+        {
+                System.abortJob(cronTriggerItem.id);
+        }    
+       
+   }
+}
