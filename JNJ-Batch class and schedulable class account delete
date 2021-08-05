@@ -1,0 +1,63 @@
+/**
+* JJ_BATCH_CHILD_ACCOUNT_DELETE.cls
+* Author - Murugesh Naidu, Veeva Systems Inc
+* Created - March 7th, 2014
+* Description - Simply collects Child_Account_vod__c where Status = Rejected and deletes them. Schedulable class 
+* JJ_scheduleChildAccountDeletes invokes this on a Schedule
+*/
+global class  JJ_BATCH_CHILD_ACCOUNT_DELETE implements Database.Batchable<sObject>{
+   private final String initialState;
+    String query;
+     
+  /**
+    * @methodDescription - This is the base query that dirves the chunking. We are grabbing 
+    * all the plans are currently active and have a start or end date that is currently in need of calculation.
+  */ 
+   global Database.QueryLocator start(Database.BatchableContext BC) {
+        // This is the base query that dirves the chunking.
+        // We are grabbing all the plans are currently active and
+        // have a start or end date that is currently in need of calculation.
+        
+         query = 'SELECT Id, Status_JNJ__c FROM Child_Account_vod__c' 
+         			+ ' where Status_JNJ__c = \'Rejected\'' ;
+        
+        return Database.getQueryLocator(query);
+    }
+    
+  /**
+    * @methodDescription - Process the records and calculate counts
+  */ 
+    global void execute(Database.BatchableContext BC, List<sObject> batch) {
+    	if(batch == null || batch.size() == 0){
+    		System.debug('Zero records to process');
+    	}
+    	List<Child_Account_vod__c> children = (List<Child_Account_vod__c>) batch;
+    	
+    	delete children;
+    }
+
+
+  /**
+    * @methodDescription - Perform error reporting 
+  */    
+     global void finish(Database.BatchableContext BC) {
+     
+     }
+}
+
+
+/**
+* JJ_scheduleChildAccountDeletes.cls
+* Author - Murugesh Naidu, Veeva Systems Inc
+* Created - March 7th, 2014
+* Description - Schedules JJ_BATCH_CHILD_ACCOUNT_DELETE
+*/
+global class JJ_scheduleChildAccountDeletes implements Schedulable{
+	
+	global void execute(SchedulableContext sc) {
+      JJ_BATCH_CHILD_ACCOUNT_DELETE c = new JJ_BATCH_CHILD_ACCOUNT_DELETE (); 
+      database.executebatch(c,100);
+		
+	}
+
+}
