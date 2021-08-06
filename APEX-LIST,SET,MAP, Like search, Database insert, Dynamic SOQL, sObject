@@ -82,7 +82,27 @@ list<account> acclisthreee = new list<account>{new account(name='chaitanya 22',p
 system.debug('thirdlist list'+acclisthreee); 
 
 
+Copy vs Clone:
 
+
+Account accCon = new account(name='chaitutwo');
+system.debug('acccon is'+accCon); // acccon isAccount:{Name=chaitutwo}
+
+//Copy single record from one to another variable
+Account acc2 = accCon;
+system.debug('acc2 is '+acc2); //acc2 is Account:{Name=chaitutwo}
+acc2.Phone = '816-908-6506';
+system.debug('acc2 after phone added'+acc2); //acc2 after phone addedAccount:{Name=chaitutwo, Phone=816-908-6506}
+system.debug('accCon after phone added '+accCon); //accCon after phone added Account:{Name=chaitutwo, Phone=816-908-6506}
+
+Account accClone = acc2.Clone();
+system.debug('accClone is '+accClone); // accClone is Account:{Name=chaitutwo, Phone=816-908-6506}
+accClone.Site = 'Hyderabad';
+system.debug('accClone site added'+accClone); //|accClone site addedAccount:{Name=chaitutwo, Phone=816-908-6506, Site=Hyderabad}
+system.debug('acc2 after site added'+acc2); // acc2 after site addedAccount:{Name=chaitutwo, Phone=816-908-6506}
+
+That means if you dont use clone, the original record also get change. but if you want to keep original record as it is without effecting it then user Clone.
+So clone is recommeded always.
 
 
 
