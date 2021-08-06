@@ -1,7 +1,11 @@
 Eexcute ananomus window:
 
-string a1 = 'chaitanya';
-string a2 = 'Poornima';
+string a1 = 'Maha';
+string a2 = 'Meghana';
+system.debug('a1 is'+a1+'a2 is'+a2);
+
+Account acc = new account();
+system.debug('acc is'+acc); // empty
 
 
 account acc = new account();
