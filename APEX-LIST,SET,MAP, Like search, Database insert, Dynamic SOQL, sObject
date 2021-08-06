@@ -20,6 +20,9 @@ account acc2 = new account(name='chaitanya 2',phone='435464567'); // its sObject
 system.debug('acc 2 is'+acc2);
 
 
+list<account> acclist = new list<account>();
+system.debug('acc list empty is'+acclist); // Empty ()
+
 list<string> stringlist = new list<string>();
 stringlist.add(a1); // Add method allowed only one parameter
 stringlist.add(a2);
