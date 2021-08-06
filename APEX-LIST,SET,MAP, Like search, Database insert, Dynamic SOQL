@@ -1,3 +1,84 @@
+Eexcute ananomus window:
+
+string a1 = 'chaitanya';
+string a2 = 'Poornima';
+
+
+account acc = new account();
+acc.Name = 'chaitanya acc';
+acc.Phone='816-908-6593';
+system.debug('acc is '+acc);
+
+account acc2 = new account(name='chaitanya 2',phone='435464567'); // its sObject constuctor so it is a collection of different data types 
+                                                                  // its same as string a1 = 'chaitanta' here insted of chaitanya we have 
+                                                                  // new account(name='chaitanya 2',phone='435464567')
+
+system.debug('acc 2 is'+acc2);
+
+
+list<string> stringlist = new list<string>();
+stringlist.add(a1); // Add method allowed only one parameter
+stringlist.add(a2);
+stringlist.add('third value');
+system.debug('total string values are'+stringlist); // (chaitanya, Poornima, third value)
+
+list<string> stringlistwo = new list<string>(stringlist); //constructor allow list type variable only and only single parameter
+system.debug('second list'+stringlistwo);          // (chaitanya, Poornima, third value)
+
+
+/*list<string> stringchaitu = new list<string>(a1); // Passing string variable
+system.debug('string test '+stringchaitu); // Error : Because a1 is not a list variable, we should pass only list variable into constructor
+                                           // that too constructor allow single parameter
+
+list<string> stringlistwo = new list<string>(stringchaitu,stringlist); //we should not pass two list varibales in constructor
+system.debug('second list'+stringlistwo);          // Error */
+
+
+list<string> stringlisthree = new list<string>{};
+system.debug('third list'+stringlisthree);  // Empty
+
+list<string> stringtest = new list<string>{a1}; // if you want to pass primitive values use {} and should not list type
+system.debug('string test '+stringtest);
+
+/*list<string> stringwithlist = new list<string>{stringtest}; // {} dont allow collection types, it only allow primitive types
+system.debug('string test '+stringwithlist); // Error*/
+
+list<string> stringtest = new list<string>{a1,a2}; // if you want to pass multiple values those should not be list type, rather primitive  
+system.debug('string test '+stringtest);
+
+list<string> stringlistfour = new list<string>{'red','orange','yellow'}; //not only variables but also values can be pass directly into {} braces
+system.debug('fourth list'+stringlistfour);  // (red, orange, yellow)
+
+
+list<account> acclist = new list<account>();
+account acc3 = new account(name='chaitanya 2',phone='435464567'); 
+account acc4 = new account(name='chaitanya 3',phone='567888888'); 
+account acc5 = new account(name='chaitanya 5',phone='567888888'); 
+acclist.add(acc3); // add method allow only one variable parameter
+acclist.add(new account(name='chaitanya 3',phone='567888888'));
+system.debug('total accouts'+acclist);
+
+list<account> acclisttwo = new list<account>(acclist); ////constructor allow list type variable only and only single parameter
+system.debug('second list'+acclisttwo);
+
+/*list<account> acclisttwo = new list<account>(new account(name='chaitanya 22',phone='435464567')); 
+                             // we should pass only list variable not sObject record into constructor 
+system.debug('second list'+acclisttwo); // Error*/
+
+
+list<account> acclisttwo = new list<account>{new account(name='chaitanya 22',phone='435464567')}; 
+system.debug('second list'+acclisttwo); 
+
+
+list<account> acclisthreee = new list<account>{new account(name='chaitanya 22',phone='435464567'),
+                                               new account(name='chaitanya 34',phone='435464567')}; 
+system.debug('thirdlist list'+acclisthreee); 
+
+
+
+
+
+
 Salesforce Object Query Language (SOQL): SOQL in salesforce (YOUTUBE)
 
 
