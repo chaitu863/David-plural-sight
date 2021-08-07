@@ -1,0 +1,9 @@
+Youtube Video : https://www.youtube.com/watch?v=XwJ9ZYnbAVc&list=PL3y3JMXmJvonE6GULU7Fb3WksnJ9lekHp
+
+For picklist you can write in two ways but 1 st approach is better one
+1)Select Id, Name, Description, Company, Status FROM Lead WHERE Status IN ('Working - Contacted', 'Closed - Not Converted') ORDER BY Status
+2)Select Id, Name, Description, Company, Status FROM Lead WHERE Status = 'Working - Contacted' OR Status = 'Closed - Not Converted' ORDER BY Status
+
+When you have name with single quotes at the time of writing SOQL where clause you should use \ otherwise you wont get result.
+In the below exmple company name has like Rana's so write query like below
+1)Select Id, Name, Description, Company, Status FROM Lead WHERE Company = 'Rana\'s'
