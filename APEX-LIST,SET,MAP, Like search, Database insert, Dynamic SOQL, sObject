@@ -24,7 +24,8 @@ list<account> acclist = new list<account>();
 system.debug('acc list empty is'+acclist); // Empty ()
 
 list<string> stringlist = new list<string>();
-stringlist.add(a1); // Add method allowed only one parameter
+// Add method allowed only one parameter and it allow sObject variable or directly value
+stringlist.add(a1); 
 stringlist.add(a2);
 stringlist.add('third value');
 system.debug('total string values are'+stringlist); // (chaitanya, Poornima, third value)
