@@ -107,6 +107,7 @@ So clone is recommeded always.
 
 
 
+
 Salesforce Object Query Language (SOQL): SOQL in salesforce (YOUTUBE)
 
 
@@ -195,6 +196,20 @@ for(account acc : [select id,name,phone from account limit 2]){
 }
 system.debug('strphone is'+strphone);
 
+// Read a one record from list and Read one field from sObject
+list<account> acclist = new list<account>();
+acclist.add(new account(name='list acc one name',site='hyderabad'));
+acclist.add(acc);
+system.debug('acclist is '+acclist);
+
+account retrieveone = acclist.get(0);
+system.debug('retrieveone is'+retrieveone);
+account retrievetwo = acclist[1];
+system.debug('retrievetwo is'+retrievetwo);
+string siteone = (string)retrieveone.get('site');
+system.debug('siteone is'+siteone);
+
+
 // adding account one by one to update to list of account variable
 list<account> updatelist = new list<account>();
 for(account acc: [select id,name from account limit 3]){
@@ -203,6 +218,7 @@ for(account acc: [select id,name from account limit 3]){
     updatelist.add(acc);
 }
 update updatelist;
+
 
 
 
