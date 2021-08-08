@@ -15,7 +15,8 @@ it has whoid lookup field related to both Lead and Contact
 Select Id, Status,Who.Id, Who.Type, What.Id, What.Type, Description From Task 
 
 -> there are soql of semi joins and empty joins but insted of those we use parent to child and child to parent query more.
-
+we have limitation with semi joins and empty joins are we can fetch only 2 records (LIMIT 2) is max
 Semi join : SELECT Id, Name, Account.Id, Account.Name FROM Contact where Accountid in (select id from account)
 // if you use NOT before IN we call it empty joins
 Empty join : SELECT Id, Name, Account.Id, Account.Name FROM Contact where Accountid NOT in (select id from account)
+
