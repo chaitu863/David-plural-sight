@@ -374,16 +374,6 @@ EX 2)//In SOQL, Difference passing List of sObject in WHERE IN clause
 list<user> userdetails = [select id,name from user where profile.name='system administrator' LIMIT 200];
 system.debug('user details are'+userdetails.size());
 
-//sObject
-
-list<sObject> sobjlist = new list<sObject>();
-sobjlist.addall([select id,phone from account limit 2]);
-list<sObject> conlist = [select id,lastname from contact limit 2];
-sobjlist.addall(conlist);
-system.debug('sobject values are '+sobjlist);
-
-list<contact> retrivedones = (list<sObject>)conlist;
-system.debug('retrived is '+retrivedones);
 
 // using lookup field in where clause for list of users
 list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_Plan_vod__c, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__c IN :userdetails limit 1];
@@ -403,3 +393,15 @@ for(user userid: userdetails){
 // using lookup field in where clause for list of users
 list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_Plan_vod__c, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__c IN :useridset limit 1];
 system.debug('actm is'+actm.size());
+
+//sObject
+
+list<sObject> sobjlist = new list<sObject>();
+sobjlist.addall([select id,phone from account limit 2]);
+list<sObject> conlist = [select id,lastname from contact limit 2];
+sobjlist.addall(conlist);
+system.debug('sobject values are '+sobjlist);
+
+list<contact> retrivedones = (list<sObject>)conlist;
+system.debug('retrived is '+retrivedones);
+
