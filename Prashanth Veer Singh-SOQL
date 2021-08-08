@@ -20,3 +20,8 @@ Semi join : SELECT Id, Name, Account.Id, Account.Name FROM Contact where Account
 // if you use NOT before IN we call it empty joins
 Empty join : SELECT Id, Name, Account.Id, Account.Name FROM Contact where Accountid NOT in (select id from account)
 
+SOQL ORDER BY
+
+it allows 4 things ASC, DESC, NULLS FIRST, NULLS LAST
+
+select id, phone from account ORDER BY phone DESC NULLS FIRST 
