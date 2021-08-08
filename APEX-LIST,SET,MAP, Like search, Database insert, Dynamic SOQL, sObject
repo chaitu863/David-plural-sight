@@ -380,7 +380,17 @@ list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_P
 system.debug('actm is'+actm.size());
 
 
-EX 3)//In SOQL, Difference between passing list of id in WHERE IN clause
+EX 3)
+list<user> userdetails = [select id,name from user where profile.name='system administrator' LIMIT 200];
+system.debug('user details are'+userdetails.size());
+
+
+// using lookup field in where clause for list of users
+list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_Plan_vod__c, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__r.Id IN :userdetails];
+system.debug('actm is'+actm.size());
+
+
+EX 4)//In SOQL, Difference between passing list of id in WHERE IN clause
 set<id>useridset = new set<id>();
 // list of users
 list<user> userdetails = [select id,name from user where profile.name='system administrator' LIMIT 200];
@@ -393,6 +403,8 @@ for(user userid: userdetails){
 // using lookup field in where clause for list of users
 list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_Plan_vod__c, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__c IN :useridset limit 1];
 system.debug('actm is'+actm.size());
+
+
 
 //sObject
 
