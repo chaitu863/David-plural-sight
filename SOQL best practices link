@@ -13,3 +13,15 @@ Bad : it cause heap size errors eventhough it retrieve less than 50 K records
 list<account> acclist = select id,name from account limit 45000];
 for(account acc : acclist) {
 }
+
+FOR TEST CLASSES:
+
+Be aware that the 50k limit is an overall per-transaction limit, and not a per-query limit. Do you have other code in your test method that makes SOQL queries?
+Are there at least 4 other queries with LIMIT 10000 in them? If so, that would do it. That things fail only in production, where you have more data, 
+hints that this could be the case.
+
+Also, since you mentioned that this is a test method: if any of the queries contributing to this are in logic to set up your test you may be able to 
+use Test.startTest and Test.stopTest to help. Code that is run between these two methods gets a new set of limits, which means that in a scenario 
+where exactly half your work is setup/teardown you can query 100k records instead.
+
+For the sake of debugging note that you can check how many query rows have been used via Limits.getQueryRows();.
