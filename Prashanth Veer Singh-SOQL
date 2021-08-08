@@ -7,3 +7,9 @@ For picklist you can write in two ways but 1 st approach is better one
 When you have name with single quotes at the time of writing SOQL where clause you should use \ otherwise you wont get result.
 In the below exmple company name has like Rana's so write query like below
 1)Select Id, Name, Description, Company, Status FROM Lead WHERE Company = 'Rana\'s'
+
+Polymorphic Relationships
+Generally task, events comes under this category because it has multiple parents with same lookup field, you can check on task object
+it has whoid lookup field related to both Lead and Contact 
+
+Select Id, Status,Who.Id, Who.Type, What.Id, What.Type, Description From Task 
