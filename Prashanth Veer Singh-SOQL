@@ -25,3 +25,8 @@ SOQL ORDER BY
 it allows 4 things ASC, DESC, NULLS FIRST, NULLS LAST
 
 select id, phone from account ORDER BY phone DESC NULLS FIRST 
+
+SOQL GROUP BY
+
+count,AVG,SUM,MIN,MAX
+select count(id),Leadsource from lead group by leadsource
