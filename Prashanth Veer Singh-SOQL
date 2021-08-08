@@ -28,5 +28,11 @@ select id, phone from account ORDER BY phone DESC NULLS FIRST
 
 SOQL GROUP BY
 
-count,AVG,SUM,MIN,MAX
+Aggregate functions : count,AVG,SUM,MIN,MAX
+ 
+you dont need group by for aggregate functions looks below
+SELECT AVG(Amount) FROM Opportunity
+
+All aggregate functions ignore null values, except for COUNT() and COUNT(Id). COUNT(fieldname) ignores null values.
 select count(id),Leadsource from lead group by leadsource
+
