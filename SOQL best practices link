@@ -1,0 +1,15 @@
+https://focusonforce.com/uncategorized/apex-best-practices-avoid-exceeding-governor-limits/#:~:text=The%20limits%20allow%20only%2050%2C000,breach%20the%20limit%20%5B2.1%5D.
+
+1)use filters in soql like where clause, LIMIT
+2)dont use soql or DML inside for loops
+3)use soql for loop insread of wring soql separately above for loop that means
+
+Good: 
+for(account acc : [select id,name from account limit 45000]){
+
+}
+
+Bad : it cause heap size errors eventhough it retrieve less than 50 K records
+list<account> acclist = select id,name from account limit 45000];
+for(account acc : acclist) {
+}
