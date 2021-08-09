@@ -384,6 +384,7 @@ EX 3)
 list<user> userdetails = [select id,name from user where profile.name='system administrator' LIMIT 200];
 system.debug('user details are'+userdetails.size());
 
+Apex is smart enough to know how to get the user ids from the list and to apply them as part of the WHERE clause.
 
 // using lookup field in where clause for list of users
 list<Account_Team_Member_vod__c> actm = [select ID,Team_Member_vod__c, Account_Plan_vod__c, Plan_Access__c, Access_Level__c From Account_Team_Member_vod__c where Team_Member_vod__r.Id IN :userdetails];
