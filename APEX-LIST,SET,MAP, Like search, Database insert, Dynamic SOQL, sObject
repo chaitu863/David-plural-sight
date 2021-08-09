@@ -302,7 +302,13 @@ try{
     system.debug('exceptio is here '+e);
 }
 
+
+
+
+
 MAPS:
+
+Blog for maps  and record types good one : https://www.iterativelogic.com/working-with-apex-code-maps/
 
 Map<string, string> stringMap = new Map<string, string>{ 'Key1' => 'Value1', 'Key2' =>  val2, key3 => val3};
 
