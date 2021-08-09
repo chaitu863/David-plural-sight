@@ -36,3 +36,12 @@ SELECT AVG(Amount) FROM Opportunity
 All aggregate functions ignore null values, except for COUNT() and COUNT(Id). COUNT(fieldname) ignores null values.
 select count(id),Leadsource from lead group by leadsource
 
+
+Sanjey Gupta:09 SOQL | Salesforce Object Query Language | Apex in Salesforce | Salesforce Videos for Beginners
+https://www.youtube.com/watch?v=Om9fEJ6WTGE&t=1160s
+
+
+
+
+
+
