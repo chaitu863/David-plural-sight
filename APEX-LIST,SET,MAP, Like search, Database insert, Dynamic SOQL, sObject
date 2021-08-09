@@ -302,6 +302,10 @@ try{
     system.debug('exceptio is here '+e);
 }
 
+MAPS:
+
+Map<string, string> stringMap = new Map<string, string>{ 'Key1' => 'Value1', 'Key2' =>  val2, key3 => val3};
+
 map<Id,Home_Page_Component__c> maphompepage = new map<Id,Home_Page_Component__c>([SELECT ID,Label__c FROM Home_Page_Component__c limit 1]);
 system.debug('map results only one '+maphompepage);//|DEBUG|map results are {a044W00000lHJQRQA4=Home_Page_Component__c:{Id=a044W00000lHJQRQA4, Label__c=TST1}}
 
