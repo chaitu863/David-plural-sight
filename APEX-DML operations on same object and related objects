@@ -1,0 +1,61 @@
+//Insert Rleated Records
+//To insert Parent record we dont need any object support
+List<account> accListInsert = new list<account>{new account(name='mohan1',Phone='564566',site='acc site for one'),
+                                                new account(name='mohan2',Phone='655564566',site='acc site for two')};
+insert accListInsert;
+
+//To insert child object for parent record we should have parent id so lets loop through an accounts now
+list<contact> contoInsert = new list<contact>();
+for(account acc : accListInsert) {
+    contoInsert.add(new Contact(lastname='conname last',firstname='first name con',accountid=acc.id)) ;
+}
+insert contoInsert;
+
+// updting only contacts fields based on its parent account 
+//that means final for loop should be on contact object
+map<id,account> accMap = new map<id,account>([SELECT Id from account where Name Like 'Ed%']);
+system.debug('acc keyset => '+accMap.keyset());
+list<contact> conupdate = new List<contact>();
+for(contact con: [select id,Description,lastname,firstname,phone,AssistantName,
+                  Account.phone,Account.site from contact where accountid IN : accMap.keyset()]) {
+    system.debug('con id is => '+con.Id);
+    con.phone = con.Account.Phone;
+    con.AssistantName = 'Chaitanya assistant';                 
+    conupdate.Add(con);
+}
+update conupdate;
+
+//Updating both Contact and related Account same time.
+//We must need two DMLs for this.
+
+contact con = [SELECT Lastname,Phone,Email,firstname,account.Site 
+               FROM contact 
+               WHERE Email='sean@edge.com'];
+system.debug('con is =>'+con.id);
+con.Phone = '55555555';
+con.Account.site = 'chaitu test site update';
+update con;
+update con.Account;
+
+//upserting records on Account object
+list<account> acclist = new list<account>();
+Account acc1 = [select id,name from account where name = 'Edge Communications'];
+system.debug('acc1 is =>'+acc1.Name);
+acc1.Site = 'upsert part update';
+acclist.add(acc1);
+account acc2 = new account(name='chandra mohan',phone='4564566');
+acclist.add(acc2);
+upsert acclist;
+
+
+// updating only account field based on associated child cases.
+//That means final loop should be on account object.
+
+list<account> accupdate = new list<account>();
+for(account acc : [select id, Name, Total_Number__c, 
+                  (SELECT id,Status,AccountId FROM Cases)
+                  FROM Account  WHERE Id ='0014W0000252hlrQAA']){ // Ingeneal we pass set of accountids variables here 
+    acc.Total_Number__c = acc.Cases.size();
+                       accupdate.add(acc);
+}
+update accupdate;
