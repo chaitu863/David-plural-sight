@@ -14,26 +14,43 @@ EX1: trigger AccountTrigg on Account (after insert,after update) {
 }
 
 EX2:
-// if opprtunity stage is closed one, then create a contract for opportunity and account using try catch 
+// while creating if opprtunity stage is closed one, then create a contract for opportunity and account using try catch
+// if opportunity is updated with closed lost then then start date is today for all contrcats 
 trigger OpportunityTrigg on Opportunity (after insert, after update) {
-
+    
     list<contract> insertcontract = new list<contract>(); 
-    for(Opportunity opp: Trigger.New) {
-        if(opp.StageName == 'Closed Won') {
-            insertcontract.add(new Contract(CustomerSignedTitle='Chaitu creted this child',
-                                            /*AccountId = opp.AccountId,*/Opportunity__c=opp.Id, 
-                                            Status ='Draft',StartDate =Date.today(),ContractTerm = 5));
+    if(Trigger.isExecuting && Trigger.isinsert){
+        set<id>oppids = new set<id>();
+        for(Opportunity opp: Trigger.New) {
+            if(opp.StageName == 'Closed Won') {
+                insertcontract.add(new Contract(CustomerSignedTitle='Chaitu creted this child',
+                                                AccountId = opp.AccountId,Opportunity__c=opp.Id, 
+                                                Status ='Draft',StartDate =Date.today(),ContractTerm = 5));
+            }
+        }
+        try{
+            insert insertcontract; 
+        }catch (Exception ex){
+            system.debug('@@@@ message is => '+ex.getMessage());
         }
     }
-    try{
-          insert insertcontract; 
-    }catch (Exception ex){
-        system.debug('@@@@ message is => '+ex.getMessage());
-        system.debug('@@@@ message is => '+ex.getCause());
-        system.debug('@@@@ message is => '+ex.getLineNumber());
-        system.debug('@@@@ message is => '+ex.getTypeName());
-        system.debug('@@@@ message is => '+ex.getStackTraceString());
-
+    
+    if(Trigger.isExecuting && Trigger.isupdate) {
+      list<contract> conupdate = new list<contract>();
+      set<id> oppids = Trigger.Newmap.keyset();
+        for(contract con: [select id,Opportunity__r.stageName,CustomerSignedDate,Opportunity__r.CloseDate from contract where Opportunity__c IN : oppids]){
+            if(con.Opportunity__r.stageName == 'Closed lost'){
+                con.CustomerSignedDate = con.Opportunity__r.CloseDate;
+                conupdate.add(con);
+            }
+        }
+        try{
+            if(!conupdate.isEmpty()){
+                update conupdate; 
+            }
+        }catch (Exception e){
+            system.debug('exception e =>'+e.getMessage());
+        }
     }
 }
 
