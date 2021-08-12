@@ -1,0 +1,38 @@
+EX1: trigger AccountTrigg on Account (after insert,after update) {
+    set<id> accids = new set<id>();
+    for(account acc : Trigger.new){
+        if(acc.Industry != Trigger.oldmap.get(acc.Id).Industry){
+            accids.add(acc.id);
+        }
+    }
+    list<contact> updatecon = new list<contact>();
+    for(contact con : [SELECT id,Account.Industry,description from contact where accountid IN :accids]){
+        con.description = con.Account.Industry;
+        updatecon.add(con);
+    }
+    update updatecon;
+}
+
+EX2:
+// if opprtunity stage is closed one, then create a contract for opportunity and account using try catch 
+trigger OpportunityTrigg on Opportunity (after insert, after update) {
+
+    list<contract> insertcontract = new list<contract>(); 
+    for(Opportunity opp: Trigger.New) {
+        if(opp.StageName == 'Closed Won') {
+            insertcontract.add(new Contract(CustomerSignedTitle='Chaitu creted this child',
+                                            /*AccountId = opp.AccountId,*/Opportunity__c=opp.Id, 
+                                            Status ='Draft',StartDate =Date.today(),ContractTerm = 5));
+        }
+    }
+    try{
+          insert insertcontract; 
+    }catch (Exception ex){
+        system.debug('@@@@ message is => '+ex.getMessage());
+        system.debug('@@@@ message is => '+ex.getCause());
+        system.debug('@@@@ message is => '+ex.getLineNumber());
+        system.debug('@@@@ message is => '+ex.getTypeName());
+        system.debug('@@@@ message is => '+ex.getStackTraceString());
+
+    }
+}
