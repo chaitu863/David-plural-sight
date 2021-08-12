@@ -36,3 +36,21 @@ trigger OpportunityTrigg on Opportunity (after insert, after update) {
 
     }
 }
+
+Ex3: trigger CountTask on Task (after insert, after update) {
+  
+    set<id>taskwhoids = new set<id>();
+    for(task taskrecord : Trigger.new) {
+        taskwhoids.add(taskrecord.whoid);
+    }
+    system.debug('taskid is'+taskwhoids);
+    Map<id,contact> contactmap = new map<id,contact>([SELECT ID,name,No_of_Open_Tasks__c,(SELECT Id,Subject,CallType,WhoID From tasks) FROM Contact where ID IN :taskwhoids]);
+    system.debug('cotntact map'+contactmap);
+    list<contact> updatecontact = new list<contact>();
+    for(contact singlecontact : contactmap.values()) {
+        singlecontact.No_of_Open_Tasks__c=singlecontact.tasks.size
+        updatecontact.add(singlecontact);
+    }
+    update updatecontact;
+}
+
