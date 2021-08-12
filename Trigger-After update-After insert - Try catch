@@ -64,3 +64,50 @@ Ex4: trigger Opportunitytrigger on Opportunity (after insert) {
     }
     insert taskInsertList;
 }
+
+EX 5:trigger accDesupdate on Account (after insert, after update) {
+
+    if(trigger.isupdate || trigger.isafter) {
+        system.debug('inside after trigger chaitu');
+        set<id> accupdateId = new set<id>();
+        for(account acc : trigger.new){
+            if(trigger.oldmap.get(acc.id).description != trigger.newmap.get(acc.id).description){
+                accupdateId.add(acc.Id);
+                system.debug('account id is'+accupdateId);
+            }
+    }
+        list<contact> conupdate = new list<contact>();
+        for(contact con : [SELECT id,Account.description from contact where AccountId IN :accupdateId]) {
+            system.debug('acc desc is '+con.Account.Description);
+            con.Description = con.Account.Description;
+            system.debug('con desc is '+con.Description);
+            conupdate.add(con);
+        }
+        update conupdate;
+        system.debug('after con update is '+conupdate);
+   }
+}
+
+EX 6: Another way for ex5
+trigger Account_Trigger on Account (after insert,after update) {
+   public static boolean recursive = false;
+    if(!recursive){
+        recursive = true;
+        set<id>accid = new set<id>();
+        map<id,account> mapofacc = new map<id,account>();
+        for(account acc:trigger.new){
+            accid.add(acc.id);
+            mapofacc.put(acc.id, acc);
+        }
+        list<contact> listofcontact = new list<contact>();
+        for(contact con: [select id,name,accountid from contact where accountid in:accid]){
+            if(mapofacc.get(con.accountid) !=null){
+                con.Description = mapofacc.get(con.accountid).Description;
+                system.debug('update contact is '+con.Description);
+                listofcontact.add(con);
+            }
+        }
+        update listofcontact;
+     }
+}
+
