@@ -128,3 +128,35 @@ trigger Account_Trigger on Account (after insert,after update) {
      }
 }
 
+Ex 7: //Opp is prent and contract is child and we are trying to update parent field based on child data which is modield recently 
+// update opp description with latest updated contract name
+trigger Contractopptrigger on Contract (after update) {
+
+    map<id,contract> conmap = new map<id,contract>();
+    for(contract con : Trigger.new){
+        if(con.Opportunity__c !=null){
+            conmap.put(con.Opportunity__c, con);
+        }
+    }
+    set<id> oppids = conmap.keySet();
+    system.debug('opp id => '+oppids);
+    list<opportunity> oppupdate = new list<opportunity>();
+    for(opportunity opp : [select id,description,
+                           (SELECT id,SpecialTerms,LastModifiedDate FROM Contracts__r order by LastModifiedDate desc limit 1) 
+                           from opportunity where id in : oppids]){
+         system.debug('opp is => '+opp);
+         system.debug('opp special terms => '+opp.contracts__r[0].SpecialTerms);
+         opp.Description = opp.contracts__r[0].SpecialTerms;
+                                system.debug('opp desc => '+opp.Description);
+         oppupdate.add(opp);
+    }
+    try{
+        if(!oppupdate.isEmpty()){
+             update oppupdate;
+        }
+    }catch (exception e){
+        system.debug('exception is => '+e.getMessage());
+    }
+   
+}
+
