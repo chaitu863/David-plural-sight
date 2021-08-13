@@ -130,6 +130,7 @@ trigger Account_Trigger on Account (after insert,after update) {
 
 Ex 7: //Opp is prent and contract is child and we are trying to update parent field based on child data which is modield recently 
 // update opp description with latest updated contract name
+// There is Ex 8 which is even better than this
 trigger Contractopptrigger on Contract (after update) {
 
     map<id,contract> conmap = new map<id,contract>();
@@ -160,3 +161,32 @@ trigger Contractopptrigger on Contract (after update) {
    
 }
 
+Ex8: //Opp is prent and contract is child and we are trying to update parent field based on child data 
+// update opp description with latest updated contract name
+trigger Contractopptrigger on Contract (after update) {
+    
+    map<id,contract> conmap = new map<id,contract>();
+    for(contract con : Trigger.new){
+        if(con.Opportunity__c !=null && con !=Trigger.oldmap.get(con.id)){ // storing last modified contract in map
+            conmap.put(con.Opportunity__c, con);
+        }
+    }
+    set<id> oppids = conmap.keySet();
+    
+    list<opportunity> oppupdate = new list<opportunity>();
+    // since we are storing last modified contract already in map we dont need to query cotract below
+    for(opportunity opp : [select id,description
+                           from opportunity where id in : oppids]){
+                               opp.Description = conmap.get(opp.id).SpecialTerms; 
+                               system.debug('opp desc => '+opp.Description);
+                               oppupdate.add(opp);
+                           }
+    try{
+        if(!oppupdate.isEmpty()){
+            update oppupdate;
+        }
+    }catch (exception e){
+        system.debug('exception is => '+e.getMessage());
+    }
+    
+}
