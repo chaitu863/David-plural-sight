@@ -1,0 +1,25 @@
+trigger LeadTrigger on Lead (before update) {
+    
+    list<Messaging.Email> sendemaillist = new list<messaging.Email>();
+    for(lead l: Trigger.new){
+        if(l.Status =='Closed - Converted' && l.Email !=null){
+            Messaging.SingleEmailMessage M = new Messaging.SingleEmailMessage();
+            M.setToAddresses(new List<String> {l.Email});
+            M.setSubject('Lead: when it becomes closed converted');
+            String body = '<h1> Hi '+l.name+'<h1>,this is your body';
+            M.setHtmlBody(body);
+            sendemaillist.add(M);
+        }
+    }
+    system.debug('email list is '+sendemaillist);
+   
+    Messaging.SendEmailResult[] results = Messaging.sendEmail(sendemaillist); 
+    if (results[0].success) {
+        System.debug('The email was sent successfully.');
+    } else {
+        System.debug('The email failed to send: '
+                     + results[0].errors[0].message);
+    }
+    
+    
+}
