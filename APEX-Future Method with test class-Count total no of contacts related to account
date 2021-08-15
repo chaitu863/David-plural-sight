@@ -103,3 +103,38 @@ public class AccountProcessorTest {
         test.stopTest();
     }
 }
+
+Ex3: Calling future method from trigger
+
+trigger LeadTrigger on Lead (before update) {
+    
+    if(System.isFuture()) {
+        return;
+    }
+    set<id> leadids = Trigger.newmap.keyset();
+    leadFutureclass.futuremethodone(leadids);
+}
+
+public class leadFutureclass {
+    
+    @future
+    public static void futuremethodone(set<id> leadids){
+        system.debug(' @@@ inside future method');
+        list<lead> totaleads = [SELECT Id,Name,Description,Email 
+                                from lead where id in :leadids];
+         system.debug(' @@@ total leads '+totaleads);
+        list<lead> updateleads = new list<lead>();
+        for(lead l : totaleads){
+            system.debug('inside for loop'+l);
+                system.debug('inside lead emails'+l.Email);
+            if(l.Email =='chaitu863@gmail.com'){
+                system.debug('inside if loop');
+                l.Description ='updated by future method';
+                updateleads.add(l);
+                system.debug('added to leads list');
+            }
+        }
+        update updateleads;
+        system.debug('updated after');
+    }
+}
