@@ -1,0 +1,1659 @@
+<!-- 
+/************************************************************
+* File Name     : SearchAccts
+* Description   : This page used to Display Globel account search page
+@author           Veeva Technical Services (Jeff Kelso, Murugesh Naidu, Wayne Abbott)
+* Modification Log 
+=============================================================
+* Ver.    Date          Author              Modification
+-------------------------------------------------------------
+1.0     08/05/2016    mnaidu                 Updated page to show Processing status when Search or Add to Territory button is clicked
+                                             so that users are clear about the operation happening. Also cleaned up the UI to show the 
+                                             messages for Add to Territory inside the results Div
+1.1     27/04/2018    Cognizant              Updated page for create a new button(Add & Open).
+1.2     05/01/2015    Cognizant              Updated page to show if user has multipule territories 
+1.3     04/07/2021    Cognizant               Updated page to show STARTS WITH search parameter for account name fields.
+************************************************************/
+ -->
+<apex:page id="p1" controller="searchAccts" showHeader="{!parentSearch!='1'}" sidebar="{!parentSearch!='1'}">
+
+
+<style type="text/css">
+#blanket {
+background-color:#111;
+opacity: 0.65;
+filter:alpha(opacity=65);
+position:absolute;
+z-index: 9001;
+top:0px;
+left:0px;
+width:100%;
+}
+#popUpDiv {
+text-align: center;
+position:absolute;
+background-color:#eeeeee;
+width:700px;
+height:700px;
+z-index: 9002; /*ooveeerrrr nine thoussaaaannnd*/
+top:50px;
+left:300px;
+}
+
+</style>
+
+
+<script type="text/javascript">
+var selAcct = '' ;
+function selectParentAcct () {
+    var elems = document.getElementsByTagName('input') ;
+    for (var i=0;i<elems.length;i++) {
+        var e = elems[i];
+        if ( e.type=='checkbox' && e.checked) {
+            // Copy the name and ID of selected Account to parent window, and then pop this down
+            var name = document.getElementById(e.id.replace('cbox','acctName')).innerHTML ;
+            var id = document.getElementById(e.id.replace('cbox','acctId')).innerHTML ;
+            parent.document.getElementById('{!returnElemId}'.replace('aaa','bbb')).value = name ;
+            parent.document.getElementById('{!returnElemId}'.replace('aaa','ccc')).value = id ;
+            parent.popup('popUpDiv') ;
+            parent.window.location.hash='RESDETAIL' ;
+            parent.window.location.hash='TOPX' ;
+            break ;
+        }
+    }
+}
+function selectedAA (cbox) {
+
+    if (cbox.checked) {
+        selAcct = 'x' ;
+        // Uncheck all other cboxes
+        var elems = document.getElementsByTagName('input') ;
+        for (var i=0;i<elems.length;i++) {
+            var e = elems[i];
+            var e1 = e.id;
+            var e2 = e1.includes("terr");
+            if (e.type=='checkbox' && e.id != cbox.id && e2 === false) {
+                e.checked = false;
+            }
+        }
+    }
+    else {
+        selAcct = '' ;
+    }
+
+}
+
+function toggle(div_id) {
+    var el = document.getElementById(div_id);
+    if ( el.style.display == 'none' ) { el.style.display = 'block';}
+    else {el.style.display = 'none';}
+}
+
+function blanket_size(popUpDivVar) {
+    if (typeof window.innerWidth != 'undefined') {
+        viewportheight = window.innerHeight;
+    } else {
+        viewportheight = document.documentElement.clientHeight;
+    }
+    if ((viewportheight > document.body.parentNode.scrollHeight) && (viewportheight > document.body.parentNode.clientHeight)) {
+        blanket_height = viewportheight;
+    } else {
+        if (document.body.parentNode.clientHeight > document.body.parentNode.scrollHeight) {
+            blanket_height = document.body.parentNode.clientHeight;
+        } else {
+            blanket_height = document.body.parentNode.scrollHeight;
+        }
+    }
+    var blanket = document.getElementById('blanket');
+    blanket.style.height = blanket_height + 'px';
+    var popUpDiv = document.getElementById(popUpDivVar);
+    popUpDiv_height=blanket_height/2-350;//350 is half popup's height
+    // popUpDiv.style.top = popUpDiv_height + 'px';
+}
+
+function window_pos(popUpDivVar) {
+    if (typeof window.innerWidth != 'undefined') {
+        viewportwidth = window.innerHeight;
+    } else {
+        viewportwidth = document.documentElement.clientHeight;
+    }
+    if ((viewportwidth > document.body.parentNode.scrollWidth) && (viewportwidth > document.body.parentNode.clientWidth)) {
+        window_width = viewportwidth;
+    } else {
+        if (document.body.parentNode.clientWidth > document.body.parentNode.scrollWidth) {
+            window_width = document.body.parentNode.clientWidth;
+        } else {
+            window_width = document.body.parentNode.scrollWidth;
+        }
+    }
+    var popUpDiv = document.getElementById(popUpDivVar);
+    window_width=window_width/2-150;//150 is half popup's width
+    popUpDiv.style.left = window_width + 'px';
+}
+
+function popup(windowname) {
+    blanket_size(windowname);
+    // window_pos(windowname);
+    toggle('blanket');
+    toggle(windowname);     
+}
+
+</script>
+
+<div id="blanket" style="display:none;"></div> 
+    <div id="popUpDiv" style="display:none;"> 
+        <iframe id="if1" src="about:blank" width="700px" height="700px" scrolling="auto"/>
+    </div>  
+
+<A NAME="TOPX"></A>
+
+<apex:outputPanel id="messagesOP">
+<apex:messages style="color:red"/>
+</apex:outputPanel>
+<apex:outputText id="errorM" style="color:red"/>
+    <apex:form id="f1">
+    <center>
+    <apex:outputPanel >
+    <br/>
+  <!--   <apex:commandButton rendered="{!parentSearch!='1'}" action="{!cancel}" value="{!GAS_CANCEL}"/>  -->
+    <apex:commandButton rendered="{!parentSearch=='1'}" onClick="parent.window.location.hash='RESDETAIL' ;parent.window.location.hash='TOPX' ;parent.popup('popUpDiv')" value="{!GAS_CANCEL}"/> 
+    <br/>
+    </apex:outputPanel>
+    </center>
+        <table width="700px">
+        <tr><td>
+        <apex:pageBlock id="pb1" title="{!IF(parentSearch=='1',GAS_SFPA,GAS_SFA)}">
+            <apex:pageBlockButtons location="top">
+                <td>
+                    <apex:actionStatus startText=" Processing tquery " stopText=" Done " id="counterStatus" > 
+                      <apex:facet name="start" >Processing... <img src="/apexpages/devmode/img/saveStatus.gif" /> </apex:facet> 
+                      <apex:facet name="stop"> 
+                          <apex:commandButton oncomplete="if (document.getElementById('p1:messagesOP').innerHTML == '') {window.location.hash='TOPX';window.location.hash='RESDETAIL'}" 
+                                    action="{!doSearch}" value="{!GAS_SEARCH}" 
+                                    rerender="restableOP,messagesOP,counterStatus" 
+                                    id="theButton"
+                                    status="counterStatus"/> 
+                      </apex:facet> 
+                    </apex:actionStatus> 
+                </td>
+                <td/>
+                <td>
+                <table border="1" cellspacing="0" cellpadding="4" bordercolor="Blue">
+                    <tr>
+                    <td>
+                        <apex:commandButton value="Create DCR" action="{!createDCR}"/>
+                    &nbsp;&nbsp;
+                    <apex:selectList id="chooseRecType" value="{!chosenDCRRectype}" size="1">
+                            <apex:selectOptions value="{!dcrRecTypes}"/>
+                        </apex:selectList>
+                    </td>
+                    </tr>
+                </table>
+                </td>        
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection id="pbs11" collapsible="false" title="" columns="5">
+
+                <apex:repeat value="{!acctSearchFields}" var="sfld">
+
+                    <apex:outputText rendered="{!OR(parentSearch!='1',NOT(sfld.is_acctlookup))}" value="{!sfld.label}"/>
+
+                    <apex:selectRadio style="text-align:left" rendered="{!sfld.has_es}" value="{!sfld.opt_value}">
+                        <apex:selectOption rendered="{!sfld.has_es}"  itemValue="Exact Match" itemLabel="{!GAS_EM}"/>
+                        <apex:selectOption rendered="{!sfld.has_es}"  itemValue="{!$Setup.GAS_Hierarchical_Setting__c.GAS_Msg_Acct_StrtsWith_Contains_Value__c}" 
+                                                                        itemLabel="{!$Setup.GAS_Hierarchical_Setting__c.GAS_Msg_Acct_StrtsWith_Contains_Label__c}"/>
+                        <apex:selectOption rendered="{!sfld.has_es}"  itemValue="{!GAS_SW}" itemLabel="{!GAS_SW}"/>
+                    </apex:selectRadio>
+                    <apex:selectRadio style="text-align:left" rendered="{!sfld.has_cs}" value="{!sfld.opt_value}">
+                        <apex:selectOption rendered="{!sfld.has_cs}"  itemValue="Starts With" itemLabel="{!GAS_SW}"/>
+                        <apex:selectOption rendered="{!sfld.has_cs}"  itemValue="Contains" itemLabel="{!GAS_CONTAINS}"/>
+                    </apex:selectRadio>
+                    <apex:outputLink id="aaa" style="text-align:left" rendered="{!AND(parentSearch!='1',sfld.is_acctlookup)}" onclick="javascript:popup('popUpDiv');document.getElementById('if1').src='/apex/searchAccts?parentSearch=1&returnElemId=' + this.id + '&parentAcctField={!sfld.apiname}';return false">{!GAS_LOOKUP}</apex:outputLink>
+                    <apex:outputText rendered="{!sfld.no_opt}" value=" "/>
+
+
+                    <apex:selectList rendered="{!AND(sfld.is_picklist,NOT(sfld.is_acctlookup))}" size="1" value="{!sfld.value}">
+                        <apex:selectOptions rendered="{!AND(sfld.is_picklist,NOT(sfld.is_acctlookup))}" value="{!sfld.plist}"/>
+                    </apex:selectList>
+                    <apex:inputText style="background-color:#F0F0F0 " size="40" onfocus="this.blur()" maxlength="80" id="bbb" rendered="{!AND(parentSearch!='1',sfld.is_acctlookup)}"  value="{!sfld.alvalue}"/>
+                    <apex:inputText rendered="{!sfld.no_picklist}" value="{!sfld.value}"/>
+
+                    <apex:outputLink id="ddd" style="text-align:left" rendered="{!AND(parentSearch!='1',sfld.is_acctlookup)}" onclick="javascript:document.getElementById(this.id.replace('ddd','bbb')).value='';document.getElementById(this.id.replace('ddd','ccc')).value='';return false">{!GAS_CLEAR}</apex:outputLink>
+                    <apex:outputText rendered="{!NOT(sfld.is_acctlookup)}" value=" "/>
+
+                    <apex:inputHidden id="ccc"  rendered="{!AND(parentSearch!='1',sfld.is_acctlookup)}" value="{!sfld.value}"/>
+                    <apex:outputText rendered="{!NOT(sfld.is_acctlookup)}"  value=" "/>
+                </apex:repeat>
+
+                <apex:repeat value="{!addrSearchFields}" var="sfld">
+                    <apex:outputText value="{!sfld.label}"/>
+                    <apex:selectRadio rendered="{!sfld.has_es}" value="{!sfld.opt_value}">
+                        <apex:selectOption rendered="{!sfld.has_es}"  itemValue="Exact Match" itemLabel="{!GAS_EM}"/>
+                        <apex:selectOption rendered="{!sfld.has_es}"  itemValue="Starts With" itemLabel="{!GAS_SW}"/>
+                    </apex:selectRadio>
+                    <apex:selectRadio rendered="{!sfld.has_cs}" value="{!sfld.opt_value}">
+                        <apex:selectOption rendered="{!sfld.has_cs}"  itemValue="Starts With" itemLabel="{!GAS_SW}"/>
+                        <apex:selectOption rendered="{!sfld.has_cs}"  itemValue="Contains" itemLabel="{!GAS_CONTAINS}"/>
+                    </apex:selectRadio>
+                    <apex:outputText rendered="{!sfld.no_opt}" value=" "/>
+                    <apex:selectList rendered="{!sfld.is_picklist}" size="1" value="{!sfld.value}">
+                        <apex:selectOptions value="{!sfld.plist}"/>
+                    </apex:selectList>
+                    <apex:inputText rendered="{!sfld.no_picklist}" value="{!sfld.value}"/>
+                    <apex:outputText rendered="{!NOT(sfld.is_acctlookup)}" value=" "/>
+                    <apex:outputText rendered="{!NOT(sfld.is_acctlookup)}"  value=" "/>
+                </apex:repeat>
+
+
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        </td></tr></table>
+
+<A NAME="RESDETAIL"></A>
+
+
+        <apex:outputPanel id="restableOP">
+        <apex:pageBlock id="pb2" title="{!GAS_RESULTS}">
+            <apex:outputPanel id="messagesRES">
+            <apex:messages style="color:red"/>
+            </apex:outputPanel>
+            <apex:pageBlockButtons location="top">
+
+                <apex:actionStatus startText=" Processing request " stopText=" Done " id="terrcounterStatus" > 
+                  <apex:facet name="start" >Processing... <img src="/apexpages/devmode/img/saveStatus.gif" /> </apex:facet> 
+                  <apex:facet name="stop"> 
+                      <apex:commandButton rendered="{!parentSearch!='1'}" 
+                      action="{!addToTerritory}" 
+                      value="{!GAS_ATT}"
+                      rerender="restableOP,messagesRES,terrcounterStatus" 
+                      status="terrcounterStatus"/>                      
+                  </apex:facet> 
+                </apex:actionStatus> 
+              <!-- CIJUNE18 MR:752 added code for new button(Add and Open) -->  
+                <apex:actionStatus startText=" Processing request " stopText=" Done " id="terrcounterStatus1" > 
+                  <apex:facet name="start" >Processing... <img src="/apexpages/devmode/img/saveStatus.gif" /> </apex:facet> 
+                  <apex:facet name="stop"> 
+                      <apex:commandButton rendered="{!parentSearch!='1'}" 
+                      action="{!addAndOpen}" 
+                      value="{!GAS_AN}"
+                      rerender="restableOP,messagesRES,terrcounterStatus" 
+                      status="terrcounterStatus1" />                      
+                  </apex:facet> 
+                </apex:actionStatus> 
+            
+                
+                <apex:commandButton rendered="{!parentSearch=='1'}" onclick="selectParentAcct()" value="{!GAS_SELECT}"/>
+            </apex:pageBlockButtons>
+            <apex:outputPanel rendered="{!cUserList.size > 1 && results.size > 0}" >
+                <b>{!GAS_AVALTERRSLECT}</b>
+                <table cellspacing="5" cellpadding="5" id="restable"  >
+                <!--<tr> <b>Select Territories </b></tr>-->
+                <tr>
+                        
+                        <td> 
+                            <apex:outputText style="font-weight:bold" value=""/>
+                        </td>
+                        <td> 
+                            <apex:outputText style="font-weight:bold" value="{!GAS_NAME}"/>
+                        </td>
+                        <td> 
+                            <apex:outputText style="font-weight:bold" value="{!GAS_DESCR}"/>
+                        </td>
+                    
+                </tr>
+                <apex:repeat value="{!cUserList}" var="userTerritory">
+                <tr>
+                        <td>
+                        <apex:inputCheckbox Id="terr" value="{!userTerritory.selected}"  /> <!-- onClick="selectedAA(this)" -->
+                         </td>
+                         <td>
+                        <apex:outputText id="tname"  value="{!userTerritory.userTer.name}"/> 
+                         </td>
+                         <td>
+                        <apex:outputText id="tdesc"  value="{!userTerritory.userTer.Description}"/> 
+                         </td>
+                    
+                </tr>
+                    
+                </apex:repeat> 
+                
+                </table>
+                <b>Accounts</b>
+            </apex:outputPanel>
+                <table cellspacing="5" cellpadding="5" id="restable">
+                <tr>
+                        <td> </td>
+                    <apex:repeat value="{!resultHeaders}" var="rh">
+                        <td>
+                        <apex:outputPanel rendered="{!rh.apiname!='ADD.Primary_vod__c'}">
+                        <apex:commandLink rerender="restableOP" action="{!sortResults}" style="font-weight:bold" value="{!rh.label}">
+                        <apex:param name="sortKey" value="{!rh.apiname}"/>
+                        <apex:image rendered="{!sortKey==rh.apiname}" value="{!IF(sortDir=='A','/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif')}"/>
+                        </apex:commandLink>
+                        </apex:outputPanel>
+                        <apex:outputText rendered="{!rh.apiname=='ADD.Primary_vod__c'}" style="font-weight:bold" value="{!rh.label}"/>
+                        </td>
+                    </apex:repeat>
+                </tr>
+                <apex:repeat value="{!results}" var="item">
+                <tr>
+                        <td>
+                        <apex:inputCheckbox Id="cbox" onClick="selectedAA(this)" value="{!item.isSelected}"/>    <!-- onClick="selectedAA(this)" -->
+                        <apex:outputText style="display:none" id="acctId" value="{!item.acctId}"/>
+                        <apex:outputText style="display:none" id="acctName" value="{!item.acctName}"/>
+                        <apex:outputText style="display:none" id="addrId" value="{!item.addrId}"/>
+                        </td>
+                    <apex:repeat value="{!item.srFields}" var="rfld">
+                        <td>
+                        <apex:outputText value="{!rfld.value}"/> 
+                        </td>
+                    </apex:repeat>
+                </tr>
+                    <apex:repeat value="{!item.otherAddrs}" var="item2">
+                    <tr>
+                            <td> </td>
+                        <apex:repeat value="{!item2.srFields}" var="rfld2">
+                            <td>
+                            <apex:outputText rendered="{!rfld2.is_Addr}" value="{!rfld2.value}"/> 
+                            </td>
+                        </apex:repeat>
+                    </tr>
+                    </apex:repeat>
+                </apex:repeat> 
+                </table>
+        </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+ </apex:page>
+ 
+ 
+ /************************************************************
+* File Name     :  SearchAccts
+* Description   :This class to search an accounts and added to current loged in userr territories.
+@author           Veeva Technical Services (Jeff Kelso, Murugesh Naidu, Wayne Abbott)
+* Modification Log 
+=============================================================
+* Ver.    Date          Author              Modification
+-------------------------------------------------------------
+1.0     07/16/2013    mnaidu                 Added Custom Filtering mechanism and migrated code to GAS Hierarchical Custom settings
+1.1     08/09/2013    jkelso                 Added ability to align accounts to multiple territories
+1.2     05/01/2015    gaurang Daskania       Optimizing code to avoid 50001 governer limit 
+1.3     27/04/2018    Cognizant              Added new method for Add&Open button and navigate to selected account detail page
+1.4     04/02/2019    Cognizant              Added new method and wrapper class to select multipule territories if user having multipule territories
+1.5     19/11/2019    Cognizant              Account result will be displayed only if account status is Active
+1.6		13/01/2021	  Cognizant              Updated with Territory 2.0 data model.
+************************************************************/
+
+public class searchAccts {
+
+
+    public List<ResultHeader> resultHeaders {set;get;}
+
+    public String wc {get;set;}
+
+    public List <SearchField> acctSearchFields {set;get;}
+    public List <SearchField> addrSearchFields {set;get;}
+
+    private List<String> acctSearchFieldSet  ;
+    private List<String> addrSearchFieldSet  ;
+
+    private List<String> resultFieldSet  ;
+    private Set <String> acctResultFields = new Set<String> () ;
+    private Set <String> addrResultFields = new Set<String> () ;
+
+
+    private Map<String, Schema.SObjectField> acctFieldMap ;
+    private Map<String, Schema.SObjectField> addrFieldMap ;
+
+    public Map <String,String> resFieldTypeMap = new Map <String,String> () ;
+    private Map <String,String> resFieldLabelMap = new Map <String,String> () ;
+
+    public static List<SelectOption> acctRecTypesPlist ;
+    public static List<SelectOption> addrRecTypesPlist ;
+    private Map <String,String> recTypeXlation = new Map <String,String> () ;
+
+    public String parentSearch {set;get;}
+    public String parentAcctField {set;get;}
+    public String returnElemId {set;get;}
+
+    public Boolean showAllAddrs {set;get;}
+    public Boolean trackAlignmentHistory {get;set;}
+
+    public SearchResult [] results {get;set;}
+
+    public String sortKey {get;set;}
+    public String sortDir {get;set;}
+    
+    //mnaidu - Sep 23, 2013 - Janssen customization to integrate the DCR process with GAS
+    public String chosenDCRRectype {set;get;}
+    
+    
+
+    // Custom Labels
+    public String GAS_CANCEL {set;get;}
+    public String GAS_SEARCH {set;get;}
+    public String GAS_LOOKUP {set;get;}
+    public String GAS_SFA {set;get;}
+    public String GAS_SFPA {set;get;}
+    public String GAS_EM {set;get;}
+    public String GAS_SW {set;get;}
+    public String GAS_CONTAINS {set;get;}
+    public static String GAS_NONE {set;get;}
+    public String GAS_RESULTS {set;get;}
+    public String GAS_ATT {set;get;}
+    public String GAS_AN {set;get;}                          //CIJUNE18 MR:752
+    public String GAS_NOCRIT {set;get;}
+    public String GAS_NAMESEARCH {set;get;}
+    public String GAS_NOMATCH {set;get;}
+    public String GAS_TOOMANY {set;get;}
+    public String GAS_NOTALGN {set;get;}
+    public String GAS_MANYALGN {set;get;}
+    public String GAS_INTERR {set;get;}
+    public String GAS_SUCCESS {set;get;}
+    public String GAS_SELECT {set;get;}
+    public String GAS_CLEAR {set;get;}
+    public Boolean GAS_ALIGN_MULTIPLE {get;set;}
+    public String GAS_AVALTERRSLECT {set;get;}
+    public String GAS_DESCR {set;get;}
+    public String GAS_NAME{set;get;}
+    public String GAS_SLECTACCT {set;get;}
+    public String GAS_SLECTTERR {set;get;}
+    public User theUser;
+
+
+    // Constructor
+    public searchAccts () {
+        results = new List<SearchResult> () ;
+        cUserList=new List<cUserTerritoryWrapper>();
+        parentSearch = ApexPages.currentPage().getParameters().get('parentSearch');
+        parentAcctField = ApexPages.currentPage().getParameters().get('parentAcctField');
+        returnElemId = ApexPages.currentPage().getParameters().get('returnElemId');
+        String lang = UserInfo.getLanguage() ;
+        // Get labels from Message_vod__c for user's language        
+        // Get values of custom settings
+        //mnaidu - 7/16/2013 - We should leverage Hierarchy Custom settings for this as it is more suited to this type of transaction. Also should
+        //give us the ability to have different search and results columns for different users
+        GAS_Hierarchical_Setting__c   gas = GAS_Hierarchical_Setting__c.getInstance();//this returns the appropriate settings for the user based on his user profile  
+        GAS_CANCEL = gas.GAS_Message_Cancel__c ;
+        GAS_SEARCH = gas.GAS_Message_Search__c;
+        GAS_LOOKUP = gas.GAS_Message_Lookup__c ;
+        GAS_SFA = gas.GAS_Message_SFA__c ;
+        GAS_SFPA = gas.GAS_Message_SFPA__c ;
+        GAS_EM = gas.GAS_Message_EM__c ;
+        GAS_SW = gas.GAS_Message_STARTS_WITH__c ;
+        GAS_CONTAINS = gas.GAS_Message_CONTAINS__c ;
+        GAS_NONE = gas.GAS_Message_NONE__c ;
+        GAS_RESULTS = gas.GAS_Message_RESULTS__c ;
+        GAS_ATT = gas.GAS_Message_ATT__c ;
+        GAS_AN = gas.GAS_Message_AN_JNJ__c;                              //CIJUNE18 MR:752
+        GAS_NOCRIT = gas.GAS_Message_NoCriteria__c;
+        GAS_NAMESEARCH = gas.GAS_Message_NameSearch__c ;
+        GAS_NOMATCH = gas.GAS_Message_NOMATCH__c ;
+        GAS_TOOMANY = gas.GAS_Message_TOO_MANY__c ;
+        GAS_NOTALGN = gas.GAS_Message_NOTALIGNED__c ;
+        GAS_MANYALGN = gas.GAS_Message_MANYALIGN__c;
+        GAS_INTERR = gas.GAS_Message_INTERR__c ;
+        GAS_SUCCESS = gas.GAS_Message_SUCCESS__c ;
+        GAS_SELECT = gas.GAS_Message_SELECT__c ;
+        GAS_CLEAR = gas.GAS_Message_CLEAR__c ;
+        GAS_ALIGN_MULTIPLE = gas.Align_Multiple_Territory__c;        
+        GAS_AVALTERRSLECT = gas.GAS_Message_AVALTERRSLECT_JNJ__c;
+        GAS_DESCR = gas.GAS_Message_Description_JNJ__c;
+        GAS_NAME = gas.GAS_Message_NAME_JNJ__c;
+        GAS_SLECTACCT = gas.GAS_Message_SLECTACCT_JNJ__c;
+        GAS_SLECTTERR = gas.GAS_Message_SLECTTERR_JNJ__c;         
+     
+        // Get Record Types for Accounts and Addresses
+        // We need to use the translation table, and also filter by sObjectType
+        acctRecTypesPlist = new List<SelectOption> () ;
+        acctRecTypesPlist.add(new SelectOption('',GAS_NONE)) ;
+        for (RecordTypeLocalization rtl : [select ParentId, Parent.Name, Value from RecordTypeLocalization where ParentId in (select Id FROM RecordType where SobjectType = 'Account' AND IsActive = true) and Language = :lang order by Value]) {
+            acctRecTypesPlist.add(new SelectOption(rtl.ParentId,rtl.Value));
+            recTypeXlation.put (rtl.Parent.Name, rtl.Value) ;
+        }
+        // Also need to pick up those Record Types not in RecordTypeLocalization
+        for (RecordType rt :[select Id,Name from RecordType where SobjectType = 'Account' AND IsActive = true and Id not in (select ParentId FROM RecordTypeLocalization where Language = :lang)]) {
+            acctRecTypesPlist.add(new SelectOption(rt.Id,rt.Name));
+            recTypeXlation.put (rt.Name, rt.Name) ;
+        }
+        acctRecTypesPlist = SortOptionList(acctRecTypesPlist) ;
+        // Address Record Types
+        addrRecTypesPlist = new List<SelectOption> () ;
+        addrRecTypesPlist.add(new SelectOption('',GAS_NONE)) ;
+        for (RecordTypeLocalization rtl : [select ParentId, Parent.Name, Value from RecordTypeLocalization where ParentId in (select Id FROM RecordType where SobjectType = 'Address_vod__c' AND IsActive = true) and Language = :lang order by Value]) {
+            addrRecTypesPlist.add(new SelectOption(rtl.ParentId,rtl.Value));
+            recTypeXlation.put (rtl.Parent.Name, rtl.Value) ;
+        }
+        // Also need to pick up those Record Types not in RecordTypeLocalization
+        for (RecordType rt :[select Id,Name from RecordType where SobjectType = 'Address_vod__c' AND IsActive = true and Id not in (select ParentId FROM RecordTypeLocalization where Language = :lang)]) {
+            addrRecTypesPlist.add(new SelectOption(rt.Id,rt.Name));
+            recTypeXlation.put (rt.Name, rt.Name) ;
+        }
+        addrRecTypesPlist = SortOptionList(addrRecTypesPlist) ;
+
+
+        acctSearchFieldSet = gas.Account_Search_Field_Set__c.split(',') ;
+        addrSearchFieldSet = gas.Address_Search_Field_Set__c.split(',') ;
+        resultFieldSet = gas.Result_Field_Set__c.split(',') ;
+        showAllAddrs = gas.Show_All_Addresses__c ;
+        trackAlignmentHistory  = gas.Track_Alignment_History__c;
+        System.debug('showAllAddrs = ' + showAllAddrs);
+        
+        // Set up search fields
+        acctSearchFields = new List <SearchField> () ;
+        acctFieldMap = Schema.SObjectType.Account.fields.getMap();
+        for (String f : acctSearchFieldSet) {
+            Schema.DescribeFieldResult  dfr = acctFieldMap.get(f).getDescribe() ;
+            acctSearchFields.add (new SearchField('Account',dfr)) ;
+        }
+        addrSearchFields = new List <SearchField> () ;
+        addrFieldMap = Schema.SObjectType.Address_vod__c.fields.getMap();
+        for (String f : addrSearchFieldSet) {
+            Schema.DescribeFieldResult  dfr = addrFieldMap.get(f).getDescribe() ;
+            addrSearchFields.add (new SearchField('Address_vod__c',dfr)) ;
+        }
+        // Parse resultFieldSet to get result Account and Address fields
+        acctResultFields = new Set<String> () ;
+        addrResultFields = new Set<String> () ;
+        resultHeaders = new List<ResultHeader> () ;
+        sortKey = '' ;
+        sortDir = 'A' ;
+        for (String rf : resultFieldSet) {
+            if (sortKey == '') {
+                // Set sortKey to first result field in list
+                sortKey = rf; 
+            }
+            if (rf.startsWith('ADD.')) {
+                String dataType = addrFieldMap.get(rf.replace('ADD.', '')).getDescribe().getType().name() ;
+                resFieldTypeMap.put (rf, dataType) ;
+                String label = addrFieldMap.get(rf.replace('ADD.', '')).getDescribe().getLabel() ;
+                if (dataType == 'Reference') {
+                    // We need to add Relationship.Name to acctResultFields
+                    String rel = addrFieldMap.get(rf.replace('ADD.', '')).getDescribe().getRelationshipName() ;
+                    addrResultFields.add(rel + '.Name') ;
+                    // Remove trailing ' ID' from label
+                    label = label.replaceFirst(' ID$', '') ;
+                }
+                resFieldLabelMap.put (rf, label) ;
+                addrResultFields.add (rf.replace('ADD.', '')) ;
+                ResultHeader rh = new ResultHeader () ;
+                rh.label = label ;
+                rh.apiname = rf ;
+                resultHeaders.add (rh) ;
+            }
+            else {
+                String dataType = acctFieldMap.get(rf).getDescribe().getType().name() ;
+                resFieldTypeMap.put (rf, dataType) ;
+                String label = acctFieldMap.get(rf).getDescribe().getLabel() ;
+                if (dataType == 'Reference') {
+                    // We need to add Relationship.Name to acctResultFields
+                    String rel = acctFieldMap.get(rf).getDescribe().getRelationshipName() ;
+                    acctResultFields.add(rel + '.Name') ;
+                    // Remove trailing ' ID' from label
+                    label = label.replaceFirst(' ID$', '') ;
+                }
+                resFieldLabelMap.put (rf, label) ;
+                acctResultFields.add (rf) ;
+                ResultHeader rh = new ResultHeader () ;
+                rh.label = label ;
+                rh.apiname = rf ;
+                resultHeaders.add (rh) ;
+            }
+        }
+        // Add the fields which we always need for Account and Address
+        acctResultFields.add('Id') ;
+        acctResultFields.add('FirstName') ;
+        acctResultFields.add('LastName') ;
+        acctResultFields.add('Name') ;
+        acctResultFields.add('IsPersonAccount') ;
+        addrResultFields.add('Id') ;
+        addrResultFields.add('Account_vod__c') ;
+        addrResultFields.add('Primary_vod__c') ;
+    }
+
+    public PageReference sortResults() {
+        String newSortKey = ApexPages.currentPage().getParameters().get('sortKey');
+        if (newSortKey == sortKey) {
+            // Just change sortDir
+            if (sortDir == 'A') {
+                sortDir = 'D' ;
+            }
+            else {
+                sortDir = 'A' ;
+            }
+        }
+        else {
+            sortKey = newSortKey ;
+            sortDir = 'A' ;
+        }
+        results = SortSearchResults(results, sortKey, sortDir) ;
+        return null ;
+    }
+
+    public PageReference doSearch() {
+        
+        try {
+            results = new List<SearchResult> () ;
+            cUserList =new List<cUserTerritoryWrapper>();
+            getCurrentUserTerritory() ;        
+            Set <Id> gotAccts = new Set<Id> ();
+            List <ID> acctIds = new List <String> () ;
+            String whereClause = '' ;
+            Boolean searchAddrFirst = false ;
+            String prefix = '' ;
+            // Determine if user has enetered any values for address search fields
+            for (SearchField sf : addrSearchFields) {
+                if (sf.value != '' && sf.value != 'null' && sf.value != null) {
+                searchAddrFirst = true  ;
+                prefix = 'Account_vod__r.' ;
+                    break ;
+                }
+            } 
+            // Boolean got_csz = false; // Got City, State or Zip
+            // Boolean got_noncsz = false; // Other than City, State or Zip
+            Boolean got_pname = false; // Got person name
+            Boolean got_name = false; // Got full name
+
+            // Combine the search fields
+            List <SearchField> allSearchFields = new List <SearchField> () ;
+            allSearchFields.addAll(acctSearchFields) ;
+            allSearchFields.addAll(addrSearchFields) ;
+
+            // Go thru each search field
+            for (SearchField sf : allSearchFields) {
+                if (sf.value != '' && sf.value != 'null' && sf.value != null) {
+                    String field = sf.apiname ;
+                    String op = '=' ;
+                    String value = sf.value ;
+                    String externalid = 'and (External_ID_vod__c != Null or External_ID_vod__c != \'\')';
+                    String accStatus = 'and (Account_Status_JNJ__c=\'active\')';
+                    String acc_addrStatus = 'and (Account_vod__r.Account_Status_JNJ__c=\'active\')';
+                    // Escape any quotes in the value
+                    //JK - changing to use escapeSingleQuotes method
+                    //value = value.replace('\'', '\\\'') ;
+                    value = String.escapeSingleQuotes(value);
+                    
+                    if (sf.obj == 'Account') {
+                        field = prefix + field ;
+                    }
+
+                    if (sf.opt_value == 'Starts With') {
+                        op = 'like' ;
+                        value = value + '%' ;
+                    }
+                    if (sf.opt_value == 'Contains') {
+                        op = 'like' ;
+                        value = '%' + value + '%' ;
+                    }
+
+                    if (sf.is_phone) {
+                        op = 'like' ;
+                        value = getPhoneRegex(value) ;
+                    }
+                    
+                    // Put quotes around val for relevant types
+                    if(!sf.no_quote) {
+                        value = '\'' + value + '\'' ;
+                    }
+                    if (whereClause != '') {
+                        whereClause += ' AND ' ;
+                    }
+                    
+                    // skip where clause for address search query
+                    if(searchAddrFirst==True){
+                        whereClause += ' ' + field + ' ' + op + ' ' + value + ' ' + externalid + ' ' + acc_addrStatus;
+                    }else{
+                        whereClause += ' ' + field + ' ' + op + ' ' + value + ' ' + externalid + ' ' + accStatus;
+                    }
+                    
+
+                    if (sf.obj == 'Account') {
+                        if (sf.apiname == 'Name') {
+                            got_name = true ;
+                        }
+                        if (sf.apiname == 'FirstName' || sf.apiname == 'LastName') {
+                            got_pname = true ;
+                        }
+                    }
+                }
+            }
+            wc = whereClause ;
+            if (whereClause == '') {
+                ApexPages.addMessage (new ApexPages.Message(ApexPages.Severity.WARNING, GAS_NOCRIT));
+                return null ;
+            }
+            if (got_pname == true && got_name == true) {
+                ApexPages.addMessage (new ApexPages.Message(ApexPages.Severity.WARNING, GAS_NAMESEARCH));
+                return null ;
+            }
+           
+            string LimitClause=' limit 20000 ';                
+                            
+            if (searchAddrFirst) {
+                for (Address_vod__c ad : Database.query('select Account_vod__c, Account_vod__r.IsPersonAccount from Address_vod__c where ' + whereClause + LimitClause )) {
+                        acctIds.add(ad.Account_vod__c) ;
+                }
+            }
+            else {
+                String resFields = joinStrings(acctResultFields,',') ;
+                // Add Formatted_Name_vod__c if it's not there
+                if (!resFields.contains('Formatted_Name_vod__c')) {
+                    resFields += ',Formatted_Name_vod__c' ;
+                }
+                //variable added by Gaurang to not include those record types. 
+                
+                 
+                 List<GAS_Visibility_Configuration__c> lstGASVisiblity  = [select Id,Name,Custom_Criteria__c from GAS_Visibility_Configuration__c]; 
+                 string exludeClause='';
+                 system.debug('************lstGASVisiblity size*******' + lstGASVisiblity.size());
+                 if(lstGASVisiblity.size()>0)
+                 {
+                     if(lstGASVisiblity[0].Custom_Criteria__c != null && lstGASVisiblity[0].Custom_Criteria__c != '')
+                     {
+                     
+                     if(GASUtilities.IsgetAccountIdsToExclude(UserInfo.getUserId()))
+                     exludeClause = lstGASVisiblity[0].Custom_Criteria__c;
+                     system.debug('************exludeClause *******' + exludeClause);
+                     }
+                 }
+                 
+                system.debug('query for where clause: = '+ whereClause);  
+                system.debug('query for exclude clause: = '+ exludeClause); 
+                system.debug('query for limit clause: = ' + LimitClause);
+                
+                
+                for (Account a : Database.query('select Id,IsPersonAccount from Account where ' + whereClause + exludeClause + ' order by Name,Id'+ LimitClause  )) 
+                {
+                        acctIds.add(a.Id) ;
+                }
+            }
+wc = 'at 1' ;
+            // Error if nothing found
+            if (acctIds.size() == 0) {
+                ApexPages.addMessage (new ApexPages.Message(ApexPages.Severity.WARNING, GAS_NOMATCH));
+                return null;
+            }
+            // If this is a search for parent, remove the account IDs we have found which are not parents.  We can do this
+            // by using a GROUP BY clause which counts child accounts per parent.  This query will not return those Accounts
+            // which have no child accounts.  Since we can't have more than 1000 elements in :acctIds, error out if we have more than 1000
+            if (parentSearch == '1' && acctIds.size() > 1000) {
+                ApexPages.addMessage (new ApexPages.Message(ApexPages.Severity.WARNING, GAS_TOOMANY));
+                return null;
+            }
+            Set <ID> distinctAcctIds = new Set<ID>() ;
+            System.debug ('parentSearch is ' + parentSearch) ;
+            if (parentSearch == '1') {
+                String query = 'select ' + parentAcctField + ', Count(Id) from Account where Primary_Parent_vod__c  in :acctIds group by ' + parentAcctField + '' ;
+                AggregateResult[] groupedResults = database.query(query);
+                for (AggregateResult ar : groupedResults)  {
+                    System.debug('Primary_Parent_vod__c ID' + ar.get('Primary_Parent_vod__c'));
+                    distinctAcctIds.add((String)ar.get('Primary_Parent_vod__c')) ;
+                }
+            }
+            else {
+                distinctAcctIds.addAll(acctIds) ;
+            }
+  
+            if (distinctAcctIds.size() >( (Integer) GAS_Hierarchical_Setting__c.getInstance().MAX_Allowed_Distinct_Accounts__c -1) ) {
+                String warnMessage = GAS_TOOMANY + ' ( Found '+ distinctAcctIds.size() + ', Allowed ' + (Integer) GAS_Hierarchical_Setting__c.getInstance().MAX_Allowed_Distinct_Accounts__c +' )';
+                ApexPages.addMessage (new ApexPages.Message(ApexPages.Severity.WARNING, warnMessage));
+                return null;
+            }
+
+            // We now do a Parent to Child query to get the Accounts we want, along with their addresses.  Order addresses by Primary Address
+            String resFields = joinStrings(acctResultFields,',') ;
+            // Add Formatted_Name_vod__c if it's not there
+            if (!resFields.contains('Formatted_Name_vod__c')) {
+                resFields += ',Formatted_Name_vod__c' ;
+            }
+            
+            //mnaidu 7/16/2013 - GAS 2.1 enhancement
+            //remove the account ids that need to be excluded
+           //Commented by Gaurang Daslania as this exlusion condition has been added to Master query.
+           /* if(GAS_Hierarchical_Setting__c.getInstance().Do_Criteria_Based_Filtering__c){
+                acctIds = excludeAccountsIfAny(acctIds);
+            }*/
+            
+            String q = 'select ' + resFields + ', (select ' + joinStrings(addrResultFields,',') + ' from Address_vod__r order by Primary_vod__c desc, CreatedDate) from Account where Id in :acctIds' ;
+
+            System.debug('GAS query = ' + q);
+
+            for (Account a : Database.query(q)) {
+                SearchResult mainSR ;
+                Integer ix = 0 ;
+                if (a.Address_vod__r.size() > 0) {
+                    for (Address_vod__c ad : a.Address_vod__r) {
+                        // Build the searchResults
+                        SearchResult sr = new SearchResult () ;
+                        sr.acctId = a.Id ;
+                        sr.addrId = a.Address_vod__r[ix].Id ;
+                        sr.isSelected = false ;
+                        // Now get field values 
+                        sr.srFields = new List<SearchResultField> () ;
+                        for (String rf : resultFieldSet) {
+                            SearchResultField srf = new SearchResultField () ;
+                            srf.apiname = rf ;
+                            String typex  = resFieldTypeMap.get(rf) ;
+                            if (rf.startsWith('ADD.')) {
+                                srf.value = getObjValue(a.Address_vod__r[ix], rf, typex) ;
+                                srf.label = resFieldLabelMap.get(rf) ;
+                                srf.is_Addr = true ;
+                                srf.is_Acct = false ;
+                            }
+                            else {
+                                srf.value = getObjValue(a, rf, typex) ;
+                                srf.label = resFieldLabelMap.get(rf) ;
+                                // Use Formatted_Name_vod__c for Name
+                                if (rf == 'Name') {
+                                    srf.value = getObjValue(a, 'Formatted_Name_vod__c', 'String') ;
+                                }
+                                srf.is_Addr = false ;
+                                srf.is_Acct = true ;
+                            }
+                            // The rawvalue of the srf will be used for sorting
+                            srf.rawvalue = srf.value ;
+                            if ((typex == 'Date' || typex == 'Datetime') && srf.value != '') {
+                                // For sorting purposes, store rawvalue of Date/Datetime as seconds since epoch
+                                String dtval = srf.value ;
+                                if (typex == 'Date') {
+                                    dtval = Datetime.newInstance(Date.parse(srf.value), Time.newInstance(0, 0, 0, 0)).format() ;
+                                }
+                                srf.rawvalue = (String) Datetime.parse(dtval).getTime().format() ;
+                            }
+                            sr.srFields.add(srf) ;
+                        }
+                        sr.acctName = a.Name ;
+                        if (ix == 0) {
+                            sr.otherAddrs = new List<SearchResult> () ;
+                            mainSR = sr ;
+                            results.add(mainSR) ;
+                        }
+                        else {
+                            mainSR.otherAddrs.add(sr) ;
+                        }
+                        ix++ ;
+                        // If we are not showing all addresses, and we are done with the first, then break out of loop
+                        System.debug('showAllAddrs before break' + showAllAddrs);
+                        if (!showAllAddrs) {
+                            break ;
+                        }
+                    }
+                }
+                else {
+                    // No address, just get and set Account info
+                    SearchResult sr = new SearchResult () ;
+                    sr.acctId = a.Id ;
+                    sr.addrId = '' ;
+                    sr.isSelected = false ;
+                    // Now get field values 
+                    sr.srFields = new List<SearchResultField> () ;
+                    for (String rf : resultFieldSet) {
+                        SearchResultField srf = new SearchResultField () ;
+                        srf.apiname = rf ;
+                        String typex  = resFieldTypeMap.get(rf) ;
+                        if (rf.startsWith('ADD.')) {
+                            srf.value = '' ;
+                            srf.label = resFieldLabelMap.get(rf) ;
+                            srf.is_Addr = true ;
+                            srf.is_Acct = false ;
+                        }
+                        else {
+                            srf.value = getObjValue(a, rf, typex) ;
+                            srf.label = resFieldLabelMap.get(rf) ;
+                            // Use Formatted_Name_vod__c for Name
+                            if (rf == 'Name') {
+                                srf.value = getObjValue(a, 'Formatted_Name_vod__c', 'String') ;
+                            }
+                            srf.is_Addr = false ;
+                            srf.is_Acct = true ;
+                        }
+                        // The rawvalue of the srf will be used for sorting
+                        srf.rawvalue = srf.value ;
+                        if ((typex == 'Date' || typex == 'Datetime') && srf.value != '') {
+                            // For sorting purposes, store rawvalue of Date/Datetime as seconds since epoch
+                            String dtval = srf.value ;
+                            if (typex == 'Date') {
+                                dtval = Datetime.newInstance(Date.parse(srf.value), Time.newInstance(0, 0, 0, 0)).format() ;
+                            }
+                            srf.rawvalue = (String) Datetime.parse(dtval).getTime().format() ;
+                        }
+                        sr.srFields.add(srf) ;
+                    }
+                    sr.acctName = a.Name ;
+                    sr.otherAddrs = new List<SearchResult> () ;
+                    mainSR = sr ;
+                    results.add(mainSR) ;
+                }
+            }
+            // Sort.  Initial sort is by first result field, which has already been set in constructor
+            results = SortSearchResults(results, sortKey, sortDir) ;
+        }
+        catch (Exception ex) {
+            ApexPages.addMessages(ex);
+        }
+        return null;
+    }
+
+    public PageReference addToTerritory() {
+        String newAcctId  = '';
+        if (results == null || results.size() == 0) {
+            return null ;
+        }
+        // Find the selected Account
+        for (SearchResult sr : results) {
+            if (sr.isSelected == true) {
+                newAcctId = sr.acctId ;                
+                break ;
+            }
+        }
+        
+        if (newAcctId == '') {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_SLECTACCT));  //CI MARCH19 MR 897 addded new error message
+            return null ;
+        }
+        
+        // Get the territory for the user
+        //jkelso - 8/12/13 - build list of multiple territories and territory Ids
+        List<UserTerritory2Association> utList = new List<UserTerritory2Association>();
+        List<Id> utIds = new List<Id>();
+        for (UserTerritory2Association ut :[select Territory2Id from UserTerritory2Association where UserId = :UserInfo.getUserId()]) {
+            system.debug(LoggingLevel.Info,'ut: ' + ut);
+            utList.add(ut);
+            utIds.add(ut.Territory2Id);
+        }
+        system.debug('utList: ' + utList);
+        if (utList.size() == 0) {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_NOTALGN));
+            return null ;
+        }
+        //jkelso - 8/12/13 - new custom setting to allow align of multiple territory
+        else if (utList.size() > 1 && !GAS_ALIGN_MULTIPLE) {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_MANYALGN));
+            return null ;
+        }
+        // Get the name of the Territory
+        List<String> userTerrNames = new List<String>();
+        String terrString = '';
+        //jkelso - 8/12/13 - build string of multiple territories
+        system.debug('utIds: ' + utIds);
+        if(cUserList!=null && cUserList.size()==1){
+            for (Territory2 t : [SELECT Name FROM Territory2 WHERE ID IN :utIds]) {
+                userTerrNames.add(t.Name);
+                terrString += t.Name + ';';
+            }
+        }else{
+            Boolean terrSelectBoolean=false;
+            for (cUserTerritoryWrapper t : cUserList) {
+                if(t.selected){
+                    terrSelectBoolean=true;
+                    userTerrNames.add(t.userTer.Name);
+                    terrString += t.userTer.Name + ';';
+                }
+            }
+            if(!terrSelectBoolean){
+                 ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_SLECTTERR));
+                 return null ;
+            }
+        }
+        
+        terrString  = terrString.Substring(0,terrString.length()-1);
+        system.debug('terrString after building territories');
+        // Now check for existing territories for the Account
+        List <AccountShare> asList = [select AccountId,UserOrGroupId, RowCause from AccountShare where AccountId =  :newAcctId //and RowCause in ('TerritoryManual') - mnaidu;04/28/13 - check for any kinds of alignment
+        ] ;
+        if (asList.size() > 0) {
+            // Get all the UserOrGroupIds, and store in a List
+            List<Id> idlist1 = new List<Id> () ;
+            Set<Id> manuallyAssignedGrpIDs = new Set<ID>();//mnaidu - 4/28/13 - capture what's manually assigned
+            Set<Id> manuallyAssignedTerrIDs = new Set<ID>();//mnaidu - 4/28/13 - capture what's manually assigned
+            for (AccountShare ash : asList) {
+                idlist1.add(ash.UserOrGroupId) ;             
+                if(ash.RowCause=='Territory2AssociationManual'){
+                    manuallyAssignedGrpIDs.add(ash.UserOrGroupId);   //mnaidu - 4/28/13 - capture what's manually assigned              
+                }
+            }
+            // Now let's get the IDs of the Territories
+            List<Id> idlist2 = new List<Id> () ;
+            List<Group> groupList = [select RelatedId from group where Id in :idlist1] ;
+           
+            for (Group g : groupList) {
+                idlist2.add(g.RelatedId) ;              
+                if(manuallyAssignedGrpIDs.contains(g.Id)){
+                    manuallyAssignedTerrIDs.add(g.RelatedId); //mnaidu - 4/28/13 - capture what's manually assigned
+                }
+            }
+            // Finally, get the names
+
+            List <Territory2> terrList = [select Id, Name from Territory2 where Id in :idlist2] ;
+            Set<String> userTerrNameSet = new Set<String>();
+            for (Territory2 t : terrList) {
+                // If the Territory is already there, output a warning and exit
+                for (String utn : userTerrNames) {
+                    userTerrNameSet.add(utn);
+                    if(cUserList.size() <= 1){
+                        if (t.Name == utn) {
+                            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,GAS_INTERR));
+                            return null ;
+                        }
+                    }
+                }
+                if(manuallyAssignedTerrIDs.contains(t.Id)){ //mnaidu - 4/28/13 - only add to the terrString if this is Manually already assigned
+                    terrString = terrString + ';' + t.Name ;                    
+                }
+            }
+            if(cuserList.size() > 1){
+                for(Territory2 t : terrList){
+                    if(userTerrNameSet.contains(t.Name)){
+                        userTerrNameSet.remove(t.Name);
+                    }
+                }
+            }
+            if(userTerrNameSet.isEmpty()&&(!terrList.isEmpty())){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,GAS_INTERR));
+                return null ;
+            }
+
+        }
+        
+        GAS_Alignment_History_vts__c history = new GAS_Alignment_History_vts__c();
+        
+        try{
+            //track that Account to be aligned
+            history.Account__c = newAcctId;
+            history.New_Territory__c = terrString;
+            
+            // Now let's see if the Account Territory Loader already exists
+            List <Account_Territory_Loader_vod__c> atlList = [select Id, Territory_vod__c from Account_Territory_Loader_vod__c where Account_vod__c = :newAcctId] ;
+            if (atlList.size() == 1) {                
+            
+                Account_Territory_Loader_vod__c atl = atlList[0] ;
+                
+                //track ATL and old territory string
+                history.Account_Territory_Loader__c = atl.Id;
+                history.Old_Territory__c = atl.Territory_vod__c;
+                
+                //set new ATL territory
+                atl.Territory_vod__c = terrString ;
+                
+                System.debug('Before updating the ATL reco: ' +  atl.Territory_vod__c);
+
+                update (atl) ;
+ 
+                 System.debug('After updating the ATL reco: ' +  atl.Territory_vod__c);
+ 
+                
+                //insert history record
+                if (trackAlignmentHistory) {
+                    insert history;
+                }
+                
+            }
+            else {
+                Account_Territory_Loader_vod__c atl = new Account_Territory_Loader_vod__c(Account_vod__c=newAcctId,External_ID_vod__c=newAcctId,Territory_vod__c=terrString);
+                insert (atl) ;
+                
+                //track history
+                history.Account_Territory_Loader__c = atl.Id;
+                if (trackAlignmentHistory) {
+                    insert history;
+                }
+            }
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.INFO,GAS_SUCCESS));
+        }
+        catch(DmlException ex){
+            ApexPages.addMessages(ex);
+        }
+        return null ;
+    }
+    
+    //CIJUNE18 MR:752 Request to create add&open button,add teerioty logic and navigate to Account detail page
+    
+    public PageReference addAndOpen() {                                            //creating add&open button logic and navigate to Account detail page
+        String newAcctId  = '';
+        if (results == null || results.size() == 0) {
+            return null ;
+        }
+        // Find the selected Account
+        for (SearchResult sr : results) {
+            if (sr.isSelected == true) {
+                newAcctId = sr.acctId ;
+                break ;
+            }
+        }
+        if (newAcctId == '') {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_SLECTACCT ));
+            return null ;
+        }
+
+        // Get the territory for the user
+        //jkelso - 8/12/13 - build list of multiple territories and territory Ids
+        List<UserTerritory2Association> utList = new List<UserTerritory2Association>();
+        List<Id> utIds = new List<Id>();
+        for (UserTerritory2Association ut :[select Territory2Id from UserTerritory2Association where UserId = :UserInfo.getUserId()]) {
+            system.debug(LoggingLevel.Info,'ut: ' + ut);
+            utList.add(ut);
+            utIds.add(ut.Territory2Id);
+        }        
+        if (utList.isEmpty()) {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_NOTALGN));
+            return null ;
+        }
+        //jkelso - 8/12/13 - new custom setting to allow align of multiple territory
+        else if (utList.size() > 1 && !GAS_ALIGN_MULTIPLE) {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_MANYALGN));
+            return null ;
+        }
+        // Get the name of the Territory
+        List<String> userTerrNames = new List<String>();
+        String terrString = '';
+        //jkelso - 8/12/13 - build string of multiple territories        
+        if(cUserList!=null && cUserList.size()==1){
+            for (Territory2 t : [SELECT Name FROM Territory2 WHERE ID IN :utIds]) {
+                userTerrNames.add(t.Name);
+                terrString += t.Name + ';';
+            }
+        }else{
+            Boolean terrSelectBoolean=false;
+            for (cUserTerritoryWrapper t : cUserList) {
+                if(t.selected){
+                    terrSelectBoolean=true;
+                    userTerrNames.add(t.userTer.Name);
+                    terrString += t.userTer.Name + ';';
+                }
+            }
+            if(!terrSelectBoolean){
+                 ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,GAS_SLECTTERR));
+                 return null ;
+            }
+        }
+        terrString  = terrString.Substring(0,terrString.length()-1);
+        system.debug('terrString after building territories');
+        // Now check for existing territories for the Account
+        List <AccountShare> asList = [select AccountId,UserOrGroupId, RowCause from AccountShare where AccountId =  :newAcctId //and RowCause in ('TerritoryManual') - mnaidu;04/28/13 - check for any kinds of alignment
+        ] ;
+        if (!asList.isEmpty()) {
+            // Get all the UserOrGroupIds, and store in a List
+            List<Id> idlist1 = new List<Id> () ;
+            Set<Id> manuallyAssignedGrpIDs = new Set<ID>();//mnaidu - 4/28/13 - capture what's manually assigned
+            Set<Id> manuallyAssignedTerrIDs = new Set<ID>();//mnaidu - 4/28/13 - capture what's manually assigned
+            for (AccountShare ash : asList) {
+                idlist1.add(ash.UserOrGroupId) ;
+                if(ash.RowCause=='Territory2AssociationManual'){
+                    manuallyAssignedGrpIDs.add(ash.UserOrGroupId);   //mnaidu - 4/28/13 - capture what's manually assigned              
+                }
+            }
+            // Now let's get the IDs of the Territories
+            List<Id> idlist2 = new List<Id> () ;
+            List<Group> groupList = [select RelatedId from group where Id in :idlist1] ;
+            for (Group g : groupList) {
+                idlist2.add(g.RelatedId) ;
+                if(manuallyAssignedGrpIDs.contains(g.Id)){
+                    manuallyAssignedTerrIDs.add(g.RelatedId); //mnaidu - 4/28/13 - capture what's manually assigned
+                }
+            }
+            // Finally, get the names
+            List <Territory2> terrList = [select Id, Name from Territory2 where Id in :idlist2];
+            Set<String> userTerrNameSet = new Set<String>(); 
+            for (Territory2 t : terrList) {
+                // If the Territory is already there, output a warning and exit
+                for (String utn : userTerrNames) {
+                    userTerrNameSet.add(utn);
+                    if(cuserList.size() <= 1){
+                        if (t.Name == utn) {
+                            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,GAS_INTERR));
+                            return null ;
+                        }
+                    } 
+                }
+                if(manuallyAssignedTerrIDs.contains(t.Id)){ //mnaidu - 4/28/13 - only add to the terrString if this is Manually already assigned
+                    terrString = terrString + ';' + t.Name ;                    
+                }
+            }
+            if(cuserList.size() > 1){
+                for(Territory2 t : terrList){
+                    if(userTerrNameSet.contains(t.Name)){
+                        userTerrNameSet.remove(t.Name);
+                    }
+                }
+            }
+            if(userTerrNameSet.isEmpty()&&(!terrList.isEmpty())){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.WARNING,GAS_INTERR));
+                return null ;
+            }
+
+        }
+        
+        GAS_Alignment_History_vts__c history = new GAS_Alignment_History_vts__c();
+        
+        try{
+            //track that Account to be aligned
+            history.Account__c = newAcctId;
+            history.New_Territory__c = terrString;
+            
+            // Now let's see if the Account Territory Loader already exists
+            List <Account_Territory_Loader_vod__c> atlList = [select Id, Territory_vod__c from Account_Territory_Loader_vod__c where Account_vod__c = :newAcctId] ;
+            if (atlList.size() == 1) {
+                Account_Territory_Loader_vod__c atl = atlList[0] ;
+                
+                //track ATL and old territory string
+                history.Account_Territory_Loader__c = atl.Id;
+                history.Old_Territory__c = atl.Territory_vod__c;
+                
+                //set new ATL territory
+                atl.Territory_vod__c = terrString ;
+                
+               
+                update (atl) ;
+ 
+                  
+                
+                //insert history record
+                if (trackAlignmentHistory) {
+                    insert history;
+                }
+                
+            }
+            else {
+                Account_Territory_Loader_vod__c atl = new Account_Territory_Loader_vod__c(Account_vod__c=newAcctId,External_ID_vod__c=newAcctId,Territory_vod__c=terrString);
+                insert (atl) ;
+                
+                //track history
+                history.Account_Territory_Loader__c = atl.Id;
+                if (trackAlignmentHistory) {
+                    insert history;
+                }
+            }
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.INFO,GAS_SUCCESS));
+        }
+        catch(DmlException ex){
+            ApexPages.addMessages(ex);
+        }
+        //CIJUNE18 MR:752 navigate to account detail page
+        PageReference nextPage = new PageReference('/' + newAcctId);    //navigate to account detail page
+        nextpage.setredirect(true);
+        return nextPage;
+        
+    }
+
+    public PageReference cancel() {
+        return null ;
+    }
+
+
+
+    private static String joinStrings (Set<String> ss, String delim) {
+        String retVal = '' ;
+        for (String s : ss) {
+            if (retVal != '')  {
+                retVal += delim ;
+            }
+            retVal += s ;
+        }
+        return retVal ;
+    }
+
+    private static String getPhoneRegex (String inph) {
+
+        Pattern pt = Pattern.compile('[^0-9]');
+        String [] res = pt.split(inph) ;
+        String digits = '' ;
+        for (Integer i = 0 ; i < res.size(); i++) {
+        System.debug ('r1:' + res[i]) ;
+            digits = digits + res[i] ;
+        }
+        System.debug ('r2:' + digits) ;
+        String retval= '';
+
+        if (digits.length() == 10) {
+            retval = '%' + digits.substring(0,3) + '%' + digits.substring(3,6) + '%' + digits.substring (6,10) + '%' ;
+        }
+        else if (digits.length() == 7) {
+            retval = '%' + digits.substring(0,3) + '%' + digits.substring(3,7) + '%' ;
+        }
+        else if (digits.length() == 4) {
+            retval = '%' + digits ;
+        }
+        else {
+            retval = digits ;
+        }
+System.debug ('r3:' + retval) ;
+        return retval ;
+    }
+
+    private String getObjValue (sObject so, String fname, String typex) {
+        if (typex == 'Reference') {
+            // Get relationship name
+            String relship ;
+            if (fname.startsWith('ADD.')) {
+                relship = addrFieldMap.get(fname.replace('ADD.', '')).getDescribe().getRelationshipName() ;
+            }
+            else {
+                relship = acctFieldMap.get(fname).getDescribe().getRelationshipName() ;
+            }
+            // Display Name field of lookup value
+            SObject so2 = so.getSObject(relship);
+            if (!fname.contains('RecordTypeId') && so2 != null) {
+                return (String) so2.get('Name') ;
+            }
+            else if (fname.contains('RecordTypeId') && so2 != null) {
+                // We have the value, we need to translate it
+                return recTypeXlation.get((String) so2.get('Name'));
+            }
+            return '' ;
+        }
+        if (fname.startsWith('ADD.')) {
+            fname = fname.replace('ADD.', '') ;
+        }
+        if (typex == 'Boolean') {
+            Boolean b = (Boolean) so.get(fname) ;
+            return (b == true ? '[X]' : '[ ]') ;
+        }
+        else if (typex == 'Date') {
+            Date d = (Date) so.get(fname) ;
+            if (d != null) {
+                return d.format() ;
+            }
+            else {
+                return '' ;
+            }
+        }
+        else if (typex == 'Datetime') {
+            Datetime d = (Datetime) so.get(fname) ;
+            if (d != null) {
+                return d.format() ;
+            }
+            else {
+                return '' ;
+            }
+        }
+        else {
+            return (String) so.get(fname) ;
+        }
+    }
+
+
+    private List<SelectOption> SortOptionList(List<SelectOption> ListToSort) {
+
+        // Simple quick sort : see http://improveit360.blogspot.com/2010/09/implementing-quicksort-to-sort-list-of.html
+        if(ListToSort == null || ListToSort.size() <= 1)
+            return ListToSort;
+            
+        List<SelectOption> Less = new List<SelectOption>();
+        List<SelectOption> Greater = new List<SelectOption>();
+        integer pivot = ListToSort.size() / 2;
+          
+        // save the pivot and remove it from the list
+        SelectOption pivotValue = ListToSort[pivot];
+        ListToSort.remove(pivot);
+        
+        for(SelectOption x : ListToSort)
+        {
+            if(x.getLabel() <= pivotValue.getLabel())
+                Less.add(x);
+            else if(x.getLabel() > pivotValue.getLabel()) Greater.add(x);   
+        }
+        List<SelectOption> xList = new List<SelectOption> ();
+        xList.addAll(SortOptionList(Less));
+        xList.add(pivotValue);
+        xList.addAll(SortOptionList(Greater));
+        // Dedupe
+        List<SelectOption> returnList = new List<SelectOption> ();
+        Set<String> labelSet = new Set<String> () ;
+        returnList.add(new SelectOption('',GAS_NONE)) ;
+        labelSet.add(GAS_NONE) ;
+        for(SelectOption x : xList) {
+            if (!labelSet.contains(x.getLabel())) {
+                returnList.add(x) ;
+                labelSet.add(x.getLabel()) ;
+            }
+        }
+        return returnList; 
+    }  
+    
+            //mnaidu 7/16/2013 - GAS 2.1 enhancement
+            //remove the account ids that need to be excluded
+/**
+***** @author = Murugesh Naidu
+***** @date = July 17, 2013
+***** @param - List of Account Ids to process
+***** @return - List of Account Ids after exclusion criteria applied
+***** GAS 2.1 enhancements
+**/
+    private List<ID> excludeAccountsIfAny(List<ID> accountIds){
+        
+        if(accountIds==null || accountIds.size() == 0){
+            return accountIds;
+        }
+        Set<ID> originalAcctIds = new Set<ID> ();
+        Set<ID> idsToExclude = GASUtilities.getAccountIdsToExclude(UserInfo.getUserId());
+        if(idsToExclude!=null && idsToExclude.size() > 0){
+            originalAcctIds.addAll(accountIds);
+            originalAcctIds.removeAll(idsToExclude);
+            accountIds.clear();
+            accountIds.addAll(originalAcctIds);
+        }
+        return accountIds;
+    }
+
+    private List<SearchResult> SortSearchResults (List<SearchResult> ListToSort, String keyField, String sortDir) {
+
+        if (keyField != '') {
+            // Set key field for each SearchResult
+            for(SearchResult x : ListToSort) {
+                for (SearchResultField y : x.srFields) {
+                    // Find the keyField
+                    if (y.apiname == keyField) {
+                        x.key = y.rawvalue ;
+                        break ;
+                    }
+                }
+            }
+        }
+
+        // Ok, now we have the keys, can do a simple quick sort. See : http://improveit360.blogspot.com/2010/09/implementing-quicksort-to-sort-list-of.html
+        if(ListToSort == null || ListToSort.size() <= 1)
+            return ListToSort;
+            
+        List<SearchResult> Less = new List<SearchResult>();
+        List<SearchResult> Greater = new List<SearchResult>();
+        integer pivot = ListToSort.size() / 2;
+          
+        // save the pivot and remove it from the list
+        SearchResult pivotValue = ListToSort[pivot];
+        ListToSort.remove(pivot);
+        
+        if (sortDir == 'A') { // Ascending
+            for(SearchResult x : ListToSort)
+            {
+                if(x.key <= pivotValue.key)
+                    Less.add(x);
+                else if(x.key > pivotValue.key) Greater.add(x);   
+            }
+        }
+        else { // Descending 
+            for(SearchResult x : ListToSort)
+            {
+                if(x.key <= pivotValue.key)
+                    Greater.add(x);
+                else if(x.key > pivotValue.key) Less.add(x);   
+            }
+        }
+        List<SearchResult> returnList = new List<SearchResult> ();
+        returnList.addAll(SortSearchResults(Less, '', sortDir));
+        returnList.add(pivotValue);
+        returnList.addAll(SortSearchResults(Greater, '', sortDir));
+        return returnList; 
+    }  
+
+    public class SearchResult {
+
+        public String acctId {get;set;}
+        public String acctName {get;set;}
+        public String addrId {get;set;}
+        public Boolean isSelected {get;set;}
+        public String key {set;get;}
+        public List<SearchResultField> srFields {get;set;}
+        public List<SearchResult> otherAddrs {get;set;}
+
+    }
+
+    public class SearchResultField {
+
+        public String apiname {get;set;}
+        public String label {get;set;}
+        public String value {get;set;}
+        public String rawvalue {get;set;}
+        public Boolean is_Acct {get;set;}
+        public Boolean is_Addr {get;set;}
+
+    }
+
+    public class SearchField {
+
+        public String obj {get;set;}
+        public String label {get;set;}
+        public String apiname {get;set;}
+        public String value {get;set;}
+        public String alvalue {get;set;}
+        public String opt_value {get;set;}
+        public Boolean is_picklist {get;set;}
+        public Boolean is_reference {get;set;}
+        public Boolean is_phone {get;set;}
+        public Boolean is_bool {get;set;}
+        public Boolean is_acctlookup {get;set;}
+        public Boolean has_es {get;set;}
+        public Boolean has_cs {get;set;}
+        public Boolean no_quote {get;set;}
+        public Boolean no_opt {get;set;}
+        public Boolean no_picklist {get;set;}
+        public List<SelectOption> plist {set;get;}
+
+        public SearchField (String o, Schema.DescribeFieldResult dfr) {
+            obj = o ;
+            label = dfr.getLabel() ;
+            apiname = dfr.getName () ;
+            value = '' ;
+            opt_value = '' ;
+            is_acctlookup = false ;
+            is_reference = (dfr.getType().name() == 'Reference') ;
+            is_picklist = (dfr.getType().name() == 'Picklist') ;
+            is_phone = (dfr.getType().name() == 'Phone') ;
+            is_bool = (dfr.getType().name() == 'Boolean') ;
+            no_quote = (dfr.getType().name() == 'Boolean' ||
+                        dfr.getType().name() == 'Currency' ||
+                        dfr.getType().name() == 'Date' ||
+                        dfr.getType().name() == 'Datetime' ||
+                        dfr.getType().name() == 'Double' ||
+                        dfr.getType().name() == 'Integer' ||
+                        dfr.getType().name() == 'Percent' ||
+                        dfr.getType().name() == 'Time') ;
+            if (is_picklist) {
+                plist = new List<SelectOption> () ;
+                List<Schema.PicklistEntry> P = dfr.getPicklistValues();
+                plist.add(new SelectOption('',searchAccts.GAS_NONE)) ;
+                for (Schema.PicklistEntry pe : P) {
+                    plist.add(new SelectOption(pe.getValue(),pe.getLabel()));
+                }
+            }
+            if (is_reference) {
+                // Make it a picklist of names
+                is_picklist = true ;
+                // Remove trailing ' ID' from label
+                label = label.replaceFirst(' ID$', '') ;
+                List <Schema.sObjectType> sobjs = dfr.getReferenceTo() ;
+                String objName = sobjs[0].getDescribe().getName() ;
+System.debug ('objName is ' + objName) ;
+                if (objName == 'RecordType') {
+                    // Already calculated
+                    plist = obj == 'Account' ? searchAccts.acctRecTypesPlist.clone()  : searchAccts.addrRecTypesPlist.clone() ;
+                }
+                else if (objName != 'Account') {
+                    // All other references
+                    plist = new List<SelectOption> () ;
+                    plist.add(new SelectOption('',searchAccts.GAS_NONE)) ;
+                    String query = 'select Id,Name from ' + objName + ' order by Name' ;
+                    for (sObject ox : Database.query(query)) {
+                        plist.add(new SelectOption((String)ox.get('Id'), (String)ox.get('Name'))) ;
+                    }
+                }
+                else {
+                    // objName is Account.  We don't want to display thousands or more Account names in a picklist,
+                    // so we handle this by creating a link to aonther search page.
+                    is_acctlookup = true ;
+                }
+System.debug ('is_acctlookup is ' + is_acctlookup) ;
+            }
+            has_es = (obj == 'Account' && (apiname == 'Name' || apiname == 'FirstName' || apiname == 'LastName')) ;
+            has_cs = (obj == 'Address_vod__c' && apiname == 'Name') ;
+            if (has_es) {
+                opt_value = 'Exact Match' ;
+            }
+            if (has_cs) {
+                opt_value = 'Starts With' ;
+            }
+            no_opt = !has_cs && !has_es && !is_acctlookup;
+            no_picklist = !is_picklist ;
+        }
+
+
+
+
+    } 
+
+    public class ResultHeader {
+
+        public String label {set;get;} 
+        public String apiname {set;get;} 
+
+    }
+
+    //mnaidu - Sep 23, 2013 - Janssen customization to integrate the DCR process with GAS
+        
+    public PageReference createDCR(){
+        System.debug('chosenDCRRectype = ' + chosenDCRRectype);
+        if(chosenDCRRectype==null || chosenDCRRectype == ''){
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,'Please choose at-least one DCR Record type from the Drop down'));
+            return null;
+        }
+        String objKeyPrefix = Data_Change_Request__c.sObjectType.getDescribe().getKeyPrefix();
+        String redirectUrl = '/'+ objKeyPrefix + '/e?RecordType='+ chosenDCRRectype + '&nooverride=1';
+        return new PageReference(redirectUrl);
+    }
+    public List<SelectOption> getdcrRecTypes(){
+        List<SelectOption> options = new List<SelectOption> {new SelectOption('','-None-')};
+        Map<ID, RecordType> dcrRecTypeMap = new Map<Id, RecordType> (
+                                                    [SELECT IsActive, Id, DeveloperName, SobjectType, Name FROM RecordType
+                                                        where SobjectType = 'Data_Change_Request__c'
+                                                        and Isactive = true
+                                                        and DeveloperName in :JJDCRRedirectExtension.OVERRIDDEN_DCR_REC_TYPE_DEV_NAMES]);
+        for(RecordType aRecType: dcrRecTypeMap.values()){
+            options.add(new SelectOption(aRecType.Id, aRecType.Name));
+        }
+        return options;     
+    }
+
+    // This method to get current login user territories into the pageblok section
+    public List<cUserTerritoryWrapper> cUserList {get; set;}
+    public void getCurrentUserTerritory() {
+           cUserList = new List<cUserTerritoryWrapper>();
+           Set<Id> territoryIds = new Set<Id>();
+            for(UserTerritory2Association usrTer: [SELECT Id, UserId,Territory2Id from UserTerritory2Association where UserId =: UserInfo.getUserId()]) {
+                territoryIds.add(usrTer.Territory2Id);
+            }
+            if(territoryIds!=null){
+                for(Territory2 usrTerobj: [SELECT Id, Name,Description  FROM Territory2 WHERE Id IN : territoryIds]) {
+                 cUserList.add(new cUserTerritoryWrapper(usrTerobj));
+                }
+            }
+    }
+    /*Wrapper class for selected content*/
+    public class cUserTerritoryWrapper {
+        public Territory2 userTer{get; set;}
+        public Boolean selected {get; set;}
+        public cUserTerritoryWrapper (Territory2 usrTer) {
+            userTer= usrTer;
+            selected = false;
+        }
+        
+    } 
+    
+}
