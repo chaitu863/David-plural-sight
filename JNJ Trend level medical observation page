@@ -1,0 +1,324 @@
+<!--
+*
+* File Name   : JJ_Trend_Level_Medical_Observations
+* Description : This is page to view alerts PUMA alerts/Suggestions
+* *   Modified By       ||  Date Modified   || Description
+*******************************************************************************************************************************
+* 1. Cognizant        || 14-Septmeber-2021     || Initial Version.
+
+-->
+
+<apex:page docType="html-5.0" controller="JJ_Trend_Level_Medical_Observations_Con"  sidebar="false" lightningStylesheets="true" >
+    <apex:form >
+        <div class="slds-scope" >
+            <apex:actionStatus id="mystatus">
+                <apex:facet name="start">
+                    <div style="position: fixed;
+                                top: 0; left: 0;
+                                right: 0;
+                                bottom: 0;
+                                opacity: 0.15;
+                                z-index: 1000;
+                                background-color: black;">&nbsp;
+                    </div>
+                    <div style="position: fixed;
+                                left: 0;
+                                top: 0;
+                                bottom: 0;
+                                right: 0;
+                                z-index: 1001;
+                                margin: 30% 50%">
+                        <img src="{!URLFOR($Resource.ProgressWheel)}"
+                             alt="progressWheel"/>
+                        
+                    </div>
+                </apex:facet>
+
+            </apex:actionStatus>
+            <apex:pageMessages id="AlertError"></apex:pageMessages>
+            <apex:pageBlock id="pb1">
+                <apex:pageBlockSection title="Search"  collapsible="false" columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >
+                            Activation Date &nbsp; <apex:input type="date"  value="{!activtionDate}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >
+                            Expiration Date &nbsp;<apex:input type="date" value="{!expirationDate}" />
+                            <apex:commandButton value="Search" action="{!doSearch}" status="mystatus" style="margin-left: 55px;"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="1" collapsible="false" title="Trend Level Medical Observations" id="tableSection">
+                    <apex:pageBlockTable value="{!alerts}" var="alert"  id="accsTable" styleclass="slds-table--bordered slds-table--cell-buffer slds-table_col-bordered slds-table_resizable-cols">
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink value="Title" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                    <apex:param name="sortBy" value="Name" assignTo="{!sortBy}"/>
+                                </apex:commandLink>
+                            </apex:facet>
+                            <a href="/{!alert.Id}" target="_blank">{!alert.Name}</a>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">
+                                     Alert Text
+                            </apex:facet>
+                            <apex:outputField value="{!alert.Alert_Text_vod__c}"/>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink value="Priority" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                    <apex:param name="sortBy" value="Priority_vod__c" assignTo="{!sortBy}"/>
+                                </apex:commandLink>
+                            </apex:facet>
+                            <apex:outputField value="{!alert.Priority_vod__c}"/>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink value="Activation Date" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                    <apex:param name="sortBy" value="Activation_Date_vod__c" assignTo="{!sortBy}"/>
+                                </apex:commandLink>
+                            </apex:facet>
+                            <apex:outputField value="{!alert.Activation_Date_vod__c}"/>
+                        </apex:column> 
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink value="Expiration Date" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                    <apex:param name="sortBy" value="Expiration_Date_vod__c" assignTo="{!sortBy}"/>
+                                </apex:commandLink>
+                            </apex:facet>
+                            <apex:outputField value="{!alert.Expiration_Date_vod__c}"/>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">
+                                <apex:commandLink value="Owner" action="{!sortColumns}" rerender="tableSection, pbsec" status="mystatus">
+                                    <apex:param name="sortBy" value="Owner.Name" assignTo="{!sortBy}"/>
+                                </apex:commandLink>
+                            </apex:facet>
+                            <apex:outputField value="{!alert.Owner.Name}"/>
+                        </apex:column>
+                        <apex:column title="Dismissed">
+                           <apex:facet name="header">
+                                Dismissed
+                            </apex:facet>
+                            <apex:repeat value="{!alert.Alert_User_Actions__r}" var="c">
+                                <apex:outputField value="{!c.Dismissed_vod__c}"/>
+                            </apex:repeat>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+                <apex:pageblock id="pbsec">
+                    <center>     
+                        <apex:commandButton disabled="{!if(con.pageNumber == 1,true,false)}" value="First" action="{!con_First}" status="mystatus" reRender="tableSection, pbsec" />
+                        <apex:commandButton disabled="{!if(con.pageNumber == 1,true,false)}" value="Previous" action="{!con_Previous}" status="mystatus" reRender="tableSection, pbsec" />
+                        <apex:commandButton disabled="{!if(con.pageNumber == CEILING(ResultSize /con.pageSize),true,false)}" value="Next" action="{!con_Next}" status="mystatus" reRender="tableSection, pbsec" />
+                        <apex:commandButton disabled="{!if(con.pageNumber == CEILING(ResultSize /con.pageSize),true,false)}" value="Last" action="{!con_Last}" status="mystatus" reRender="tableSection, pbsec" /> 
+                        
+                        <div style="float:right;">
+                            <apex:outputText >
+                                Page {!con.pageNumber} of {!CEILING(ResultSize /con.pageSize)}
+                            </apex:outputText>
+                        </div>
+                    </center>
+                </apex:pageblock> 
+            </apex:pageBlock>
+        </div>
+    </apex:form>
+</apex:page>
+
+/*
+* File Name   : JJ_Trend_Level_Medical_Observation_Con.
+* Description : Controller/Class for JJ_Trend_Level_Medical_Observations visualforce Page.
+* *   Modified By       ||  Date Modified   || Description
+*******************************************************************************************************************************
+* 1. Cognizant        || 14-Septmeber-2021     || Initial Version.
+*/
+
+public class JJ_Trend_Level_Medical_Observations_Con {
+    
+    
+    public String sortBy                 {get;set;}    
+    public Date activtionDate            {get;set;}
+    public Date expirationDate           {get;set;}
+    public String ASC_DESC;
+    public boolean dontdisplay;
+    public Integer soqlrecords;
+    public List<Alert_vod__c> alertList;
+    Set<Id> setOfSubUserId = new Set<Id>();
+    
+    public JJ_Trend_Level_Medical_Observations_Con(){
+        setOfSubUserId = getRoleSubordinateUsers(UserInfo.getUserId()); 
+    }
+    
+    //Method for Showing the data table on Default page.
+    
+    public ApexPages.StandardSetController Con {
+        get {
+            if(Con == null) {
+                con = new ApexPages.StandardSetController(Database.getQueryLocator(
+                    [SELECT Activation_Date_vod__c,Alert_Text_vod__c,CreatedDate,Expiration_Date_vod__c,
+                     Id,Name,Owner.Name,Priority_vod__c,(select id,Dismissed_vod__c from Alert_User_Actions__r limit 1)
+                     FROM Alert_vod__c
+                     WHERE JJ_Medical_Observation__c = true AND CreatedDate = LAST_90_DAYS AND (Ownerid IN : setOfSubUserId OR Ownerid =: UserInfo.getUserId())
+                     ORDER BY CreatedDate DESC
+                     LIMIT :getRemainingQueryRows()]));
+                con.setPageSize(25);
+            }
+            return Con;
+        }
+        set;
+    }
+    
+    public List<Alert_vod__c> getalerts() {
+        system.debug('inside getalterts'+dontdisplay);
+        if(dontdisplay == true){
+            dontdisplay = false;
+            return null;
+        }else{
+             return (List<Alert_vod__c>) Con.getRecords();
+        }
+           
+    }
+    
+    
+    //Count records to avoid SOQL governor limits of 10000 records
+    
+    public static Integer getRemainingQueryRows()
+    {
+        return Limits.getLimitQueryLocatorRows() - Limits.getQueryLocatorRows();
+    }
+    
+    
+    public static Set<ID> getRoleSubordinateUsers(Id userId) {
+        
+        Id roleId             = [select UserRoleId from User where Id = :userId].UserRoleId;
+        Set<Id> allSubRoleIds = getAllSubRoleIds(new Set<ID>{roleId});
+        Map<Id,User> users    = new Map<Id, User>([Select Id, Name 
+                                                   From User
+                                                   WHERE UserRoleId IN : allSubRoleIds]);
+        
+        return users.keySet();
+    }
+    
+    private static Set<Id> getAllSubRoleIds(Set<ID> roleIds) {
+        
+        Set<Id> currentRoleIds       = new Set<Id>();
+        Set<String> currentRoleNames = new Set<String>();
+        
+        for(UserRole userRole :[select Id, name 
+                                from UserRole 
+                                where ParentRoleId IN : roleIds 
+                                AND ParentRoleID != null]) {
+                                    currentRoleIds.add(userRole.Id);
+                                    currentRoleNames.add(userRole.name);
+                                }
+        
+        if(currentRoleIds.size() > 0) {
+            currentRoleIds.addAll(getAllSubRoleIds(currentRoleIds));
+        }
+        
+        return currentRoleIds;
+    }
+    
+    public Boolean hasNext {
+        get {
+            return con.getHasNext();
+        }
+        set;
+    }
+    
+    public Boolean hasPrevious {
+        get {
+            return con.getHasPrevious();
+        }
+        set;
+    }
+    
+    public Integer pageNumber {
+        get {
+            return con.getPageNumber();
+        }
+        set;
+    }
+    
+    public void con_Next() {
+        con.next();    
+    }
+    
+    public void con_Previous() {
+        con.previous();    
+    } 
+    
+    public void con_First() {
+        con.first();    
+    }
+    
+    public void con_Last() {
+        con.last();    
+    } 
+    public Integer resultSize {
+        get {
+            return con.getResultSize();
+        }
+        set;
+    }
+    
+    public void sortColumns() {
+        system.debug('inside sort');
+        if(ASC_DESC == 'ASC') {
+            ASC_DESC = 'DESC';
+        }
+        else {
+            ASC_DESC = 'ASC';
+        }
+        String mySoql               = '';
+        soqlrecords                 = getRemainingQueryRows();
+        if(expirationDate !=null){
+            datetime expirationDatetime = datetime.newInstance(expirationDate.year(), expirationDate.month(), expirationDate.day(), 23, 59, 59);
+        }
+        datetime activtionDatetime  = activtionDate;
+        Set<String> setOfUserId     = new Set<String>();
+        setOfUserId.add(userInfo.getUserId());
+        mySoql  = 'SELECT Activation_Date_vod__c,Alert_Text_vod__c,CreatedDate,Dismissible_vod__c,Expiration_Date_vod__c,';
+        mySoql += 'Name,Owner.Name,Priority_vod__c,(select id,Dismissed_vod__c from Alert_User_Actions__r limit 1) FROM Alert_vod__c'; 
+        mySoql += ' WHERE JJ_Medical_Observation__c = true AND CreatedDate = LAST_90_DAYS AND (Ownerid IN : setOfSubUserId OR Ownerid IN : setOfUserId) ';
+        mySoql += ' AND Activation_Date_vod__c >=  : activtionDatetime AND Expiration_Date_vod__c <= : expirationDatetime order by ';
+        mySoql += sortBy;
+        mySoql += ' ' + ASC_DESC + ' NULLS last';
+        mySoql += ' ' +'LIMIT'+''+': soqlrecords';
+        con = new ApexPages.StandardSetController(Database.getQueryLocator(mySoql));
+        con.setPageSize(25);
+    }
+    
+    public pageReference doSearch(){
+        if(activtionDate == Null && expirationDate ==Null){
+            dontdisplay = true;
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.INFO,'Any one of the following is required : Activation Date Or Expiration Date')); 
+        }else{
+            fliterAlerts(activtionDate,expirationDate);
+        }
+        
+        return null;
+    }
+    
+    public void fliterAlerts(date activtionDate, date expirationDate){
+      
+        if(expirationDate !=null){
+            datetime expirationDatetime = datetime.newInstance(expirationDate.year(), expirationDate.month(), expirationDate.day(), 23, 59, 59);
+        }
+        String mySoql               = '';
+        soqlrecords                 = getRemainingQueryRows();
+        datetime activtionDatetime  = activtionDate;
+        Set<String> setOfUserId     = new Set<String>();
+        setOfUserId.add(userInfo.getUserId());
+        mySoql = 'SELECT Activation_Date_vod__c,Alert_Text_vod__c,CreatedDate,Dismissible_vod__c,Expiration_Date_vod__c,';
+        mySoql += 'Name,Owner.Name,Priority_vod__c,(select id,Dismissed_vod__c from Alert_User_Actions__r limit 1) FROM Alert_vod__c';
+        mySoql += ' WHERE JJ_Medical_Observation__c = true AND CreatedDate = LAST_90_DAYS  AND (Ownerid IN : setOfSubUserId OR Ownerid IN : setOfUserId) ';
+        mySoql += ' AND Activation_Date_vod__c >=  : activtionDatetime AND Expiration_Date_vod__c <= : expirationDatetime order by ';
+        mySoql += 'CreatedDate DESC';
+        mySoql += ' ' +'LIMIT'+''+': soqlrecords';
+        con = new ApexPages.StandardSetController(Database.getQueryLocator(mySoql));
+        con.setPageSize(25);
+    }
+}
