@@ -1,4 +1,115 @@
+
 Eexcute ananomus window:
+
+
+
+//PRIMITIVE DATA TYPES
+
+//assiging data from UI
+string name = 'chaitanya';
+system.debug('name is '+name);
+// Reading data from backend
+
+string namefromsoql = [select id,name,type from account where name ='Alpha Dynamics' limit 1].type;
+system.debug('name from soql '+namefromsoql);
+
+account superone = [select id,name from account where name='Alpha Dynamics' limit 1];
+string nameis = (string)superone.get('name');
+system.debug('nameis '+nameis);
+
+//assiging data from UI
+//first approach
+account acc = new account();
+acc.name = 'meghana1';
+acc.phone ='456767888';
+system.debug('acc1 is '+acc);
+//second approach
+account acc2 = new account(name ='niof',phone ='56675686');
+system.debug('acc2 is '+acc2);
+
+// Reading data from backend
+account acc3 = [select id,name from account limit 1];
+system.debug('acc3 is '+acc3);
+
+list<account>superpowerlist = [select id,name from account limit 6];
+account thisis = (account)superpowerlist.get(5);
+system.debug(' this is '+thisis);
+
+
+//LIST 
+
+//assiging data from UI
+//first approach
+list<account> acclst = new list<account>();
+acclst.add(new account(name='harsha sai'));
+acclst.add(acc2);
+system.debug('total list '+acclst);
+
+//second approach
+list<account>acclist2 = new list<account>{new account(name='secondname'),
+                                          new account(name='secondname2')};
+                                              
+system.debug('total list 2'+acclist2);
+
+//third approach
+list<account>acclist3 = new list<account>{acc,acc2};
+system.debug('acc list 3 '+acclist3);
+
+//fourth approach
+
+list<account>acclist4 = new list<account>(acclist2);
+system.debug('total list 4'+acclist4);
+
+// Reading data from backend
+
+list<account> readsoqllist = [select id,name from account limit 5];
+system.debug('readsoqllist is '+readsoqllist);
+
+list<account> readlist2 = new list<account>([select id,name from account limit 2]);
+system.debug('readtwo is '+readlist2);
+
+for(account acc : [select id,name from account limit 3]){
+    system.debug('acc names '+acc.name);
+}
+
+// map
+
+// Assigning values from UI
+map<string,string> mapstringis = new map<string,string>{'key1'=>'value1','key2'=>'value2'};
+system.debug('map values are'+mapstringis);
+
+// reading data from backend
+
+//first approach
+map<id,account> mapofaccounts = new map<id,account>([select id,name from account limit 5]);
+system.debug('mapofaccounts are '+mapofaccounts);
+
+//second approach
+
+map<string,account> mapaccountname = new map<string,account>();
+for(account acc : [select id,name from account limit 5]){
+    mapaccountname.put(acc.name,acc);
+}
+system.debug('mapaccountname is '+mapaccountname);
+
+//Covert map to list and set
+
+list<account> accsfrommap = new list<account>(mapaccountname.values());
+system.debug('list from map is '+accsfrommap);
+
+list<account> accsfrommap2 = mapaccountname.values();
+system.debug('list from map is '+accsfrommap2);
+
+set<string> setfrommap = mapaccountname.keyset();
+system.debug('setfrommap is '+setfrommap);
+
+
+
+
+
+
+
+
 
 string a1 = 'Maha';
 string a2 = 'Meghana';
